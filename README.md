@@ -1,2 +1,2 @@
 # ml
-homebrew machine learning
+homebrew machine learning (inspired by a variety of tutorials, blogs, and StackOverflow answers on the Web)
