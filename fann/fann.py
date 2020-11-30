@@ -6,7 +6,7 @@ Source code in `fann.py`, demo in `fann.ipynb`.
 
 # data structures
 import pandas as pd
-# algorithms
+# calculations and algorithms
 import numpy as np
 from scipy.special import expit
 
