@@ -63,7 +63,7 @@ def _predict(nn: pd.DataFrame, x: pd.Series) -> int:
 
     output
     ------
-    label (usually int), a scalar value identifiying which category we predict.
+    int (or other scalar value, or whatever the user has used), a label identifiying which category we predict.
     """
     return fprop(nn=nn, x=x).idxmax()  # essentially argmax
 
