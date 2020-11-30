@@ -9,6 +9,8 @@ import pandas as pd
 # calculations and algorithms
 import numpy as np
 from scipy.special import expit, softmax
+# syntactic sugar
+from typing import Callable
 
 
 ########################################################################################################################
@@ -22,7 +24,8 @@ a NN model is essentially identified by its forward-propagation weights.
 We store the model as a pd.DataFrame with MultiIndex. Each "super-row" (axis=0, level=0) represents a layer.
 Each row (axis=0, level=1) represents the weights feeding into a single neuron on that layer.
 (E.g. the first row represents the weights feeding from the input layer into
-the first neuron on the first hidden layer.) The first column is always reserved for the bias term.
+the first neuron on the first hidden layer.) The first column (indexed as -1 for compatibility reasons)
+is always reserved for the bias term.
 
 Because different layers can have different widths, some rows may not be completely filled across.
 But obviously, for neurons on the same layer, the number of neurons on the previous layer is also the same.
@@ -55,37 +58,79 @@ squash = softmax
 # FORWARD PROPAGATION ##################################################################################################
 ########################################################################################################################
 
-def _fprop(w: pd.Series, x: pd.Series) -> pd.Series:
-    """Recursive helper function."""
-    raise NotImplementedError
-
-
-def fprop(nn: pd.DataFrame, x: pd.Series) -> pd.Series:
+def __fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=activate) -> float:
     """
-    Forward propagate.
+    Forward-propagate the previous layer's output with the current neuron's weights and activation function.
 
     input
     -----
-    nn: pd.DataFrame, the model.
+    x: pd.Series, the previous layer's output (possibly a single input data point,
+        which can be seen as the first layer's "output").
 
+    w_neuron: pd.Series, the current neuron's weights.
+
+    fn: function, the current neuron's activation function.
+
+    output
+    ------
+    float: the current neuron's output.
+    """
+    assert isinstance(x, pd.Series), type(x)
+    assert isinstance(w_neuron, pd.Series), type(w_neuron)
+    w_neuron = w_neuron.reindex(index=x.index)
+    assert w_neuron.notnull().all(), "Weights {w} are not completely filled!".format(w=w_neuron)
+
+    # activate(bias + x'w)
+    return fn(w[-1] + x.dot(w_neuron))
+
+
+def _fprop(x: pd.Series, w_layer: pd.DataFrame) -> pd.Series:
+    """
+    Forward-propagate the previous layer's output with the current layer's weights and activation function.
+
+    input
+    -----
+    x: pd.Series, the previous layer's output (possibly a single input data point,
+        which can be seen as the first layer's "output").
+
+    w_layer: pd.DataFrame, the current layer's weights.
+
+    output
+    ------
+    pd.Series, the current layer's output.
+    """
+    raise NotImplementedError
+
+
+def fprop(x: pd.Series, nn: pd.DataFrame) -> pd.Series:
+    """
+    Forward-propagate the input through the network.
+
+    input
+    -----
     x: pd.Series, a single input data point.
+
+    nn: pd.DataFrame w/ MultiIndex, the model.
 
     output
     ------
     pd.Series, the probability the model assigns to each category label.
     """
     raise NotImplementedError
+    # recurse
+    # squash the output
+    # return
 
 
-def _predict(nn: pd.DataFrame, x: pd.Series) -> int:
+def _predict(x: pd.Series, nn: pd.DataFrame) -> int:
     """
     Predict which category the input point belongs to.
 
     input
     -----
-    nn: pd.DataFrame, the model.
-
     x: pd.Series, a single input data point.
+
+    nn: pd.DataFrame, the model.
 
     output
     ------
@@ -94,9 +139,9 @@ def _predict(nn: pd.DataFrame, x: pd.Series) -> int:
     return fprop(nn=nn, x=x).idxmax()  # essentially argmax
 
 
-def predict(nn: pd.DataFrame, X: pd.DataFrame) -> pd.Series:
+def predict(X: pd.DataFrame, nn: pd.DataFrame) -> pd.Series:
     """Predict which category each input point belongs to."""
-    _predict = lambda x: _predict(nn=nn, x=x)
+    _predict = lambda x: _predict(x=x, nn=nn)
     return X.apply(_predict, axis="columns")
 
 
@@ -143,18 +188,18 @@ def _get_loss(p_y: pd.Series) -> float:
     return -get_llh(p=p_y)
 
 
-def get_loss(p_hat: pd.DataFrame, y: pd.Series) -> float:
+def get_loss(y: pd.Series, p_hat: pd.DataFrame) -> float:
     """
     Negative log likelihood loss.
 
     input
     -----
+    y: pd.Series, the correct category label for each point.
+
     p_hat: pd.DataFrame (columns = category labels, index = observations),
         how much probability mass we assigned to each category label for each point.
         Each row should be a well-formed probability mass function
         AKA discrete probability distribution.
-
-    y: pd.Series, the correct category label for each point.
 
     output
     ------
