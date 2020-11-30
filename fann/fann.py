@@ -1,7 +1,7 @@
 """
 Arbitrary-depth, arbitrary-width feedforward artificial neural network.
 Step-by-step Python implementation of simple deep learning for binary classification.
-Source code in fann.py, demo in fann.ipynb.
+Source code in `fann.py`, demo in `fann.ipynb`.
 """
 
 # data structures
@@ -11,12 +11,23 @@ import numpy as np
 
 
 ########################################################################################################################
+# WEIGHTS DATA STRUCTURE ###############################################################################################
+########################################################################################################################
+
+"""
+An ANN is essentially identified by its forward-propagation weights. We store the model as a pd.DataFrame.
+Each row (on the index, AKA the 0th axis) represents a layer. The first column is always reserved for the bias term.
+Note that because different layers can have different widths, some rows may not be completely filled across.
+"""
+
+
+########################################################################################################################
 # ACTIVATION FUNCTION ##################################################################################################
 ########################################################################################################################
 
 """
 Three common neuron activation functions are logistic (AKA sigmoid), tanh, and ReLU.
-I like the logistic for (binary) classification tasks, for the slightly (maybe even misleadingly) arbitrary reason
+We like the logistic for (binary) classification tasks, for the slightly (maybe even misleadingly) arbitrary reason
 that its output lies in [0, 1], so it can be interpreted as this neuron's "best guess"
 of the probability that the input belongs to Category 1. As further support, the logistic's generalization, the softmax,
 is a commonly-used "output squashing" function for multinomial classification tasks: It transforms a `n`-vector
