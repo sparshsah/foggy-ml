@@ -17,7 +17,7 @@ from scipy.special import expit
 
 """
 Fixing the neuron activation---in our case, logistic---and output squashing---in our case, softmax---function,
-an ANN is essentially identified by its forward-propagation weights.
+a NN model is essentially identified by its forward-propagation weights.
 
 We store the model as a pd.DataFrame with MultiIndex. Each "super-row" (axis=0, level=0) represents a layer.
 Each row (axis=0, level=1) represents the weights feeding into a single neuron on that layer.
@@ -28,6 +28,30 @@ Because different layers can have different widths, some rows may not be complet
 But obviously, for neurons on the same layer, the number of neurons on the previous layer is also the same.
 Hence, any two rows on the same "super-row" (i.e. sharing a key on axis=0 & level=0), will be filled to the same width.
 """
+
+
+########################################################################################################################
+# ACTIVATION ###########################################################################################################
+########################################################################################################################
+
+"""
+Three common neuron activation functions are logistic (AKA expit AKA inverse-logit AKA sigmoid), tanh, and ReLU.
+
+We like the logistic for (binary) classification tasks, for the slightly (maybe even misleadingly) arbitrary reason
+that its output lies in [0, 1], so it can be interpreted as this neuron's "best guess"
+of the probability that the input belongs to Category 1. As further support, the logistic's generalization, the softmax,
+is a commonly-used "output squashing" function for multinomial classification tasks: It transforms a `n`-vector
+of Real numbers into a probability mass distribution. (And tanh is simply a scaled-and-shifted version of logistic.)
+
+ReLU is cool too, and has another cool connection, this time to the hinge loss function.
+"""
+
+activate = expit
+
+
+########################################################################################################################
+# FORWARD PROPAGATION ##################################################################################################
+########################################################################################################################
 
 def _fprop(w: pd.Series, x: pd.Series) -> pd.Series:
     """Recursive helper function."""
@@ -75,26 +99,7 @@ def predict(nn: pd.DataFrame, X: pd.DataFrame) -> pd.Series:
 
 
 ########################################################################################################################
-# ACTIVATION FUNCTION ##################################################################################################
-########################################################################################################################
-
-"""
-Three common neuron activation functions are logistic (AKA expit AKA inverse-logit AKA sigmoid), tanh, and ReLU.
-
-We like the logistic for (binary) classification tasks, for the slightly (maybe even misleadingly) arbitrary reason
-that its output lies in [0, 1], so it can be interpreted as this neuron's "best guess"
-of the probability that the input belongs to Category 1. As further support, the logistic's generalization, the softmax,
-is a commonly-used "output squashing" function for multinomial classification tasks: It transforms a `n`-vector
-of Real numbers into a probability mass distribution. (And tanh is simply a scaled-and-shifted version of logistic.)
-
-ReLU is cool too, and has another cool connection, this time to the hinge loss function.
-"""
-
-activate = expit
-
-
-########################################################################################################################
-# LOSS FUNCTION ########################################################################################################
+# LOSS #################################################################################################################
 ########################################################################################################################
 
 def get_llh(p: pd.Series) -> float:
@@ -156,3 +161,8 @@ def get_loss(p_hat: pd.DataFrame, y: pd.Series) -> float:
     # pick out the entry for the correct label in each row
     p_y = pd.Series({n: p_hat.loc[n, label] for n, label in y.items()})
     return _get_loss(p_y=p_y)
+
+
+########################################################################################################################
+# TRAINING AKA BACK-PROPAGATION ########################################################################################
+########################################################################################################################
