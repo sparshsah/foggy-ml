@@ -1,3 +1,9 @@
+"""
+Arbitrary-depth, arbitrary-width feedforward artificial neural network.
+Step-by-step Python implementation of simple deep learning for binary classification.
+Source code in fann.py, demo in fann.ipynb.
+"""
+
 # data structures
 import pandas as pd
 # algorithms
@@ -5,29 +11,38 @@ import numpy as np
 
 
 ########################################################################################################################
+# ACTIVATION FUNCTION ##################################################################################################
+########################################################################################################################
+
+"""
+Three common neuron activation functions are logistic (AKA sigmoid), tanh, and ReLU.
+I like the logistic for (binary) classification tasks, for the slightly (maybe even misleadingly) arbitrary reason
+that its output lies in [0, 1], so it can be interpreted as this neuron's "best guess"
+of the probability that the input belongs to Category 1. As further support, the logistic's generalization, the softmax,
+is a commonly-used "output squashing" function for multinomial classification tasks: It transforms a `n`-vector
+of Real numbers into a probability mass distribution. (And tanh is simply a scaled-and-shifted version of logistic.)
+ReLU is cool too, and has another cool connection, this time to the hinge loss function.
+"""
+
+
+########################################################################################################################
 # LOSS FUNCTION ########################################################################################################
 ########################################################################################################################
 
-def get_loss(p_hat: pd.DataFrame, y: pd.Series) -> float:
+def get_ll(p: pd.Series) -> float:
     """
-    Negative log likelihood loss.
+    Log likelihood of a series of independent outcomes.
+    More numerically stable than raw likelihood.
 
     input
     -----
-    p_hat: pd.DataFrame (columns = category labels, index = observations),
-        how much probability mass we assigned to each category label for each point.
-        Each row should be a well-formed probability mass function
-        AKA discrete probability distribution.
-
-    y: pd.Series, the correct category label for each point.
+    p: pd.Series, the probability of each outcome.
 
     output
     ------
-    float, the calculated loss.
+    float, the joint log likelihood of the outcomes.
     """
-    # pick out the entry for the correct label in each row
-    p_y = pd.Series({n: p_hat.loc[n, label] for n, label in y.items()})
-    return _get_loss(p_y=p_y)
+    return np.log(p).sum()
 
 
 def _get_loss(p_y: pd.Series) -> float:
@@ -53,32 +68,23 @@ def _get_loss(p_y: pd.Series) -> float:
     return -get_ll(p=p_y)
 
 
-def get_ll(p: pd.Series) -> float:
+def get_loss(p_hat: pd.DataFrame, y: pd.Series) -> float:
     """
-    Log likelihood of a series of independent outcomes.
-    More numerically stable than raw likelihood.
+    Negative log likelihood loss.
 
     input
     -----
-    p: pd.Series, the probability of each outcome.
+    p_hat: pd.DataFrame (columns = category labels, index = observations),
+        how much probability mass we assigned to each category label for each point.
+        Each row should be a well-formed probability mass function
+        AKA discrete probability distribution.
+
+    y: pd.Series, the correct category label for each point.
 
     output
     ------
-    float, the joint log likelihood of the outcomes.
+    float, the calculated loss.
     """
-    return np.log(p).sum()
-
-
-########################################################################################################################
-# ACTIVATION FUNCTION ##################################################################################################
-########################################################################################################################
-
-"""
-Three common neuron activation functions are logistic (AKA sigmoid), tanh, and ReLU.
-I like the logistic for (binary) classification tasks, for the slightly (maybe even misleadingly) arbitrary reason
-that its output lies in [0, 1], so it can be interpreted as this neuron's "best guess"
-of the probability that the input belongs to Category 1. As further support, the logistic's generalization, the softmax,
-is a commonly-used "output squashing" function for multinomial classification tasks: It transforms a `n`-vector
-of Real numbers into a probability mass distribution. (And tanh is simply a scaled-and-shifted version of logistic.)
-ReLU is cool too, and has another cool connection, this time to the hinge loss function.
-"""
+    # pick out the entry for the correct label in each row
+    p_y = pd.Series({n: p_hat.loc[n, label] for n, label in y.items()})
+    return _get_loss(p_y=p_y)
