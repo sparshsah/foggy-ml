@@ -8,6 +8,7 @@ Source code in `fann.py`, demo in `fann.ipynb`.
 import pandas as pd
 # algorithms
 import numpy as np
+from scipy.special import expit
 
 
 ########################################################################################################################
@@ -50,7 +51,7 @@ def fprop(nn: pd.DataFrame, x: pd.Series) -> pd.Series:
     raise NotImplementedError
 
 
-def _predict(nn: pd.DataFrame, x: pd.Series) -> label:
+def _predict(nn: pd.DataFrame, x: pd.Series) -> int:
     """
     Predict which category the input point belongs to.
 
