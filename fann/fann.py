@@ -233,7 +233,7 @@ def _get_loss(p_y: pd.Series) -> float:
 
 def get_loss(y: pd.Series, p_hat: pd.DataFrame) -> float:
     """
-    Negative log likelihood loss.
+    Negative log likelihood loss (normalized by |training data|).
 
     input
     -----
@@ -250,7 +250,7 @@ def get_loss(y: pd.Series, p_hat: pd.DataFrame) -> float:
     """
     # pick out the entry for the correct label in each row
     p_y = pd.Series({n: p_hat.loc[n, label] for n, label in y.items()})
-    return _get_loss(p_y=p_y)
+    return _get_loss(p_y=p_y) / y.count()
 
 
 ########################################################################################################################
