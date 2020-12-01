@@ -29,7 +29,7 @@ is always reserved for the bias term.
 
 Because different layers can have different widths, some rows may not be completely filled across.
 But obviously, for neurons on the same layer, the number of neurons on the previous layer is also the same.
-Hence, any two rows on the same "super-row" (i.e. sharing a key on axis=0 & level=0), will be filled to the same width.
+Hence, any two rows on the same "super-row" (i.e. sharing a key on axis=0), will be filled to the same width.
 """
 
 NN = pd.DataFrame  # w/ MultiIndex[layers, neurons]
