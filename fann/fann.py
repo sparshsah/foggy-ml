@@ -275,7 +275,6 @@ def get_loss(y: pd.Series, p_hat: pd.DataFrame) -> float:
 # TRAINING AKA BACK-PROPAGATION ########################################################################################
 ########################################################################################################################
 
-
 def bprop():
     # This function learns parameters for the neural network and returns the model.
     # - nn_hdim: Number of nodes in the hidden layer
