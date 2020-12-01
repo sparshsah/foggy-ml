@@ -146,21 +146,24 @@ def fprop(x: pd.Series, nn: NN) -> pd.Series:
     return squash(_fprop(x=x, nn=nn))
 
 
-def _predict(x: pd.Series, nn: NN) -> int:
+def fprop_(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     """
-    Predict which category the input point belongs to.
+    Forward-propagate each input through the network.
+    Could be done more efficiently with some clever linear algebra, but this does the job.
 
     input
     -----
-    x: pd.Series, a single input data point.
+    x: pd.DataFrame, the input data points where each row is an observation.
 
     nn: NN AKA pd.DataFrame w/ MultiIndex, the model.
 
     output
     ------
-    int (or other scalar value, or whatever the user has used), a label identifiying which category we predict.
+    pd.DataFrame (columns = category labels, index = observations),
+        how much probability mass we assigned to each category label for each point.
+        Each row is a well-formed probability mass function AKA discrete probability distribution.
     """
-    return fprop(nn=nn, x=x).idxmax()  # essentially argmax
+    return X.apply(lambda x: fprop(x=x, nn=nn), axis="columns")
 
 
 def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
@@ -178,8 +181,8 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
     pd.Series of int (or other scalar value, or whatever the user has used),
         a single label per point identifiying which category we predict for that point.
     """
-    _predict = lambda x: _predict(x=x, nn=nn)  # intentionally shadows name from outer scope
-    return X.apply(_predict, axis="columns")
+    p_hat = fprop_(X=X, nn=nn)
+    return p_hat.apply(lambda _p_hat: _p_hat.idxmax(), axis="columns")
 
 
 ########################################################################################################################
