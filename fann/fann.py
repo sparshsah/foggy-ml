@@ -2,6 +2,23 @@
 Arbitrary-depth, arbitrary-width feedforward artificial neural network.
 Step-by-step Python implementation of simple deep learning for multinomial classification.
 Source code in `fann.py`, demo in `fann.ipynb`.
+
+Style note
+----------
+We permit ourselves our personal predilection for underscores,
+to the point of controversy and perhaps even overuse.
+    For example, if we have a 2D array `arr`,
+we will iterate over each row within that array as `_arr`.
+Similarly, if we have a function `foo`,
+we will call its helper `_foo`, and in turn its helper `__foo`.
+    This nomenclature takes a little getting-used-to,
+but we vigorously defend the modularity and clarity it promotes. For example,
+building a nested series of one-liner helpers becomes second nature,
+so that each individual function is easy to digest
+and its position in the hierarchy is immediately obvious.
+    In fact, if you think of a row within an array (or a helper to a function)
+as a "private attribute" or "subcomponent", you might even call this
+at-first-glance-unidiomatic nomenclature truly Pythonic!
 """
 
 # data structures
@@ -42,8 +59,8 @@ NN = pd.DataFrame  # w/ MultiIndex[layers, neurons]
 """
 Three common neuron activation functions are logistic (AKA expit AKA inverse-logit AKA sigmoid), tanh, and ReLU.
 
-We like the logistic for (binary) classification tasks, for the slightly (maybe even misleadingly) arbitrary reason
-that its output lies in [0, 1], so it can be interpreted as this neuron's "best guess"
+We like the logistic for (binary) classification tasks, for the slightly arbitrary reason
+that its output lies in [0, 1], so it can potentially be interpreted as this neuron's "best guess"
 of the probability that the input belongs to Category 1. As further support, the logistic's generalization, the softmax,
 is a commonly-used "output squashing" function for multinomial classification tasks: It transforms a `n`-vector
 of Real numbers into a probability mass distribution. (And tanh is simply a scaled-and-shifted version of logistic.)
@@ -59,8 +76,6 @@ squash = softmax
 ########################################################################################################################
 # FORWARD PROPAGATION ##################################################################################################
 ########################################################################################################################
-
-# controversial, but we like the clarity and modularity of a bunch of underscored one-liner helpers
 
 def ___fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=activate) -> float:
     """
@@ -182,7 +197,7 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
         a single label per point identifiying which category we predict for that point.
     """
     p_hat = fprop_(X=X, nn=nn)
-    return p_hat.apply(lambda _p_hat: _p_hat.idxmax(), axis="columns")
+    return p_hat.apply(lambda _p_hat: _p_hat.idxmax(), axis="columns")  # argmax of each row
 
 
 ########################################################################################################################
