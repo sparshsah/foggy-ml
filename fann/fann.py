@@ -9,7 +9,7 @@ import pandas as pd
 # calculations and algorithms
 import numpy as np
 from scipy.special import expit, softmax
-# syntactic sugar
+# syntax utils
 from typing import Callable
 
 
@@ -31,6 +31,8 @@ Because different layers can have different widths, some rows may not be complet
 But obviously, for neurons on the same layer, the number of neurons on the previous layer is also the same.
 Hence, any two rows on the same "super-row" (i.e. sharing a key on axis=0 & level=0), will be filled to the same width.
 """
+
+NN = pd.DataFrame  # w/ MultiIndex[layers, neurons]
 
 
 ########################################################################################################################
@@ -58,7 +60,9 @@ squash = softmax
 # FORWARD PROPAGATION ##################################################################################################
 ########################################################################################################################
 
-def __fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=activate) -> float:
+# controversial, but we like the clarity and modularity of a bunch of underscored one-liner helpers
+
+def ___fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=activate) -> float:
     """
     Forward-propagate the previous layer's output with the current neuron's weights and activation function.
 
@@ -77,14 +81,15 @@ def __fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=acti
     """
     assert isinstance(x, pd.Series), type(x)
     assert isinstance(w_neuron, pd.Series), type(w_neuron)
+    bias = w_neuron[-1]
+    assert pd.notnull(bias), "Weights {w} missing bias!".format(w=w_neuron)
     w_neuron = w_neuron.reindex(index=x.index)
     assert w_neuron.notnull().all(), "Weights {w} are not completely filled!".format(w=w_neuron)
 
-    # activate(bias + x'w)
-    return fn(w[-1] + x.dot(w_neuron))
+    return fn(bias + x.dot(w_neuron))
 
 
-def _fprop(x: pd.Series, w_layer: pd.DataFrame) -> pd.Series:
+def __fprop(x: pd.Series, w_layer: pd.DataFrame) -> pd.Series:
     """
     Forward-propagate the previous layer's output with the current layer's weights and activation function.
 
@@ -93,16 +98,16 @@ def _fprop(x: pd.Series, w_layer: pd.DataFrame) -> pd.Series:
     x: pd.Series, the previous layer's output (possibly a single input data point,
         which can be seen as the first layer's "output").
 
-    w_layer: pd.DataFrame, the current layer's weights.
+    w_layer: pd.DataFrame, the current layer's weights where each row corresponds to a neuron.
 
     output
     ------
     pd.Series, the current layer's output.
     """
-    raise NotImplementedError
+    return w_layer.apply(lambda w_neuron: ___fprop(x=x, w_neuron=w_neuron), axis="columns")
 
 
-def fprop(x: pd.Series, nn: pd.DataFrame) -> pd.Series:
+def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     """
     Forward-propagate the input through the network.
 
@@ -110,19 +115,38 @@ def fprop(x: pd.Series, nn: pd.DataFrame) -> pd.Series:
     -----
     x: pd.Series, a single input data point.
 
-    nn: pd.DataFrame w/ MultiIndex, the model.
+    nn: NN AKA pd.DataFrame w/ MultiIndex, the model.
+
+    output
+    ------
+    pd.Series, the last layer's output.
+    """
+    layers = nn.index.levels[0]
+    curr_layer = layers[0]
+    x = __fprop(x=x, w_layer=nn.loc[pd.IndexSlice[curr_layer, :], :])
+    # recurse
+    next_layers = layers[1:]
+    return _fprop(x=x, nn=nn.loc[pd.IndexSlice[next_layers, :], :]) if len(next_layers) > 0 else x
+
+
+def fprop(x: pd.Series, nn: NN) -> pd.Series:
+    """
+    Forward-propagate the input through the network.
+
+    input
+    -----
+    x: pd.Series, a single input data point.
+
+    nn: NN AKA pd.DataFrame w/ MultiIndex, the model.
 
     output
     ------
     pd.Series, the probability the model assigns to each category label.
     """
-    raise NotImplementedError
-    # recurse
-    # squash the output
-    # return
+    return squash(_fprop(x=x, nn=nn))
 
 
-def _predict(x: pd.Series, nn: pd.DataFrame) -> int:
+def _predict(x: pd.Series, nn: NN) -> int:
     """
     Predict which category the input point belongs to.
 
@@ -130,7 +154,7 @@ def _predict(x: pd.Series, nn: pd.DataFrame) -> int:
     -----
     x: pd.Series, a single input data point.
 
-    nn: pd.DataFrame, the model.
+    nn: NN AKA pd.DataFrame w/ MultiIndex, the model.
 
     output
     ------
@@ -139,15 +163,34 @@ def _predict(x: pd.Series, nn: pd.DataFrame) -> int:
     return fprop(nn=nn, x=x).idxmax()  # essentially argmax
 
 
-def predict(X: pd.DataFrame, nn: pd.DataFrame) -> pd.Series:
-    """Predict which category each input point belongs to."""
-    _predict = lambda x: _predict(x=x, nn=nn)
+def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
+    """
+    Predict which category each input point belongs to.
+
+    input
+    -----
+    X: pd.DataFrame, the input data points where each row is a single observation.
+
+    nn: NN AKA pd.DataFrame w/ MultiIndex, the model.
+
+    output
+    ------
+    pd.Series of int (or other scalar value, or whatever the user has used),
+        labels identifiying which category we predict for each point.
+    """
+    _predict = lambda x: _predict(x=x, nn=nn)  # intentionally shadows name from outer scope
     return X.apply(_predict, axis="columns")
 
 
 ########################################################################################################################
 # LOSS #################################################################################################################
 ########################################################################################################################
+
+"""
+One choice (not implemented) that can help combat overfitting is
+to "regularize" parameters by penalizing deviations from zero.
+This is like LASSO or Ridge or ElasticNet OLS regression.
+"""
 
 def get_llh(p: pd.Series) -> float:
     """
