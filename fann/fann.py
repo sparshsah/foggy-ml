@@ -48,7 +48,7 @@ of the probability that the input belongs to Category 1. As further support, the
 is a commonly-used "output squashing" function for multinomial classification tasks: It transforms a `n`-vector
 of Real numbers into a probability mass distribution. (And tanh is simply a scaled-and-shifted version of logistic.)
 
-ReLU is cool too, and has another cool connection, this time to the hinge loss function.
+ReLU (not implemented) is cool too, and has another cool connection, this time to the hinge loss function.
 """
 
 activate = expit
@@ -176,7 +176,7 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
     output
     ------
     pd.Series of int (or other scalar value, or whatever the user has used),
-        labels identifiying which category we predict for each point.
+        a single label per point identifiying which category we predict for that point.
     """
     _predict = lambda x: _predict(x=x, nn=nn)  # intentionally shadows name from outer scope
     return X.apply(_predict, axis="columns")
