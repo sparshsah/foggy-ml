@@ -1,6 +1,6 @@
 """
 Arbitrary-depth, arbitrary-width feedforward artificial neural network.
-Step-by-step Python implementation of simple deep learning for multinomial classification.
+Easy-to-read Python implementation of deep learning for multinomial classification.
 Source code in `fann.py`, demo in `fann.ipynb`.
 
 Style note
