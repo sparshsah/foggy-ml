@@ -136,7 +136,7 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
 
     output
     ------
-    pd.Series, the last layer's output.
+    pd.Series, the final layer's output.
     """
     layers = nn.index.levels[0]
     curr_layer = layers[0]
