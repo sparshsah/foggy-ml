@@ -41,8 +41,9 @@ a NN model is essentially identified by its forward-propagation weights.
 We store the model as a pd.DataFrame with MultiIndex. Each "super-row" (axis=0, level=0) represents a layer.
 Each row (axis=0, level=1) represents the weights feeding into a single neuron on that layer.
 (E.g. the first row represents the weights feeding from the input layer into
-the first neuron on the first hidden layer.) The first column (indexed as -1 for compatibility reasons)
-is always reserved for the bias term.
+the first hidden layer's first neuron; the second row---if applicable---could represent
+the weights feeding from the input layer into the first hidden layer's second neuron.)
+The first column (indexed as -1 for compatibility reasons) is always reserved for the bias term.
 
 Because different layers can have different widths, some rows may not be completely filled across.
 But obviously, for neurons on the same layer, the number of neurons on the previous layer is also the same.
