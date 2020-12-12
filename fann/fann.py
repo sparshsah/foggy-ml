@@ -50,6 +50,7 @@ But obviously, for neurons on the same layer, the number of neurons on the previ
 Hence, any two rows on the same "super-row" (i.e. sharing a key on axis=0), will be filled to the same width.
 """
 
+NNLayer = pd.DataFrame
 NN = pd.DataFrame  # w/ MultiIndex[layers, neurons]
 
 
