@@ -3,8 +3,11 @@ Arbitrary-depth, arbitrary-width feedforward artificial neural network.
 Easy-to-read Python implementation of deep learning for multinomial classification.
 Source code in `fann.py`, unit tests in `test_fann.py`, demo in `demo_fann.ipynb`.
 
-Style note
-----------
+Style notes
+-----------
+Many readers will see this code and instinctively want to refactor
+from functional to OOP. Resist this urge.
+
 We permit ourselves our personal predilection for underscores,
 to the point of controversy and perhaps even overuse.
     For example, if we have a 2D array `arr`,
@@ -36,7 +39,7 @@ from scipy.special import expit, softmax
 
 """
 Fixing the neuron activation---in our case, logistic---and output squashing---in our case, softmax---function,
-a NN model is essentially identified by its forward-propagation weights.
+a NN model is essentially identified by its forward-propagation AKA forward-pass AKA feed-forward weights.
 
 We store the model as a pd.DataFrame with MultiIndex. Each "super-row" (axis=0, level=0) represents a layer.
 Each row (axis=0, level=1) represents the weights feeding into a single neuron on that layer.
