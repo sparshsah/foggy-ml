@@ -55,13 +55,13 @@ NNLayer = pd.DataFrame
 NN = pd.DataFrame  # w/ MultiIndex[layers, neurons]
 
 
-def assert_isinstance_nnlayer(possible_nnlayer) -> type(None):
+def assert_isinstance_nnlayer(possible_nnlayer: object) -> type(None):
     assert isinstance(possible_nnlayer, NNLayer), type(possible_nnlayer)
     assert not isinstance(possible_nnlayer.index, pd.MultiIndex), type(possible_nnlayer.index)
     assert not isinstance(possible_nnlayer.columns, pd.MultiIndex), type(possible_nnlayer.columns)
 
 
-def assert_isinstance_nn(possible_nn) -> type(None):
+def assert_isinstance_nn(possible_nn: object) -> type(None):
     assert isinstance(possible_nn, NN), type(possible_nn)
     assert isinstance(possible_nn.index, pd.MultiIndex), type(possible_nn.index)
     assert not isinstance(possible_nn.columns, pd.MultiIndex), type(possible_nn.columns)
