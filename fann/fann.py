@@ -100,10 +100,15 @@ def ___fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=act
     assert isinstance(w_neuron, pd.Series), type(w_neuron)
     bias = w_neuron[-1]
     assert pd.notnull(bias), "Weights {w} missing bias!".format(w=w_neuron)
+    assert isinstance(bias, float), type(bias)
     w_neuron = w_neuron.reindex(index=x.index)
     assert w_neuron.notnull().all(), "Weights \n{w}\n are not completely filled!".format(w=w_neuron)
 
-    return fn(bias + x.dot(w_neuron))
+    a_in = x.dot(w_neuron)
+    assert isinstance(a_in, float), type(a_in)
+    a_out = fn(bias + a_in)
+    assert isinstance(a_out, float), type(a_out)
+    return a_out
 
 
 def __fprop(x: pd.Series, w_layer: pd.DataFrame) -> pd.Series:
