@@ -128,7 +128,7 @@ ReLU (not implemented) is cool too, and has another cool connection, this time t
 
 activate: Callable[[float], float] = expit
 
-squash: Callable[[pd.Series], pd.Series] = softmax  # function[pd.Series[float] -> pd.Series[float]]
+squash: Callable[[pd.Series], pd.Series] = softmax  # function[[pd.Series[float]] -> pd.Series[float]]
 
 
 ########################################################################################################################
