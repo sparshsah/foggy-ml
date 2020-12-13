@@ -111,7 +111,7 @@ def ___fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=act
     return a_out
 
 
-def __fprop(x: pd.Series, w_layer: pd.DataFrame) -> pd.Series:
+def __fprop(x: pd.Series, w_layer: NNLayer) -> pd.Series:
     """
     Forward-propagate the previous layer's output with the current layer's weights and activation function.
 
@@ -120,7 +120,7 @@ def __fprop(x: pd.Series, w_layer: pd.DataFrame) -> pd.Series:
     x: pd.Series, the previous layer's output (possibly a single input data point,
         which can be seen as the first layer's "output").
 
-    w_layer: pd.DataFrame, the current layer's weights where each row corresponds to a neuron.
+    w_layer: NNLayer, the current layer's weights where each row corresponds to a neuron.
 
     output
     ------
