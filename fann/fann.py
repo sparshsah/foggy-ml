@@ -51,7 +51,20 @@ Hence, any two rows on the same "super-row" (i.e. sharing a key on axis=0), will
 """
 
 NNLayer = pd.DataFrame
+
 NN = pd.DataFrame  # w/ MultiIndex[layers, neurons]
+
+
+def assert_isinstance_nnlayer(possible_nnlayer):
+    assert isinstance(possible_nnlayer, NNLayer), type(possible_nnlayer)
+    assert not isinstance(possible_nnlayer.index, pd.MultiIndex), type(possible_nnlayer.index)
+    assert not isinstance(possible_nnlayer.columns, pd.MultiIndex), type(possible_nnlayer.columns)
+
+
+def assert_isinstance_nn(possible_nn):
+    assert isinstance(possible_nn, NN), type(possible_nn)
+    assert isinstance(possible_nn.index, pd.MultiIndex), type(possible_nn.index)
+    assert not isinstance(possible_nn.columns, pd.MultiIndex), type(possible_nn.columns)
 
 
 ########################################################################################################################
@@ -126,8 +139,7 @@ def __fprop(x: pd.Series, w_layer: NNLayer) -> pd.Series:
     ------
     pd.Series, the current layer's output.
     """
-    assert isinstance(w_layer, NNLayer), type(w_layer)
-    assert not isinstance(w_layer.index, pd.MultiIndex), type(w_layer.index)
+    assert_isinstance_nnlayer(w_layer)
     return w_layer.apply(lambda w_neuron: ___fprop(x=x, w_neuron=w_neuron), axis="columns")
 
 
@@ -152,8 +164,7 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     # we want to "squeeze" the MultiIndex i.e. we want indices to be
     # not `[(curr_layer, 0), (curr_layer, 1), (curr_layer, 2), ..]` but rather `[0, 1, 2, ..]`
     w_layer = nn.loc[curr_layer]
-    assert isinstance(w_layer, NNLayer), type(w_layer)
-    assert not isinstance(w_layer.index, pd.MultiIndex), type(w_layer.index)
+    assert_isinstance_nnlayer(w_layer)
     x = __fprop(x=x, w_layer=w_layer)
     # recurse
     next_layers = layers[1:]
