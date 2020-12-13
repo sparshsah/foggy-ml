@@ -71,6 +71,8 @@ def assert_isinstance_nn(possible_nn: object) -> type(None):
 
 def check_data_point(x: object) -> type(None):
     assert isinstance(x, pd.Series), type(x)
+    if isinstance(x.index, pd.MultiIndex):
+        raise ValueError(x.index)
     if BIAS_INDEX in x.index:
         raise ValueError("{i} is reserved!".format(i=BIAS_INDEX))
 
