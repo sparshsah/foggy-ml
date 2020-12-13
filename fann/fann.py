@@ -145,9 +145,16 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     ------
     pd.Series, the final layer's output.
     """
+    # pd.MultiIndex "remembers" old, unused levels even after you drop all rows that used those levels
     layers = nn.index.remove_unused_levels().levels[0]
     curr_layer = layers[0]
-    x = __fprop(x=x, w_layer=nn.loc[pd.IndexSlice[curr_layer, :], :])
+    # don't use `w_layer = nn.loc[pd.IndexSlice[curr_layer, :], :]` because
+    # we want to "squeeze" the MultiIndex i.e. we want indices to be
+    # not `[(curr_layer, 0), (curr_layer, 1), (curr_layer, 2), ..]` but rather `[0, 1, 2, ..]`
+    w_layer = nn.loc[curr_layer]
+    assert isinstance(w_layer, NNLayer), type(w_layer)
+    assert not isinstance(w_layer.index, pd.MultiIndex), type(w_layer.index)
+    x = __fprop(x=x, w_layer=w_layer)
     # recurse
     next_layers = layers[1:]
     return _fprop(x=x, nn=nn.loc[pd.IndexSlice[next_layers, :], :]) if len(next_layers) > 0 else x
