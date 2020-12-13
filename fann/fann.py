@@ -162,7 +162,8 @@ def __fprop(x: pd.Series, nn_layer: NNLayer) -> pd.Series:
 
     output
     ------
-    pd.Series, the current layer's output.
+    pd.Series(index = nn_layer.index), the current layer's output, where each entry corresponds to
+        a neuron on the current layer.
     """
     check_data_point(x=x)
     assert_isinstance_nnlayer(nn_layer)
