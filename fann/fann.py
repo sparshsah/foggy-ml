@@ -126,7 +126,7 @@ def ___fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=act
     return a_out
 
 
-def __fprop(x: pd.Series, w_layer: NNLayer) -> pd.Series:
+def __fprop(x: pd.Series, nn_layer: NNLayer) -> pd.Series:
     """
     Forward-propagate the previous layer's output with the current layer's weights and activation function.
 
@@ -135,14 +135,14 @@ def __fprop(x: pd.Series, w_layer: NNLayer) -> pd.Series:
     x: pd.Series, the previous layer's output (possibly a single input data point,
         which can be seen as the first layer's "output").
 
-    w_layer: NNLayer, the current layer's weights where each row corresponds to a neuron.
+    nn_layer: NNLayer, the current layer's weights where each row corresponds to a neuron.
 
     output
     ------
     pd.Series, the current layer's output.
     """
-    assert_isinstance_nnlayer(w_layer)
-    return w_layer.apply(lambda w_neuron: ___fprop(x=x, w_neuron=w_neuron), axis="columns")
+    assert_isinstance_nnlayer(nn_layer)
+    return nn_layer.apply(lambda w_neuron: ___fprop(x=x, w_neuron=w_neuron), axis="columns")
 
 
 def _fprop(x: pd.Series, nn: NN) -> pd.Series:
@@ -164,19 +164,19 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     layers = nn.index.remove_unused_levels().levels[0]
 
     curr_layer = layers[0]
-    # don't use `w_layer = nn.loc[pd.IndexSlice[curr_layer, :], :]` because
+    # don't use `curr_layer = nn.loc[pd.IndexSlice[curr_layer, :], :]` because
     # we want to "squeeze" the MultiIndex i.e. we want indices to be
     # not `[(curr_layer, 0), (curr_layer, 1), (curr_layer, 2), ..]` but rather `[0, 1, 2, ..]`
-    w_layer = nn.loc[curr_layer]
-    assert_isinstance_nnlayer(w_layer)
-    x = __fprop(x=x, w_layer=w_layer)
+    curr_layer = nn.loc[curr_layer]
+    assert_isinstance_nnlayer(curr_layer)
+    x = __fprop(x=x, nn_layer=curr_layer)
 
     # recurse
     remainining_layers = layers[1:]
     if len(remainining_layers) > 0:
-        remainining_nn = nn.loc[pd.IndexSlice[remainining_layers, :], :]
-        assert_isinstance_nn(remainining_nn)
-        return _fprop(x=x, nn=remainining_nn)
+        remainining_layers = nn.loc[pd.IndexSlice[remainining_layers, :], :]
+        assert_isinstance_nn(remainining_layers)
+        return _fprop(x=x, nn=remainining_layers)
     else:
         return x
 
