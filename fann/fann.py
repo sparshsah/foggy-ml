@@ -59,6 +59,9 @@ def assert_isinstance_nnlayer(possible_nnlayer: object) -> type(None):
     assert isinstance(possible_nnlayer, NNLayer), type(possible_nnlayer)
     assert not isinstance(possible_nnlayer.index, pd.MultiIndex), type(possible_nnlayer.index)
     assert not isinstance(possible_nnlayer.columns, pd.MultiIndex), type(possible_nnlayer.columns)
+    if not np.alltrue(possible_nnlayer.dtypes == float):
+        raise TypeError("NN Layer \n{nn_layer}\n contains non-float dtype \n{dtypes}!".format(
+            nn_layer=possible_nnlayer, dtypes=possible_nnlayer.dtypes))
 
 
 def assert_isinstance_nn(possible_nn: object) -> type(None):
@@ -67,14 +70,19 @@ def assert_isinstance_nn(possible_nn: object) -> type(None):
     # levels[0] indexes the layers, levels[1] indexes the neurons on each layer
     assert possible_nn.index.nlevels == 2, possible_nn.index.nlevels
     assert not isinstance(possible_nn.columns, pd.MultiIndex), type(possible_nn.columns)
+    if not np.alltrue(possible_nn.dtypes == float):
+        raise TypeError("NN \n{nn}\n contains non-float dtype \n{dtypes}!".format(
+            nn=possible_nn, dtypes=possible_nn.dtypes))
 
 
 def check_data_point(x: object) -> type(None):
     assert isinstance(x, pd.Series), type(x)
     if isinstance(x.index, pd.MultiIndex):
-        raise ValueError(x)
+        raise TypeError(x)
     if BIAS_INDEX in x.index:
         raise ValueError("Data point \n{x}\n contains reserved index {i}!".format(x=x, i=BIAS_INDEX))
+    if not x.dtype == float:
+        raise TypeError("Data point \n{x}\n is non-float dtype {dtype}!".format(x=x, dtype=x.dtype))
 
 
 ########################################################################################################################
