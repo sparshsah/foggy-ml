@@ -50,9 +50,9 @@ But obviously, for neurons on the same layer, the number of neurons on the previ
 Hence, any two rows on the same "super-row" (i.e. sharing a key on axis=0), will be filled to the same width.
 """
 
-NNLayer = pd.DataFrame
-
-NN = pd.DataFrame  # w/ MultiIndex[layers, neurons]
+BIAS_INDEX: int = -1
+NNLayer: type = pd.DataFrame
+NN: type = pd.DataFrame  # w/ MultiIndex[layers, neurons]
 
 
 def assert_isinstance_nnlayer(possible_nnlayer: object) -> type(None):
@@ -64,6 +64,8 @@ def assert_isinstance_nnlayer(possible_nnlayer: object) -> type(None):
 def assert_isinstance_nn(possible_nn: object) -> type(None):
     assert isinstance(possible_nn, NN), type(possible_nn)
     assert isinstance(possible_nn.index, pd.MultiIndex), type(possible_nn.index)
+    # levels[0] indexes the layers, levels[1] indexes the neurons on each layer
+    assert possible_nn.index.nlevels == 2, possible_nn.index.nlevels
     assert not isinstance(possible_nn.columns, pd.MultiIndex), type(possible_nn.columns)
 
 
@@ -112,7 +114,7 @@ def ___fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=act
     assert isinstance(x, pd.Series), type(x)
     assert isinstance(w_neuron, pd.Series), type(w_neuron)
 
-    bias = w_neuron[-1]
+    bias = w_neuron[BIAS_INDEX]
     assert pd.notnull(bias), "Weights {w} missing bias!".format(w=w_neuron)
     assert isinstance(bias, float), type(bias)
 
@@ -159,8 +161,9 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     ------
     pd.Series, the final layer's output.
     """
-    # pd.MultiIndex "remembers" old, unused levels even after you drop all rows that used those levels
     # this is basically a list of layers in this NN e.g. [0, 1, 2, ..]
+    # levels[0] indexes the layers, levels[1] indexes the neurons on each layer
+    # pd.MultiIndex "remembers" old, unused levels even after you drop all rows that used those levels
     layers = nn.index.remove_unused_levels().levels[0]
 
     curr_layer = layers[0]
