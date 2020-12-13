@@ -21,13 +21,13 @@ as a "private attribute" or "subcomponent", you might even call this
 at-first-glance-unidiomatic nomenclature truly Pythonic!
 """
 
+# syntax utils
+from typing import Callable
 # data structures
 import pandas as pd
 # calculations and algorithms
 import numpy as np
 from scipy.special import expit, softmax
-# syntax utils
-from typing import Callable
 
 
 ########################################################################################################################
