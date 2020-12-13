@@ -72,9 +72,9 @@ def assert_isinstance_nn(possible_nn: object) -> type(None):
 def check_data_point(x: object) -> type(None):
     assert isinstance(x, pd.Series), type(x)
     if isinstance(x.index, pd.MultiIndex):
-        raise ValueError(x.index)
+        raise ValueError(x)
     if BIAS_INDEX in x.index:
-        raise ValueError("{i} is reserved!".format(i=BIAS_INDEX))
+        raise ValueError("Data point \n{x}\n contains reserved index {i}!".format(x=x, i=BIAS_INDEX))
 
 
 ########################################################################################################################
@@ -108,10 +108,11 @@ def ___fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=act
 
     input
     -----
-    x: pd.Series, the previous layer's output (possibly a single input data point,
-        which can be seen as the first layer's "output").
+    x: pd.Series, the previous layer's output (possibly a raw data point,
+        which can be seen as the input layer's "output").
 
-    w_neuron: pd.Series, the current neuron's weights.
+    w_neuron: pd.Series, the current neuron's weights, where each entry corresponds to
+        (the bias or) a neuron on the previous layer.
 
     fn: function, the current neuron's activation function.
 
@@ -142,10 +143,12 @@ def __fprop(x: pd.Series, nn_layer: NNLayer) -> pd.Series:
 
     input
     -----
-    x: pd.Series, the previous layer's output (possibly a single input data point,
-        which can be seen as the first layer's "output").
+    x: pd.Series, the previous layer's output (possibly a raw data point,
+        which can be seen as the input layer's "output").
 
-    nn_layer: NNLayer, the current layer's weights where each row corresponds to a neuron.
+    nn_layer: NNLayer, the current layer's weights, where each row corresponds to
+        a neuron on the current layer and each column corresponds to
+        (the bias or) a neuron on the previous layer.
 
     output
     ------
@@ -162,7 +165,7 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
 
     input
     -----
-    x: pd.Series, a single input data point.
+    x: pd.Series, a single raw data point.
 
     nn: NN AKA pd.DataFrame w/ MultiIndex, the model.
 
@@ -202,7 +205,7 @@ def fprop(x: pd.Series, nn: NN) -> pd.Series:
 
     input
     -----
-    x: pd.Series, a single input data point.
+    x: pd.Series, a single raw data point.
 
     nn: NN AKA pd.DataFrame w/ MultiIndex, the model.
 
@@ -222,7 +225,7 @@ def fprop_(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
 
     input
     -----
-    x: pd.DataFrame, the input data points where each row is an observation.
+    x: pd.DataFrame, the raw data points where each row is an observation.
 
     nn: NN AKA pd.DataFrame w/ MultiIndex, the model.
 
@@ -243,7 +246,7 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
 
     input
     -----
-    X: pd.DataFrame, the input data points where each row is a single observation.
+    X: pd.DataFrame, the raw data points where each row is a single observation.
 
     nn: NN AKA pd.DataFrame w/ MultiIndex, the model.
 
