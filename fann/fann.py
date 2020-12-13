@@ -171,6 +171,7 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     pd.Series, the final layer's output.
     """
     check_data_point(x=x)
+    assert_isinstance_nn(nn)
 
     # this is basically a list of layers in this NN e.g. [0, 1, 2, ..]
     # levels[0] indexes the layers, levels[1] indexes the neurons on each layer
@@ -210,6 +211,7 @@ def fprop(x: pd.Series, nn: NN) -> pd.Series:
     pd.Series, the probability the model assigns to each category label.
     """
     check_data_point(x=x)
+    assert_isinstance_nn(nn)
     return squash(_fprop(x=x, nn=nn))
 
 
@@ -231,6 +233,7 @@ def fprop_(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
         Each row is a well-formed probability mass function AKA discrete probability distribution.
     """
     X.apply(check_data_point, axis="columns")
+    assert_isinstance_nn(nn)
     return X.apply(lambda x: fprop(x=x, nn=nn), axis="columns")
 
 
@@ -250,6 +253,7 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
         a single label per point identifiying which category we predict for that point.
     """
     X.apply(check_data_point, axis="columns")
+    assert_isinstance_nn(nn)
     p_hat = fprop_(X=X, nn=nn)
     return p_hat.apply(lambda _p_hat: _p_hat.idxmax(), axis="columns")  # argmax of each row
 
