@@ -138,7 +138,7 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     ------
     pd.Series, the final layer's output.
     """
-    layers = nn.index.levels[0]
+    layers = nn.index.remove_unused_levels().levels[0]
     curr_layer = layers[0]
     x = __fprop(x=x, w_layer=nn.loc[pd.IndexSlice[curr_layer, :], :])
     # recurse
