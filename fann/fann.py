@@ -126,6 +126,8 @@ def __fprop(x: pd.Series, w_layer: NNLayer) -> pd.Series:
     ------
     pd.Series, the current layer's output.
     """
+    assert isinstance(w_layer, NNLayer), type(w_layer)
+    assert not isinstance(w_layer.index, pd.MultiIndex), type(w_layer.index)
     return w_layer.apply(lambda w_neuron: ___fprop(x=x, w_neuron=w_neuron), axis="columns")
 
 
