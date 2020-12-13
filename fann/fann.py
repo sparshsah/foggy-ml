@@ -117,7 +117,8 @@ def ___fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=act
     input
     -----
     x: pd.Series, the previous layer's output (possibly a raw data point,
-        which can be seen as the input layer's "output").
+        which can be seen as the input layer's "output"), where each entry correponds to
+        a neuron on the previous layer.
 
     w_neuron: pd.Series, the current neuron's weights, where each entry corresponds to
         (the bias or) a neuron on the previous layer.
@@ -152,7 +153,8 @@ def __fprop(x: pd.Series, nn_layer: NNLayer) -> pd.Series:
     input
     -----
     x: pd.Series, the previous layer's output (possibly a raw data point,
-        which can be seen as the input layer's "output").
+        which can be seen as the input layer's "output"), where each entry correponds to
+        a neuron on the previous layer.
 
     nn_layer: NNLayer, the current layer's weights, where each row corresponds to
         a neuron on the current layer and each column corresponds to
