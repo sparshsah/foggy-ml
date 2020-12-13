@@ -8,7 +8,22 @@ Style notes
 1. Many readers will see this code and instinctively want to refactor
 from functional to OOP. Resist this urge.
 
-2. We permit ourselves our personal predilection for underscores,
+2. Obviously, we've added a lot of data checking and assertions,
+which tend to be slow, especially relative to the speed of
+some of the vectorized functions that perform the actual
+substance of the calculations. However, they make the code
+easier to reason about---in both writing and reading it---and
+anyway it's not like this would be PyTorch-rivalling code
+~if only~ we removed the assertions.. as far as we know,
+we're not giving up any Turing Awards by leaving them in.
+
+3. We make liberal use of `del` statements. This is not because
+we're C programmers who never learned how to use `free()` calls properly,
+or because we don't trust Python's garbage collector,
+but rather to enforce scope for certain variables,
+decluttering the namespace and preventing accidental misuse.
+
+4. We permit ourselves our personal predilection for underscores,
 to the point of controversy and perhaps even overuse.
     For example, if we have a 2D array `arr`,
 we will iterate over each row within that array as `_arr`.
@@ -23,14 +38,12 @@ and its position in the hierarchy is immediately obvious.
 as a "private attribute" or "subcomponent", you might even call this
 at-first-glance-unidiomatic nomenclature truly Pythonic!
 
-3. Obviously, we've added a lot of data checking and assertions,
-which tend to be slow, especially relative to the speed of
-some of the vectorized functions that perform the actual
-substance of the calculations. However, they make the code
-easier to reason about---in both writing and reading it---and
-anyway it's not like this would be PyTorch-rivalling code
-if we removed the assertions.. as far as we know,
-we're not giving up any Turing Awards by leaving them in.
+5. We stick to the first-person plural in comments ("we", "us", "our").
+This isn't the "Royal We", it just helps
+make reading the code feel like a journey,
+a shared experience between author and reader,
+and also has the knock-on benefit of making any mistakes you find
+in my code seem like at least partially your fault.
 """
 
 # syntax utils
