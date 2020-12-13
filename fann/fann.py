@@ -22,7 +22,7 @@ at-first-glance-unidiomatic nomenclature truly Pythonic!
 """
 
 # syntax utils
-from typing import Callable
+from typing import Callable, Union
 # data structures
 import pandas as pd
 # calculations and algorithms
@@ -43,14 +43,14 @@ Each row (axis=0, level=1) represents the weights feeding into a single neuron o
 (E.g. the first row represents the weights feeding from the input layer into
 the first hidden layer's first neuron; the second row---if applicable---could represent
 the weights feeding from the input layer into the first hidden layer's second neuron.)
-The first column (indexed as -1 for compatibility reasons) is always reserved for the bias term.
+The first column (indexed as "_bias_" for compatibility reasons) is always reserved for the bias term.
 
 Because different layers can have different widths, some rows may not be completely filled across.
 But obviously, for neurons on the same layer, the number of neurons on the previous layer is also the same.
 Hence, any two rows on the same "super-row" (i.e. sharing a key on axis=0), will be filled to the same width.
 """
 
-BIAS_INDEX: int = -1
+BIAS_INDEX: Union[int, str] = "_bias_"
 NNLayer: type = pd.DataFrame
 NN: type = pd.DataFrame  # w/ MultiIndex[layers, neurons]
 
@@ -67,6 +67,12 @@ def assert_isinstance_nn(possible_nn: object) -> type(None):
     # levels[0] indexes the layers, levels[1] indexes the neurons on each layer
     assert possible_nn.index.nlevels == 2, possible_nn.index.nlevels
     assert not isinstance(possible_nn.columns, pd.MultiIndex), type(possible_nn.columns)
+
+
+def check_data_point(x: object) -> type(None):
+    assert isinstance(x, pd.Series), type(x)
+    if BIAS_INDEX in x.index:
+        raise ValueError("{i} is reserved!".format(i=BIAS_INDEX))
 
 
 ########################################################################################################################
@@ -111,7 +117,7 @@ def ___fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=act
     ------
     float: the current neuron's output.
     """
-    assert isinstance(x, pd.Series), type(x)
+    check_data_point(x=x)
     assert isinstance(w_neuron, pd.Series), type(w_neuron)
 
     bias = w_neuron[BIAS_INDEX]
@@ -143,6 +149,7 @@ def __fprop(x: pd.Series, nn_layer: NNLayer) -> pd.Series:
     ------
     pd.Series, the current layer's output.
     """
+    check_data_point(x=x)
     assert_isinstance_nnlayer(nn_layer)
     return nn_layer.apply(lambda w_neuron: ___fprop(x=x, w_neuron=w_neuron), axis="columns")
 
@@ -161,6 +168,8 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     ------
     pd.Series, the final layer's output.
     """
+    check_data_point(x=x)
+
     # this is basically a list of layers in this NN e.g. [0, 1, 2, ..]
     # levels[0] indexes the layers, levels[1] indexes the neurons on each layer
     # pd.MultiIndex "remembers" old, unused levels even after you drop all rows that used those levels
@@ -198,6 +207,7 @@ def fprop(x: pd.Series, nn: NN) -> pd.Series:
     ------
     pd.Series, the probability the model assigns to each category label.
     """
+    check_data_point(x=x)
     return squash(_fprop(x=x, nn=nn))
 
 
@@ -218,6 +228,7 @@ def fprop_(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
         how much probability mass we assigned to each category label for each point.
         Each row is a well-formed probability mass function AKA discrete probability distribution.
     """
+    X.apply(check_data_point, axis="columns")
     return X.apply(lambda x: fprop(x=x, nn=nn), axis="columns")
 
 
@@ -236,6 +247,7 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
     pd.Series of int (or other scalar value, or whatever the user has used),
         a single label per point identifiying which category we predict for that point.
     """
+    X.apply(check_data_point, axis="columns")
     p_hat = fprop_(X=X, nn=nn)
     return p_hat.apply(lambda _p_hat: _p_hat.idxmax(), axis="columns")  # argmax of each row
 
