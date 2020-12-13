@@ -101,7 +101,7 @@ def ___fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=act
     bias = w_neuron[-1]
     assert pd.notnull(bias), "Weights {w} missing bias!".format(w=w_neuron)
     w_neuron = w_neuron.reindex(index=x.index)
-    assert w_neuron.notnull().all(), "Weights {w} are not completely filled!".format(w=w_neuron)
+    assert w_neuron.notnull().all(), "Weights \n{w}\n are not completely filled!".format(w=w_neuron)
 
     return fn(bias + x.dot(w_neuron))
 
