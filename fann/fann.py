@@ -5,10 +5,10 @@ Source code in `fann.py`, unit tests in `test_fann.py`, demo in `demo_fann.ipynb
 
 Style notes
 -----------
-Many readers will see this code and instinctively want to refactor
+1. Many readers will see this code and instinctively want to refactor
 from functional to OOP. Resist this urge.
 
-We permit ourselves our personal predilection for underscores,
+2. We permit ourselves our personal predilection for underscores,
 to the point of controversy and perhaps even overuse.
     For example, if we have a 2D array `arr`,
 we will iterate over each row within that array as `_arr`.
@@ -22,6 +22,15 @@ and its position in the hierarchy is immediately obvious.
     In fact, if you think of a row within an array (or a helper to a function)
 as a "private attribute" or "subcomponent", you might even call this
 at-first-glance-unidiomatic nomenclature truly Pythonic!
+
+3. Obviously, we've added a lot of data checking and assertions,
+which tend to be slow, especially relative to the speed of
+some of the vectorized functions that perform the actual
+substance of the calculations. However, they make the code
+easier to reason about---in both writing and reading it---and
+anyway it's not like this would be PyTorch-rivalling code
+if we removed the assertions.. as far as we know,
+we're not giving up any Turing Awards by leaving them in.
 """
 
 # syntax utils
