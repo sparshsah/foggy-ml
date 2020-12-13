@@ -126,9 +126,9 @@ of Real numbers into a probability mass distribution. (And tanh is simply a scal
 ReLU (not implemented) is cool too, and has another cool connection, this time to the hinge loss function.
 """
 
-activate = expit
+activate: Callable[float, float] = expit
 
-squash = softmax
+squash: Callable[pd.Series, pd.Series] = softmax  # function[pd.Series[float] -> pd.Series[float]]
 
 
 ########################################################################################################################
