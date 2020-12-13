@@ -312,6 +312,13 @@ def get_loss(y: pd.Series, p_hat: pd.DataFrame) -> float:
 # TRAINING AKA BACK-PROPAGATION ########################################################################################
 ########################################################################################################################
 
+"""
+some tutorials for basic 2-layer perceptrons:
+https://towardsdatascience.com/how-to-build-your-own-neural-network-from-scratch-in-python-68998a08e4f6
+https://towardsdatascience.com/step-by-step-guide-to-building-your-own-neural-network-from-scratch-df64b1c5ab6e
+https://towardsdatascience.com/how-to-build-a-deep-neural-network-without-a-framework-5d46067754d5
+"""
+
 def bprop():
     # This function learns parameters for the neural network and returns the model.
     # - nn_hdim: Number of nodes in the hidden layer
