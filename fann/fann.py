@@ -95,7 +95,7 @@ def check_data_point(x: object) -> type(None):
         raise TypeError("Data point \n{x}\n is non-float dtype {dtype}!".format(x=x, dtype=x.dtype))
 
 
-def assert_isinstance_layer(layer: object) -> type(None):
+def check_layer(layer: object) -> type(None):
     assert isinstance(layer, Layer), type(layer)
     assert not isinstance(layer.index, pd.MultiIndex), type(layer.index)
     assert not isinstance(layer.columns, pd.MultiIndex), type(layer.columns)
@@ -103,7 +103,7 @@ def assert_isinstance_layer(layer: object) -> type(None):
         raise TypeError("\n{layer}\n contains non-float \n{dtypes}\n!".format(layer=layer, dtypes=layer.dtypes))
 
 
-def assert_isinstance_nn(nn: object) -> type(None):
+def check_nn(nn: object) -> type(None):
     assert isinstance(nn, NN), type(nn)
     assert isinstance(nn.index, pd.MultiIndex), type(nn.index)
     # levels[0] indexes the layers, levels[1] indexes the neurons on each layer
@@ -194,7 +194,7 @@ def __fprop(x: pd.Series, nn_layer: Layer) -> pd.Series:
         a neuron on the current layer.
     """
     check_data_point(x=x)
-    assert_isinstance_layer(nn_layer)
+    check_layer(nn_layer)
     return nn_layer.apply(lambda w_neuron: ___fprop(x=x, w_neuron=w_neuron), axis="columns")
 
 
@@ -213,7 +213,7 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     pd.Series, the final layer's output.
     """
     check_data_point(x=x)
-    assert_isinstance_nn(nn)
+    check_nn(nn)
 
     # levels[0] indexes the layers, levels[1] indexes the neurons on each layer, so
     # this is basically a list of (names of) layers in this NN e.g. [0, 1, 2, ..].
@@ -225,14 +225,14 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     # not `[(curr_layer, 0), (curr_layer, 1), (curr_layer, 2), ..]` but rather `[0, 1, 2, ..]`,
     # so don't use `curr_layer = nn.loc[pd.IndexSlice[curr_layer, :], :]`.
     curr_layer = nn.loc[curr_layer]
-    assert_isinstance_layer(curr_layer)
+    check_layer(curr_layer)
     x = __fprop(x=x, nn_layer=curr_layer)
 
     # recurse
     remainining_layers = layers[1:]
     if len(remainining_layers) > 0:
         remainining_layers = nn.loc[pd.IndexSlice[remainining_layers, :], :]
-        assert_isinstance_nn(remainining_layers)
+        check_nn(remainining_layers)
         return _fprop(x=x, nn=remainining_layers)
     else:
         return x
@@ -253,7 +253,7 @@ def fprop(x: pd.Series, nn: NN) -> pd.Series:
     pd.Series, the probability the model assigns to each category label.
     """
     check_data_point(x=x)
-    assert_isinstance_nn(nn)
+    check_nn(nn)
     return squash(_fprop(x=x, nn=nn))
 
 
@@ -275,7 +275,7 @@ def fprop_(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
         Each row is a well-formed probability mass function AKA discrete probability distribution.
     """
     X.apply(check_data_point, axis="columns")
-    assert_isinstance_nn(nn)
+    check_nn(nn)
     return X.apply(lambda x: fprop(x=x, nn=nn), axis="columns")
 
 
@@ -295,7 +295,7 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
         a single label per point identifiying which category we predict for that point.
     """
     X.apply(check_data_point, axis="columns")
-    assert_isinstance_nn(nn)
+    check_nn(nn)
     p_hat = fprop_(X=X, nn=nn)
     return p_hat.apply(lambda _p_hat: _p_hat.idxmax(), axis="columns")  # argmax of each row
 
