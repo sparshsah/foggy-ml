@@ -8,14 +8,15 @@ Style notes
 1. Many readers will see this code and instinctively want to refactor
 from functional to OOP. Resist this urge.
 
-2. Obviously, we've added a lot of data checking and assertions,
+2. Obviously, we've added a lot of sometimes-redundant
+data checking and assertions,
 which tend to be slow, especially relative to the speed of
 some of the vectorized functions that perform the actual
 substance of the calculations. However, they make the code
 easier to reason about---in both writing and reading it---and
-anyway it's not like this would be PyTorch-rivalling code
-~if only~ we removed the assertions.. as far as we know,
-we're not giving up any Turing Awards by leaving them in.
+anyway it's not like it would be blazing fast
+~if only~ we removed the assertions.. we're going for easy-to-read,
+not a PyTorch rival.
 
 3. We make liberal use of `del` statements. This is not because
 we're C programmers who never learned how to use `free()` calls properly,
