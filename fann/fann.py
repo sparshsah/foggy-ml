@@ -77,7 +77,7 @@ will be filled to the same width.
 """
 
 # types
-NNLayer: type = pd.DataFrame
+Layer: type = pd.DataFrame
 NN: type = pd.DataFrame  # w/ MultiIndex[layers, neurons]
 
 # magic numbers
@@ -95,24 +95,22 @@ def check_data_point(x: object) -> type(None):
         raise TypeError("Data point \n{x}\n is non-float dtype {dtype}!".format(x=x, dtype=x.dtype))
 
 
-def assert_isinstance_nnlayer(possible_nnlayer: object) -> type(None):
-    assert isinstance(possible_nnlayer, NNLayer), type(possible_nnlayer)
-    assert not isinstance(possible_nnlayer.index, pd.MultiIndex), type(possible_nnlayer.index)
-    assert not isinstance(possible_nnlayer.columns, pd.MultiIndex), type(possible_nnlayer.columns)
-    if not np.alltrue(possible_nnlayer.dtypes == float):
-        raise TypeError("NN Layer \n{nn_layer}\n contains non-float dtype \n{dtypes}!".format(
-            nn_layer=possible_nnlayer, dtypes=possible_nnlayer.dtypes))
+def assert_isinstance_layer(layer: object) -> type(None):
+    assert isinstance(layer, Layer), type(layer)
+    assert not isinstance(layer.index, pd.MultiIndex), type(layer.index)
+    assert not isinstance(layer.columns, pd.MultiIndex), type(layer.columns)
+    if not np.alltrue(layer.dtypes == float):
+        raise TypeError("\n{layer}\n contains non-float \n{dtypes}\n!".format(layer=layer, dtypes=layer.dtypes))
 
 
-def assert_isinstance_nn(possible_nn: object) -> type(None):
-    assert isinstance(possible_nn, NN), type(possible_nn)
-    assert isinstance(possible_nn.index, pd.MultiIndex), type(possible_nn.index)
+def assert_isinstance_nn(nn: object) -> type(None):
+    assert isinstance(nn, NN), type(nn)
+    assert isinstance(nn.index, pd.MultiIndex), type(nn.index)
     # levels[0] indexes the layers, levels[1] indexes the neurons on each layer
-    assert possible_nn.index.nlevels == 2, possible_nn.index.nlevels
-    assert not isinstance(possible_nn.columns, pd.MultiIndex), type(possible_nn.columns)
-    if not np.alltrue(possible_nn.dtypes == float):
-        raise TypeError("NN \n{nn}\n contains non-float dtype \n{dtypes}!".format(
-            nn=possible_nn, dtypes=possible_nn.dtypes))
+    assert nn.index.nlevels == 2, nn.index.nlevels
+    assert not isinstance(nn.columns, pd.MultiIndex), type(nn.columns)
+    if not np.alltrue(nn.dtypes == float):
+        raise TypeError("NN \n{nn}\n contains non-float dtype \n{dtypes}\n!".format(nn=nn, dtypes=nn.dtypes))
 
 
 ########################################################################################################################
@@ -176,7 +174,7 @@ def ___fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=act
     return a_out
 
 
-def __fprop(x: pd.Series, nn_layer: NNLayer) -> pd.Series:
+def __fprop(x: pd.Series, nn_layer: Layer) -> pd.Series:
     """
     Forward-propagate the previous layer's output with the current layer's weights and activation function.
 
@@ -186,7 +184,7 @@ def __fprop(x: pd.Series, nn_layer: NNLayer) -> pd.Series:
         which can be seen as the input layer's "output"), where each entry correponds to
         a neuron on the previous layer.
 
-    nn_layer: NNLayer, the current layer's weights, where each row corresponds to
+    nn_layer: Layer, the current layer's weights, where each row corresponds to
         a neuron on the current layer and each column corresponds to
         (the bias or) a neuron on the previous layer.
 
@@ -196,7 +194,7 @@ def __fprop(x: pd.Series, nn_layer: NNLayer) -> pd.Series:
         a neuron on the current layer.
     """
     check_data_point(x=x)
-    assert_isinstance_nnlayer(nn_layer)
+    assert_isinstance_layer(nn_layer)
     return nn_layer.apply(lambda w_neuron: ___fprop(x=x, w_neuron=w_neuron), axis="columns")
 
 
@@ -227,7 +225,7 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     # not `[(curr_layer, 0), (curr_layer, 1), (curr_layer, 2), ..]` but rather `[0, 1, 2, ..]`,
     # so don't use `curr_layer = nn.loc[pd.IndexSlice[curr_layer, :], :]`.
     curr_layer = nn.loc[curr_layer]
-    assert_isinstance_nnlayer(curr_layer)
+    assert_isinstance_layer(curr_layer)
     x = __fprop(x=x, nn_layer=curr_layer)
 
     # recurse
