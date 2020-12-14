@@ -88,7 +88,7 @@ BIAS_INDEX: Union[int, str] = "_bias_"
 
 
 # data structure checkers
-def check_type(obj: object, type_: type, check_dtype: bool=False, check_not: bool=False) -> type(None):
+def _check_type(obj: object, type_: type, check_dtype: bool=False, check_not: bool=False) -> type(None):
     if check_dtype:
         try:
             # e.g. pd.DataFrame
@@ -114,54 +114,59 @@ def check_type(obj: object, type_: type, check_dtype: bool=False, check_not: boo
             obj=obj, check_dtype=check_dtype, type_obj=type_obj, check_not=check_not, type_=type_))
 
 
-def check_dtype(obj: object, type_: type, check_not: bool=False) -> type(None):
-    return check_type(obj=obj, type_=type_, check_dtype=True, check_not=check_not)
+def _check_dtype(obj: object, type_: type, check_not: bool=False) -> type(None):
+    return _check_type(obj=obj, type_=type_, check_dtype=True, check_not=check_not)
 
 
-def check_not_type(obj: object, type_: type, check_dtype: bool=False) -> type(None):
-    return check_type(obj=obj, type_=type_, check_dtype=check_dtype, check_not=True)
+def _check_not_type(obj: object, type_: type, check_dtype: bool=False) -> type(None):
+    return _check_type(obj=obj, type_=type_, check_dtype=check_dtype, check_not=True)
 
 
-def check_data_point(x: object) -> type(None):
-    check_type(x, pd.Series)
-    check_not_type(x.index, pd.MultiIndex)
+def check_data_point(x: object) -> pd.Series:
+    _check_type(x, pd.Series)
+    _check_not_type(x.index, pd.MultiIndex)
     if BIAS_INDEX in x.index:
         raise ValueError("Data point \n{x}\n contains reserved index {i}!".format(x=x, i=BIAS_INDEX))
-    check_dtype(x, float)
+    _check_dtype(x, float)
+    return x
 
 
-def check_neuron(neuron: object) -> type(None):
-    check_type(neuron, Neuron)
-    check_not_type(neuron.index, pd.MultiIndex)
+def check_neuron(neuron: object) -> Neuron:
+    _check_type(neuron, Neuron)
+    _check_not_type(neuron.index, pd.MultiIndex)
     if BIAS_INDEX not in neuron.index:
         raise ValueError("Neuron \n{neuron}\n missing bias index {i}!".format(neuron=neuron, i=BIAS_INDEX))
-    check_dtype(neuron, float)
+    _check_dtype(neuron, float)
+    return neuron
 
 
-def check_layer(layer: object) -> type(None):
-    check_type(layer, Layer)
-    check_not_type(layer.index, pd.MultiIndex)
-    check_not_type(layer.columns, pd.MultiIndex)
-    check_dtype(layer, float)
+def check_layer(layer: object) -> Layer:
+    _check_type(layer, Layer)
+    _check_not_type(layer.index, pd.MultiIndex)
+    _check_not_type(layer.columns, pd.MultiIndex)
+    _check_dtype(layer, float)
+    return layer
 
 
-def check_nn(nn: object) -> type(None):
-    check_type(nn, NN)
-    check_type(nn.index, pd.MultiIndex)
+def check_nn(nn: object) -> NN:
+    _check_type(nn, NN)
+    _check_type(nn.index, pd.MultiIndex)
     # levels[0] indexes the layers, levels[1] indexes the neurons on each layer
     if nn.index.nlevels != NN_INDEX_NLEVELS:
         raise ValueError("NN \n{nn}\n index nlevels = {nlevels} not {nlevels_}!".format(
             nn=nn, nlevels=nn.index.nlevels, nlevels_=NN_INDEX_NLEVELS))
-    check_not_type(nn.columns, pd.MultiIndex)
-    check_dtype(nn, float)
+    _check_not_type(nn.columns, pd.MultiIndex)
+    _check_dtype(nn, float)
+    return nn
 
 
-def check_pmf(pmf: object) -> type(None):
-    check_dtype(pmf, float)
+def check_pmf(pmf: object) -> object:
+    _check_dtype(pmf, float)
     if not np.alltrue(pmf >= -EPSILON):
         raise ValueError("{pmf} not non-negative!".format(pmf=pmf))
     if not np.isclose(sum(pmf), 1.00):
         raise ValueError("{pmf} sums to {sum_} not 1.00!".format(pmf=pmf, sum_=sum(pmf)))
+    return pmf
 
 
 ########################################################################################################################
@@ -208,8 +213,8 @@ def ___fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activate
     ------
     float: the current neuron's output.
     """
-    check_data_point(x=x)
-    check_neuron(neuron=neuron)
+    x = check_data_point(x=x)
+    neuron = check_neuron(neuron=neuron)
 
     bias = neuron[BIAS_INDEX]
     assert pd.notnull(bias), "\n{w}\n missing bias!".format(w=neuron)
@@ -225,7 +230,7 @@ def ___fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activate
     return a_out
 
 
-def __fprop(x: pd.Series, nn_layer: Layer) -> pd.Series:
+def __fprop(x: pd.Series, layer: Layer) -> pd.Series:
     """
     Forward-propagate the previous layer's output with the current layer's weights and activation function.
 
@@ -235,18 +240,18 @@ def __fprop(x: pd.Series, nn_layer: Layer) -> pd.Series:
         which can be seen as the input layer's "output"), where each entry correponds to
         a neuron on the previous layer.
 
-    nn_layer: Layer, the current layer's weights, where each row corresponds to
+    layer: Layer, the current layer's weights, where each row corresponds to
         a neuron on the current layer and each column corresponds to
         (the bias or) a neuron on the previous layer.
 
     output
     ------
-    pd.Series(index = nn_layer.index), the current layer's output, where each entry corresponds to
+    pd.Series(index = layer.index), the current layer's output, where each entry corresponds to
         a neuron on the current layer.
     """
-    check_data_point(x=x)
-    check_layer(nn_layer)
-    return nn_layer.apply(lambda neuron: ___fprop(x=x, neuron=neuron), axis="columns")
+    x = check_data_point(x=x)
+    layer = check_layer(layer=layer)
+    return layer.apply(lambda neuron: ___fprop(x=x, neuron=neuron), axis="columns")
 
 
 def _fprop(x: pd.Series, nn: NN) -> pd.Series:
@@ -263,8 +268,8 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     ------
     pd.Series, the final layer's output.
     """
-    check_data_point(x=x)
-    check_nn(nn)
+    x = check_data_point(x=x)
+    nn = check_nn(nn)
 
     # levels[0] indexes the layers, levels[1] indexes the neurons on each layer, so
     # this is basically a list of (names of) layers in this NN e.g. [0, 1, 2, ..].
@@ -277,7 +282,7 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     # so don't use `curr_layer = nn.loc[pd.IndexSlice[curr_layer, :], :]`.
     curr_layer = nn.loc[curr_layer]
     check_layer(curr_layer)
-    x = __fprop(x=x, nn_layer=curr_layer)
+    x = __fprop(x=x, layer=curr_layer)
 
     # recurse
     remainining_layers = layers[1:]
@@ -303,8 +308,8 @@ def fprop(x: pd.Series, nn: NN) -> pd.Series:
     ------
     pd.Series, the probability the model assigns to each category label.
     """
-    check_data_point(x=x)
-    check_nn(nn)
+    x = check_data_point(x=x)
+    nn = check_nn(nn)
     return squash(_fprop(x=x, nn=nn))
 
 
@@ -325,8 +330,8 @@ def fprop_(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
         how much probability mass we assigned to each category label for each point.
         Each row is a well-formed probability mass function AKA discrete probability distribution.
     """
-    X.apply(check_data_point, axis="columns")
-    check_nn(nn)
+    X = X.apply(check_data_point, axis="columns")
+    nn = check_nn(nn)
     return X.apply(lambda x: fprop(x=x, nn=nn), axis="columns")
 
 
@@ -345,8 +350,8 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
     pd.Series of int (or other scalar value, or whatever the user has used),
         a single label per point identifiying which category we predict for that point.
     """
-    X.apply(check_data_point, axis="columns")
-    check_nn(nn)
+    X = X.apply(check_data_point, axis="columns")
+    nn = check_nn(nn)
     p_hat = fprop_(X=X, nn=nn)
     return p_hat.apply(lambda _p_hat: _p_hat.idxmax(), axis="columns")  # argmax of each row
 
