@@ -77,6 +77,7 @@ will be filled to the same width.
 """
 
 # types
+Neuron: type = pd.Series
 Layer: type = pd.DataFrame
 NN: type = pd.DataFrame  # w/ MultiIndex[layers, neurons]
 
@@ -95,7 +96,7 @@ def check_type(obj: object, type_: type, check_dtype: bool=False, check_not: boo
             check = type_obj == type_
         except AttributeError:
             try:
-                # e.g. pd.series
+                # e.g. pd.Series
                 type_obj = obj.dtypes
                 check = type_obj == type_
             except AttributeError:
@@ -127,6 +128,14 @@ def check_data_point(x: object) -> type(None):
     if BIAS_INDEX in x.index:
         raise ValueError("Data point \n{x}\n contains reserved index {i}!".format(x=x, i=BIAS_INDEX))
     check_dtype(x, float)
+
+
+def check_neuron(neuron: object) -> type(None):
+    check_type(neuron, Neuron)
+    check_not_type(neuron.index, pd.MultiIndex)
+    if BIAS_INDEX not in neuron.index:
+        raise ValueError("Neuron \n{neuron}\n missing bias index {i}!".format(neuron=neuron, i=BIAS_INDEX))
+    check_dtype(neuron, float)
 
 
 def check_layer(layer: object) -> type(None):
@@ -180,7 +189,7 @@ squash: Callable[[pd.Series], pd.Series] = softmax  # function[[pd.Series[float]
 # FEED FORWARD AKA FORWARD PASS AKA FORWARD PROPAGATION ################################################################
 ########################################################################################################################
 
-def ___fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=activate) -> float:
+def ___fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activate) -> float:
     """
     Forward-propagate the previous layer's output with the current neuron's weights and activation function.
 
@@ -190,7 +199,7 @@ def ___fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=act
         which can be seen as the input layer's "output"), where each entry correponds to
         a neuron on the previous layer.
 
-    w_neuron: pd.Series, the current neuron's weights, where each entry corresponds to
+    neuron: Neuron, the current neuron's weights, where each entry corresponds to
         (the bias or) a neuron on the previous layer.
 
     fn: function, the current neuron's activation function.
@@ -200,13 +209,13 @@ def ___fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=act
     float: the current neuron's output.
     """
     check_data_point(x=x)
-    assert isinstance(w_neuron, pd.Series), type(w_neuron)
+    check_neuron(neuron=neuron)
 
-    bias = w_neuron[BIAS_INDEX]
-    assert pd.notnull(bias), "\n{w}\n missing bias!".format(w=w_neuron)
+    bias = neuron[BIAS_INDEX]
+    assert pd.notnull(bias), "\n{w}\n missing bias!".format(w=neuron)
     assert isinstance(bias, float), type(bias)
 
-    w_in = w_neuron.reindex(index=x.index)
+    w_in = neuron.reindex(index=x.index)
     assert w_in.notnull().all(), "Feed-in weights \n{w}\n are not completely filled!".format(w=w_in)
 
     a_in = x.dot(w_in)
@@ -237,7 +246,7 @@ def __fprop(x: pd.Series, nn_layer: Layer) -> pd.Series:
     """
     check_data_point(x=x)
     check_layer(nn_layer)
-    return nn_layer.apply(lambda w_neuron: ___fprop(x=x, w_neuron=w_neuron), axis="columns")
+    return nn_layer.apply(lambda neuron: ___fprop(x=x, neuron=neuron), axis="columns")
 
 
 def _fprop(x: pd.Series, nn: NN) -> pd.Series:
