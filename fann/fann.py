@@ -412,6 +412,7 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
     nn = check_nn(nn=nn)
 
     p_hat = fprop_(X=X, nn=nn)
+    p_hat = p_hat.apply(check_pmf, axis="columns")
     return p_hat.apply(lambda _p_hat: _p_hat.idxmax(), axis="columns")  # argmax of each row
 
 
@@ -465,7 +466,9 @@ def _get_loss(p_y: pd.Series) -> float:
     ------
     float, the calculated loss.
     """
-    return -get_llh(p=p_y)
+    loss = -get_llh(p=p_y)
+    loss = _check_type(loss, float)
+    return loss
 
 
 def get_loss(y: pd.Series, p_hat: pd.DataFrame) -> float:
@@ -491,7 +494,9 @@ def get_loss(y: pd.Series, p_hat: pd.DataFrame) -> float:
 
     # pick out the entry for the correct label in each row
     p_y = pd.Series({n: p_hat.loc[n, label] for n, label in y.items()})
-    return _get_loss(p_y=p_y) / y.count()
+    loss = _get_loss(p_y=p_y) / y.count()
+    loss = _check_type(loss, float)
+    return loss
 
 
 ########################################################################################################################
