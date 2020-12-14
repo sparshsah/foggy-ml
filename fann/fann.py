@@ -149,7 +149,7 @@ def check_bias(neuron: Neuron) -> float:
     bias = neuron[BIAS_INDEX]
     bias = _check_type(bias, float)
     if pd.isnull(bias):
-        raise ValueError("\n{neuron}\n missing bias!".format(neuron=neuron))
+        raise ValueError("Neuron \n{neuron}\n missing bias!".format(neuron=neuron))
     return bias
 
 
@@ -164,7 +164,7 @@ def check_w_in(x: pd.Series, neuron: Neuron) -> pd.Series:
 
     w_pad = neuron.drop(labels=BIAS_INDEX).drop(labels=x.index)
     if w_pad.notnull().any():
-        raise ValueError("\n{w_pad}\n should be just padding, but contains value(s)!".format(w_pad=w_pad))
+        raise ValueError("\n{w_pad}\n contains value(s), but should be just padding!".format(w_pad=w_pad))
 
     return w_in
 
