@@ -246,7 +246,7 @@ def __fprop(x: pd.Series, layer: Layer) -> pd.Series:
 
     output
     ------
-    pd.Series(index = layer.index), the current layer's output, where each entry corresponds to
+    pd.Series (index = layer.index), the current layer's output, where each entry corresponds to
         a neuron on the current layer.
     """
     x = check_data_point(x=x)
@@ -326,13 +326,15 @@ def fprop_(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
 
     output
     ------
-    pd.DataFrame (columns = category labels, index = observations),
+    pd.DataFrame (index = observations, columns = category labels),
         how much probability mass we assigned to each category label for each point.
         Each row is a well-formed probability mass function AKA discrete probability distribution.
     """
     X = X.apply(check_data_point, axis="columns")
     nn = check_nn(nn)
-    return X.apply(lambda x: fprop(x=x, nn=nn), axis="columns")
+    p_hat = X.apply(lambda x: fprop(x=x, nn=nn), axis="columns")
+    p_hat = p_hat.apply(check_pmf, axis="columns")
+    return p_hat
 
 
 def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
@@ -413,7 +415,7 @@ def get_loss(y: pd.Series, p_hat: pd.DataFrame) -> float:
     -----
     y: pd.Series, the correct category label for each point.
 
-    p_hat: pd.DataFrame (columns = category labels, index = observations),
+    p_hat: pd.DataFrame (index = observations, columns = category labels),
         how much probability mass we assigned to each category label for each point.
         Each row should be a well-formed probability mass function
         AKA discrete probability distribution.
