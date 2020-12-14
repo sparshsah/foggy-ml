@@ -162,11 +162,13 @@ def check_nn(nn: object) -> NN:
 
 
 def check_pmf(pmf: object) -> object:
-    _check_dtype(pmf, float)
-    if not np.alltrue(pmf >= -EPSILON):
-        raise ValueError("{pmf} not non-negative!".format(pmf=pmf))
-    if not np.isclose(sum(pmf), 1.00):
-        raise ValueError("{pmf} sums to {sum_} not 1.00!".format(pmf=pmf, sum_=sum(pmf)))
+    # e.g. list, dict, np.ndarray, pd.Series
+    _pmf = pd.Series(pmf)
+    _check_dtype(_pmf, float)
+    if not np.alltrue(_pmf >= -EPSILON):
+        raise ValueError("{_pmf} not non-negative!".format(_pmf=_pmf))
+    if not np.isclose(sum(_pmf), 1.00):
+        raise ValueError("{_pmf} sums to {sum_} not 1.00!".format(_pmf=_pmf, sum_=sum(_pmf)))
     return pmf
 
 
