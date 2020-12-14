@@ -81,36 +81,78 @@ Layer: type = pd.DataFrame
 NN: type = pd.DataFrame  # w/ MultiIndex[layers, neurons]
 
 # magic numbers
+EPSILON: float = 1e-6
+NN_INDEX_NLEVELS: int = 2  # MultiIndex[layers, neurons]
 BIAS_INDEX: Union[int, str] = "_bias_"
 
 
 # data structure checkers
+def check_type(obj: object, type_: type, check_dtype: bool=False, check_not: bool=False) -> type(None):
+    if check_dtype:
+        try:
+            # e.g. pd.DataFrame
+            type_obj = obj.dtypes
+            check = type_obj == type_
+        except AttributeError:
+            try:
+                # e.g. pd.series
+                type_obj = obj.dtypes
+                check = type_obj == type_
+            except AttributeError:
+                # e.g. list
+                type_obj = [type(x) for x in obj]
+                check = [isinstance(x, type_) for x in obj]
+    else:
+        type_obj = type(obj)
+        check = isinstance(obj, type_)
+    check = np.alltrue(check)
+    if check_not:
+        check = not check
+    if not check:
+        raise TypeError("{obj} is (dtype={check_dtype}) {type_obj}, failing against (not={check_not}) {type_}!".format(
+            obj=obj, check_dtype=check_dtype, type_obj=type_obj, check_not=check_not, type_=type_))
+
+
+def check_dtype(obj: object, type_: type, check_not: bool=False) -> type(None):
+    return check_type(obj=obj, type_=type_, check_dtype=True, check_not=check_not)
+
+
+def check_not_type(obj: object, type_: type, check_dtype: bool=False) -> type(None):
+    return check_type(obj=obj, type_=type_, check_dtype=check_dtype, check_not=True)
+
+
 def check_data_point(x: object) -> type(None):
-    assert isinstance(x, pd.Series), type(x)
-    if isinstance(x.index, pd.MultiIndex):
-        raise TypeError(x)
+    check_type(x, pd.Series)
+    check_not_type(x.index, pd.MultiIndex)
     if BIAS_INDEX in x.index:
         raise ValueError("Data point \n{x}\n contains reserved index {i}!".format(x=x, i=BIAS_INDEX))
-    if not x.dtype == float:
-        raise TypeError("Data point \n{x}\n is non-float dtype {dtype}!".format(x=x, dtype=x.dtype))
+    check_dtype(x, float)
 
 
 def check_layer(layer: object) -> type(None):
-    assert isinstance(layer, Layer), type(layer)
-    assert not isinstance(layer.index, pd.MultiIndex), type(layer.index)
-    assert not isinstance(layer.columns, pd.MultiIndex), type(layer.columns)
-    if not np.alltrue(layer.dtypes == float):
-        raise TypeError("\n{layer}\n contains non-float \n{dtypes}\n!".format(layer=layer, dtypes=layer.dtypes))
+    check_type(layer, Layer)
+    check_not_type(layer.index, pd.MultiIndex)
+    check_not_type(layer.columns, pd.MultiIndex)
+    check_dtype(layer, float)
 
 
 def check_nn(nn: object) -> type(None):
-    assert isinstance(nn, NN), type(nn)
-    assert isinstance(nn.index, pd.MultiIndex), type(nn.index)
+    check_type(nn, NN)
+    check_type(nn.index, pd.MultiIndex)
     # levels[0] indexes the layers, levels[1] indexes the neurons on each layer
-    assert nn.index.nlevels == 2, nn.index.nlevels
-    assert not isinstance(nn.columns, pd.MultiIndex), type(nn.columns)
-    if not np.alltrue(nn.dtypes == float):
-        raise TypeError("NN \n{nn}\n contains non-float dtype \n{dtypes}\n!".format(nn=nn, dtypes=nn.dtypes))
+    if nn.index.nlevels != NN_INDEX_NLEVELS:
+        raise ValueError("NN \n{nn}\n index nlevels = {nlevels} not {nlevels_}!".format(
+            nn=nn, nlevels=nn.index.nlevels, nlevels_=NN_INDEX_NLEVELS))
+    check_not_type(nn.columns, pd.MultiIndex)
+    check_dtype(nn, float)
+
+
+def check_pmf(pmf: object) -> type(None):
+    check_dtype(pmf, float)
+    if not np.alltrue(pmf >= -EPSILON):
+        raise ValueError("{pmf} not non-negative!".format(pmf=pmf))
+    if not np.isclose(sum(pmf), 1.00):
+        raise ValueError("{pmf} sums to {sum_} not 1.00!".format(pmf=pmf, sum_=sum(pmf)))
 
 
 ########################################################################################################################
