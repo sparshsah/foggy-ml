@@ -20,19 +20,23 @@ import loss
 
 """
 Fixing the neuron activation---in our case, logistic---and output squashing---in our case, softmax---function,
-a NN model is essentially identified by its feed-forward AKA forward-pass AKA forward-propagation weights.
+a FANN is essentially identified by its feed-forward AKA forward-pass AKA forward-propagation weights.
 
-We store the model as a pd.DataFrame with MultiIndex. Each "super-row" (axis=0, level=0) represents a layer.
-Each row (axis=0, level=1) represents the weights feeding into a single neuron on that layer.
-(E.g. the first row represents the weights feeding from the input layer into
+We store the model as a pd.DataFrame with MultiIndex.
+Each "block" or "super-row" (i.e. collection of rows sharing an index key on axis=0, level=0)
+represents a layer.
+Each row (having a unique pair of index keys on axis=0, levels=[0, 1])
+represents the weights feeding into a single neuron on that layer.
+The first column (having index key "_bias_" on axis=1)
+is always reserved for the bias term.
+
+(E.g. the first row represents the bias/weights feeding from the input layer into
 the first hidden layer's first neuron; the second row---if applicable---could represent
-the weights feeding from the input layer into the first hidden layer's second neuron.)
-The first column (indexed as "_bias_" for compatibility reasons) is always reserved for the bias term.
+the bias/weights feeding from the input layer into the first hidden layer's second neuron.)
 
 Because different layers can have different widths, some rows may not be completely filled across.
 But obviously, for neurons on the same layer, the number of neurons on the previous layer is also the same.
-Hence, any two rows on the same "super-row" or "block" (i.e. sharing a key on axis=0),
-will be filled to the same width.
+Hence, any two rows on the same block will be filled to the same width.
 """
 
 # types
