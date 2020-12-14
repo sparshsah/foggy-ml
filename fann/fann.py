@@ -72,14 +72,19 @@ The first column (indexed as "_bias_" for compatibility reasons) is always reser
 
 Because different layers can have different widths, some rows may not be completely filled across.
 But obviously, for neurons on the same layer, the number of neurons on the previous layer is also the same.
-Hence, any two rows on the same "super-row" (i.e. sharing a key on axis=0), will be filled to the same width.
+Hence, any two rows on the same "super-row" or "block" (i.e. sharing a key on axis=0),
+will be filled to the same width.
 """
 
-BIAS_INDEX: Union[int, str] = "_bias_"
+# types
 NNLayer: type = pd.DataFrame
 NN: type = pd.DataFrame  # w/ MultiIndex[layers, neurons]
 
+# magic numbers
+BIAS_INDEX: Union[int, str] = "_bias_"
 
+
+# data structure checkers
 def check_data_point(x: object) -> type(None):
     assert isinstance(x, pd.Series), type(x)
     if isinstance(x.index, pd.MultiIndex):
@@ -212,15 +217,15 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     check_data_point(x=x)
     assert_isinstance_nn(nn)
 
-    # this is basically a list of layers in this NN e.g. [0, 1, 2, ..]
-    # levels[0] indexes the layers, levels[1] indexes the neurons on each layer
-    # pd.MultiIndex "remembers" old, unused levels even after you drop all rows that used those levels
+    # levels[0] indexes the layers, levels[1] indexes the neurons on each layer, so
+    # this is basically a list of (names of) layers in this NN e.g. [0, 1, 2, ..].
+    # pd.MultiIndex "remembers" old, unused levels even after you drop all rows that used those levels.
     layers = nn.index.remove_unused_levels().levels[0]
 
     curr_layer = layers[0]
-    # don't use `curr_layer = nn.loc[pd.IndexSlice[curr_layer, :], :]` because
     # we want to "squeeze" the MultiIndex i.e. we want indices to be
-    # not `[(curr_layer, 0), (curr_layer, 1), (curr_layer, 2), ..]` but rather `[0, 1, 2, ..]`
+    # not `[(curr_layer, 0), (curr_layer, 1), (curr_layer, 2), ..]` but rather `[0, 1, 2, ..]`,
+    # so don't use `curr_layer = nn.loc[pd.IndexSlice[curr_layer, :], :]`.
     curr_layer = nn.loc[curr_layer]
     assert_isinstance_nnlayer(curr_layer)
     x = __fprop(x=x, nn_layer=curr_layer)
