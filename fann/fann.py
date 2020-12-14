@@ -61,7 +61,7 @@ from scipy.special import expit, softmax
 
 """
 Fixing the neuron activation---in our case, logistic---and output squashing---in our case, softmax---function,
-a NN model is essentially identified by its forward-propagation AKA forward-pass AKA feed-forward weights.
+a NN model is essentially identified by its feed-forward AKA forward-pass AKA forward-propagation weights.
 
 We store the model as a pd.DataFrame with MultiIndex. Each "super-row" (axis=0, level=0) represents a layer.
 Each row (axis=0, level=1) represents the weights feeding into a single neuron on that layer.
@@ -132,7 +132,7 @@ squash: Callable[[pd.Series], pd.Series] = softmax  # function[[pd.Series[float]
 
 
 ########################################################################################################################
-# FORWARD PROPAGATION ##################################################################################################
+# FEED FORWARD AKA FORWARD PASS AKA FORWARD PROPAGATION ################################################################
 ########################################################################################################################
 
 def ___fprop(x: pd.Series, w_neuron: pd.Series, fn: Callable[[float], float]=activate) -> float:
@@ -203,7 +203,7 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     -----
     x: pd.Series, a single raw data point.
 
-    nn: NN AKA pd.DataFrame w/ MultiIndex, the model.
+    nn: NN, the model.
 
     output
     ------
@@ -243,7 +243,7 @@ def fprop(x: pd.Series, nn: NN) -> pd.Series:
     -----
     x: pd.Series, a single raw data point.
 
-    nn: NN AKA pd.DataFrame w/ MultiIndex, the model.
+    nn: NN, the model.
 
     output
     ------
@@ -263,7 +263,7 @@ def fprop_(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     -----
     x: pd.DataFrame, the raw data points where each row is an observation.
 
-    nn: NN AKA pd.DataFrame w/ MultiIndex, the model.
+    nn: NN, the model.
 
     output
     ------
@@ -284,7 +284,7 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
     -----
     X: pd.DataFrame, the raw data points where each row is a single observation.
 
-    nn: NN AKA pd.DataFrame w/ MultiIndex, the model.
+    nn: NN, the model.
 
     output
     ------
