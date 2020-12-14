@@ -386,6 +386,7 @@ def fprop_(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     """
     X = X.apply(check_data_point, axis="columns")
     nn = check_nn(nn=nn)
+
     p_hat = X.apply(lambda x: fprop(x=x, nn=nn), axis="columns")
     p_hat = p_hat.apply(check_pmf, axis="columns")
     return p_hat
@@ -408,6 +409,7 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
     """
     X = X.apply(check_data_point, axis="columns")
     nn = check_nn(nn=nn)
+
     p_hat = fprop_(X=X, nn=nn)
     return p_hat.apply(lambda _p_hat: _p_hat.idxmax(), axis="columns")  # argmax of each row
 
@@ -436,6 +438,7 @@ def get_llh(p: pd.Series) -> float:
     float, the joint log likelihood of the outcomes.
     """
     p = check_pmf(pmf=p)
+
     llh = np.log(p).sum()
     llh = _check_type(llh, float)
     return llh
@@ -484,6 +487,7 @@ def get_loss(y: pd.Series, p_hat: pd.DataFrame) -> float:
     y = _check_type(y, pd.Series)
     p_hat = _check_type(p_hat, pd.DataFrame)
     p_hat = p_hat.apply(check_pmf, axis="columns")
+
     # pick out the entry for the correct label in each row
     p_y = pd.Series({n: p_hat.loc[n, label] for n, label in y.items()})
     return _get_loss(p_y=p_y) / y.count()
