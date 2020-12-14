@@ -87,6 +87,13 @@ def check_nn(nn: object) -> NN:
 
 # check-and-return calculation utils
 
+def nnify(nn: List[Layer]) -> NN:
+    nn = [check_layer(layer=layer) for layer in nn]
+    nn = pd.concat(nn, keys=range(len(nn)))
+    nn = check_nn(nn=nn)
+    return nn
+
+
 def get_bias(neuron: Neuron) -> float:
     """Get bias weight from neuron."""
     # neuron = check_neuron(neuron=neuron)
@@ -133,13 +140,6 @@ def get_a_out(bias: float, a_in: float, fn: Callable[[float], float]) -> float:
     a_out = fn(bias + a_in)
     a_out = util.check_type(a_out, float)
     return a_out
-
-
-def nnify(nn: List[Layer]) -> NN:
-    nn = [check_layer(layer=layer) for layer in nn]
-    nn = pd.concat(nn, keys=range(len(nn)))
-    nn = check_nn(nn=nn)
-    return nn
 
 
 ########################################################################################################################
