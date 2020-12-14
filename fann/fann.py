@@ -272,6 +272,7 @@ def ___fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activate
     """
     x = check_data_point(x=x)
     neuron = check_neuron(neuron=neuron)
+    # fn = _check_type(fn, Callable[[float], float])
 
     bias = check_bias(neuron=neuron)
     w_in = check_w_in(x=x, neuron=neuron)
@@ -431,7 +432,10 @@ def get_llh(p: pd.Series) -> float:
     ------
     float, the joint log likelihood of the outcomes.
     """
-    return np.log(p).sum()
+    p = check_pmf(pmf=p)
+    llh = np.log(p).sum()
+    llh = _check_type(llh, float)
+    return llh
 
 
 def _get_loss(p_y: pd.Series) -> float:
@@ -441,7 +445,7 @@ def _get_loss(p_y: pd.Series) -> float:
     input
     -----
     p_y: pd.Series, how much probability mass we assigned to the correct label for each point.
-        E.g. if p_y = [0.10, 0.85, 0.50], then there were 2 data points. For the first point,
+        E.g. if p_y = [0.10, 0.85, 0.50], then there were 3 data points. For the first point,
         we distributed 1-0.10=0.90 probability mass among incorrect labels. Depending on
         how many categories there are, this is pretty poor. In particular, if this is a
         binary classification task, then a simple coin flip would distribute only 0.50
@@ -474,6 +478,9 @@ def get_loss(y: pd.Series, p_hat: pd.DataFrame) -> float:
     ------
     float, the calculated loss.
     """
+    y = _check_type(y, pd.Series)
+    p_hat = _check_type(p_hat, pd.DataFrame)
+    p_hat = p_hat.apply(check_pmf, axis="columns")
     # pick out the entry for the correct label in each row
     p_y = pd.Series({n: p_hat.loc[n, label] for n, label in y.items()})
     return _get_loss(p_y=p_y) / y.count()
