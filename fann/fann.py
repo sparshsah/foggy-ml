@@ -47,6 +47,7 @@ in my code seem like at least partially your fault.
 
 # syntax utils
 from typing import List, Callable, Union
+import util
 # data structures
 import pandas as pd
 # calculations and algorithms
@@ -81,91 +82,55 @@ Layer: type = pd.DataFrame
 NN: type = pd.DataFrame  # w/ MultiIndex[layers, neurons]
 
 # magic numbers
-EPSILON: float = 1e-6
 NN_INDEX_NLEVELS: int = 2  # MultiIndex[layers, neurons]
 BIAS_INDEX: Union[int, str] = "_bias_"
 
 
 # type checkers
 
-def _check_type(obj: object, type_: type, check_dtype: bool=False, check_not: bool=False) -> object:
-    if check_dtype:
-        try:
-            # e.g. pd.DataFrame
-            type_obj = obj.dtypes
-            check = type_obj == type_
-        except AttributeError:
-            try:
-                # e.g. np.ndarray, pd.Series
-                type_obj = obj.dtype
-                check = type_obj == type_
-            except AttributeError:
-                # fallback for generic collection e.g. list, set
-                type_obj = [type(x) for x in list(obj)]
-                check = [isinstance(x, type_) for x in list(obj)]
-    else:
-        type_obj = type(obj)
-        check = isinstance(obj, type_)
-    check = np.alltrue(check)
-    if check_not:
-        check = not check
-    if not check:
-        raise TypeError("{obj} is (dtype={check_dtype}) {type_obj}, failing against (not={check_not}) {type_}!".format(
-            obj=obj, check_dtype=check_dtype, type_obj=type_obj, check_not=check_not, type_=type_))
-    return obj
-
-
-def _check_dtype(obj: object, type_: type, check_not: bool=False) -> object:
-    return _check_type(obj=obj, type_=type_, check_dtype=True, check_not=check_not)
-
-
-def _check_not_type(obj: object, type_: type, check_dtype: bool=False) -> object:
-    return _check_type(obj=obj, type_=type_, check_dtype=check_dtype, check_not=True)
-
-
 def check_data_point(x: object) -> pd.Series:
-    _check_type(x, pd.Series)
-    _check_not_type(x.index, pd.MultiIndex)
+    util.check_type(x, pd.Series)
+    util.check_not_type(x.index, pd.MultiIndex)
     if BIAS_INDEX in x.index:
         raise ValueError("Data point \n{x}\n contains reserved index {i}!".format(x=x, i=BIAS_INDEX))
-    _check_dtype(x, float)
+    util.check_dtype(x, float)
     return x
 
 
 def check_neuron(neuron: object) -> Neuron:
-    _check_type(neuron, Neuron)
-    _check_not_type(neuron.index, pd.MultiIndex)
+    util.check_type(neuron, Neuron)
+    util.check_not_type(neuron.index, pd.MultiIndex)
     if BIAS_INDEX not in neuron.index:
         raise ValueError("Neuron \n{neuron}\n missing bias index {i}!".format(neuron=neuron, i=BIAS_INDEX))
-    _check_dtype(neuron, float)
+    util.check_dtype(neuron, float)
     return neuron
 
 
 def check_layer(layer: object) -> Layer:
-    _check_type(layer, Layer)
-    _check_not_type(layer.index, pd.MultiIndex)
-    _check_not_type(layer.columns, pd.MultiIndex)
-    _check_dtype(layer, float)
+    util.check_type(layer, Layer)
+    util.check_not_type(layer.index, pd.MultiIndex)
+    util.check_not_type(layer.columns, pd.MultiIndex)
+    util.check_dtype(layer, float)
     return layer
 
 
 def check_nn(nn: object) -> NN:
-    _check_type(nn, NN)
-    _check_type(nn.index, pd.MultiIndex)
+    util.check_type(nn, NN)
+    util.check_type(nn.index, pd.MultiIndex)
     # levels[0] indexes the layers, levels[1] indexes the neurons on each layer
     if nn.index.nlevels != NN_INDEX_NLEVELS:
         raise ValueError("NN \n{nn}\n index nlevels = {nlevels} not {nlevels_}!".format(
             nn=nn, nlevels=nn.index.nlevels, nlevels_=NN_INDEX_NLEVELS))
-    _check_not_type(nn.columns, pd.MultiIndex)
-    _check_dtype(nn, float)
+    util.check_not_type(nn.columns, pd.MultiIndex)
+    util.check_dtype(nn, float)
     return nn
 
 
 def check_pmf(pmf: object) -> object:
     # e.g. list, dict, np.ndarray, pd.Series
     _pmf = pd.Series(pmf)
-    _check_dtype(_pmf, float)
-    if not np.alltrue(_pmf >= -EPSILON):
+    util.check_dtype(_pmf, float)
+    if not np.alltrue(_pmf >= -util.EPSILON):
         raise ValueError("{_pmf} not non-negative!".format(_pmf=_pmf))
     if not np.isclose(sum(_pmf), 1.00):
         raise ValueError("{_pmf} sums to {sum_} not 1.00!".format(_pmf=_pmf, sum_=sum(_pmf)))
@@ -179,7 +144,7 @@ def get_bias(neuron: Neuron) -> float:
     # neuron = check_neuron(neuron=neuron)
 
     bias = neuron[BIAS_INDEX]
-    bias = _check_type(bias, float)
+    bias = util.check_type(bias, float)
     if pd.isnull(bias):
         raise ValueError("Neuron \n{neuron}\n missing bias!".format(neuron=neuron))
     return bias
@@ -204,21 +169,21 @@ def get_w_in(x: pd.Series, neuron: Neuron) -> pd.Series:
 def get_a_in(x: pd.Series, w_in: pd.Series) -> float:
     """Get incoming activation."""
     # x = check_data_point(x=x)
-    # w_in = _check_type(w_in, pd.Series)
+    # w_in = util.check_type(w_in, pd.Series)
 
     a_in = x.dot(w_in)
-    a_in = _check_type(a_in, float)
+    a_in = util.check_type(a_in, float)
     return a_in
 
 
 def get_a_out(bias: float, a_in: float, fn: Callable[[float], float]) -> float:
     """Get outgoing activation."""
-    # bias = _check_type(bias, float)
-    # a_in = _check_type(a_in, float)
-    # fn = _check_type(fn, Callable[[float], float])
+    # bias = util.check_type(bias, float)
+    # a_in = util.check_type(a_in, float)
+    # fn = util.check_type(fn, Callable[[float], float])
 
     a_out = fn(bias + a_in)
-    a_out = _check_type(a_out, float)
+    a_out = util.check_type(a_out, float)
     return a_out
 
 
@@ -275,7 +240,7 @@ def ___fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activate
     """
     x = check_data_point(x=x)
     neuron = check_neuron(neuron=neuron)
-    # fn = _check_type(fn, Callable[[float], float])
+    # fn = util.check_type(fn, Callable[[float], float])
 
     bias = get_bias(neuron=neuron)
     w_in = get_w_in(x=x, neuron=neuron)
@@ -442,7 +407,7 @@ def get_llh(p: pd.Series) -> float:
     p = check_pmf(pmf=p)
 
     llh = np.log(p).sum()
-    llh = _check_type(llh, float)
+    llh = util.check_type(llh, float)
     return llh
 
 
@@ -467,7 +432,7 @@ def _get_loss(p_y: pd.Series) -> float:
     float, the calculated loss.
     """
     loss = -get_llh(p=p_y)
-    loss = _check_type(loss, float)
+    loss = util.check_type(loss, float)
     return loss
 
 
@@ -488,14 +453,14 @@ def get_loss(y: pd.Series, p_hat: pd.DataFrame) -> float:
     ------
     float, the calculated loss.
     """
-    y = _check_type(y, pd.Series)
-    p_hat = _check_type(p_hat, pd.DataFrame)
+    y = util.check_type(y, pd.Series)
+    p_hat = util.check_type(p_hat, pd.DataFrame)
     p_hat = p_hat.apply(check_pmf, axis="columns")
 
     # pick out the entry for the correct label in each row
     p_y = pd.Series({n: p_hat.loc[n, label] for n, label in y.items()})
     loss = _get_loss(p_y=p_y) / y.count()
-    loss = _check_type(loss, float)
+    loss = util.check_type(loss, float)
     return loss
 
 
