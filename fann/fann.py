@@ -47,7 +47,7 @@ in my code seem like at least partially your fault.
 """
 
 # syntax utils
-from typing import Callable, Union
+from typing import List, Callable, Union
 # data structures
 import pandas as pd
 # calculations and algorithms
@@ -216,6 +216,13 @@ def check_pmf(pmf: object) -> object:
     if not np.isclose(sum(pmf), 1.00):
         raise ValueError("{pmf} sums to {sum_} not 1.00!".format(pmf=pmf, sum_=sum(pmf)))
     return pmf
+
+
+def nnify(nn: List[Layer]) -> NN:
+    nn = [check_layer(layer=layer) for layer in nn]
+    nn = pd.concat(nn, keys=range(len(nn)))
+    nn = check_nn(nn=nn)
+    return nn
 
 
 ########################################################################################################################
