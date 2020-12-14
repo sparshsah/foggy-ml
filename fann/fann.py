@@ -93,7 +93,8 @@ def check_nn(nn: object) -> NN:
         raise ValueError("NN \n{nn}\n index nlevels = {nlevels} not {nlevels_}!".format(
             nn=nn, nlevels=nn.index.nlevels, nlevels_=NN_INDEX_NLEVELS))
     util.check_not_type(nn.columns, pd.MultiIndex)
-    util.check_dtype(nn, float)
+    for layer in nn.index.remove_unused_levels().levels[0]:
+        check_layer(layer=nn.loc[layer])
     return nn
 
 

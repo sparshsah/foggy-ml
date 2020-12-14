@@ -14,7 +14,7 @@ refactor from functional to OOP. Resist this urge.
 
 - Obviously, we've added a lot of sometimes-redundant
 type checking and assertions, which tend to be slow,
-especially relative to some of the actual calculations.
+often 10-100x slower than the actual calculations.
 However, they (we hope) make the code easier to reason about,
 which is the whole point of a project like this.
 We worked hard on our code, but it's not like it would be a viable
