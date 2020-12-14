@@ -88,7 +88,7 @@ BIAS_INDEX: Union[int, str] = "_bias_"
 
 
 # data structure checkers
-def _check_type(obj: object, type_: type, check_dtype: bool=False, check_not: bool=False) -> type(None):
+def _check_type(obj: object, type_: type, check_dtype: bool=False, check_not: bool=False) -> object:
     if check_dtype:
         try:
             # e.g. pd.DataFrame
@@ -112,13 +112,14 @@ def _check_type(obj: object, type_: type, check_dtype: bool=False, check_not: bo
     if not check:
         raise TypeError("{obj} is (dtype={check_dtype}) {type_obj}, failing against (not={check_not}) {type_}!".format(
             obj=obj, check_dtype=check_dtype, type_obj=type_obj, check_not=check_not, type_=type_))
+    return obj
 
 
-def _check_dtype(obj: object, type_: type, check_not: bool=False) -> type(None):
+def _check_dtype(obj: object, type_: type, check_not: bool=False) -> object:
     return _check_type(obj=obj, type_=type_, check_dtype=True, check_not=check_not)
 
 
-def _check_not_type(obj: object, type_: type, check_dtype: bool=False) -> type(None):
+def _check_not_type(obj: object, type_: type, check_dtype: bool=False) -> object:
     return _check_type(obj=obj, type_=type_, check_dtype=check_dtype, check_not=True)
 
 
@@ -138,6 +139,54 @@ def check_neuron(neuron: object) -> Neuron:
         raise ValueError("Neuron \n{neuron}\n missing bias index {i}!".format(neuron=neuron, i=BIAS_INDEX))
     _check_dtype(neuron, float)
     return neuron
+
+
+def check_bias(neuron: Neuron) -> float:
+    """Get bias weight from neuron."""
+    # neuron = check_neuron(neuron=neuron)
+
+    bias = neuron[BIAS_INDEX]
+    bias = _check_type(bias, float)
+    if pd.isnull(bias):
+        raise ValueError("\n{neuron}\n missing bias!".format(neuron=neuron))
+    return bias
+
+
+def check_w_in(x: pd.Series, neuron: Neuron) -> pd.Series:
+    """Get feed-in weights from neuron."""
+    # x = check_data_point(x=x)
+    # neuron = check_neuron(neuron=neuron)
+
+    w_in = neuron.reindex(index=x.index)
+    if w_in.isnull().any():
+        raise ValueError("Feed-in weights \n{w_in}\n not completely filled!".format(w_in=w_in))
+
+    w_pad = neuron.drop(labels=BIAS_INDEX).drop(labels=x.index)
+    if w_pad.notnull().any():
+        raise ValueError("\n{w_pad}\n should be just padding, but contains value(s)!".format(w_pad=w_pad))
+
+    return w_in
+
+
+def check_a_in(x: pd.Series, w_in: pd.Series) -> float:
+    """Get incoming activation."""
+    # x = check_data_point(x=x)
+    # w_in = _check_type(w_in, pd.Series)
+
+    a_in = x.dot(w_in)
+    a_in = _check_type(a_in, float)
+    return a_in
+
+
+def check_a_out(bias: float, a_in: float, fn: Callable[[float], float]) -> float:
+    """Get outgoing activation."""
+    # bias = _check_type(bias, float)
+    # a_in = _check_type(a_in, float)
+    # fn = _check_type(fn, Callable[[float], float])
+
+    a_out = fn(bias + a_in)
+    a_out = _check_type(a_out, float)
+    return a_out
 
 
 def check_layer(layer: object) -> Layer:
@@ -216,17 +265,10 @@ def ___fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activate
     x = check_data_point(x=x)
     neuron = check_neuron(neuron=neuron)
 
-    bias = neuron[BIAS_INDEX]
-    assert pd.notnull(bias), "\n{w}\n missing bias!".format(w=neuron)
-    assert isinstance(bias, float), type(bias)
-
-    w_in = neuron.reindex(index=x.index)
-    assert w_in.notnull().all(), "Feed-in weights \n{w}\n are not completely filled!".format(w=w_in)
-
-    a_in = x.dot(w_in)
-    assert isinstance(a_in, float), type(a_in)
-    a_out = fn(bias + a_in)
-    assert isinstance(a_out, float), type(a_out)
+    bias = check_bias(neuron=neuron)
+    w_in = check_w_in(x=x, neuron=neuron)
+    a_in = check_a_in(x=x, w_in=w_in)
+    a_out = check_a_out(bias=bias, a_in=bias, fn=fn)
     return a_out
 
 
