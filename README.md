@@ -18,7 +18,7 @@ especially relative to some of the actual calculations.
 However, they (we hope) make the code easier to reason about,
 which is the whole point of a project like this.
 We worked hard on our code, but it's not like it would be a viable
-PyTorch alternative ~if only~ we removed the type checks.
+PyTorch alternative \~if only\~ we removed the type checks.
 
 - We make liberal use of `del` statements. This is not because
 we're C programmers who never learned how to use `free()` calls properly,
