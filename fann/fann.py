@@ -345,6 +345,7 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
         remaining_layers = check_nn(nn=remainining_layers)
         return _fprop(x=x, nn=remainining_layers)
     else:
+        # this was the final i.e. output layer
         return x
 
 
