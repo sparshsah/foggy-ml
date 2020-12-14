@@ -126,17 +126,6 @@ def check_nn(nn: object) -> NN:
     return nn
 
 
-def check_pmf(pmf: object) -> object:
-    # e.g. list, dict, np.ndarray, pd.Series
-    _pmf = pd.Series(pmf)
-    util.check_dtype(_pmf, float)
-    if not np.alltrue(_pmf >= -util.EPSILON):
-        raise ValueError("{_pmf} not non-negative!".format(_pmf=_pmf))
-    if not np.isclose(sum(_pmf), 1.00):
-        raise ValueError("{_pmf} sums to {sum_} not 1.00!".format(_pmf=_pmf, sum_=sum(_pmf)))
-    return pmf
-
-
 # check-and-return calculation utils
 
 def get_bias(neuron: Neuron) -> float:
@@ -354,7 +343,7 @@ def fprop_(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     nn = check_nn(nn=nn)
 
     p_hat = X.apply(lambda x: fprop(x=x, nn=nn), axis="columns")
-    p_hat = p_hat.apply(check_pmf, axis="columns")
+    p_hat = p_hat.apply(util.check_pmf, axis="columns")
     return p_hat
 
 
@@ -377,7 +366,7 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
     nn = check_nn(nn=nn)
 
     p_hat = fprop_(X=X, nn=nn)
-    p_hat = p_hat.apply(check_pmf, axis="columns")
+    p_hat = p_hat.apply(util.check_pmf, axis="columns")
     return p_hat.apply(lambda _p_hat: _p_hat.idxmax(), axis="columns")  # argmax of each row
 
 
@@ -404,7 +393,7 @@ def get_llh(p: pd.Series) -> float:
     ------
     float, the joint log likelihood of the outcomes.
     """
-    p = check_pmf(pmf=p)
+    p = util.check_pmf(pmf=p)
 
     llh = np.log(p).sum()
     llh = util.check_type(llh, float)
@@ -455,7 +444,7 @@ def get_loss(y: pd.Series, p_hat: pd.DataFrame) -> float:
     """
     y = util.check_type(y, pd.Series)
     p_hat = util.check_type(p_hat, pd.DataFrame)
-    p_hat = p_hat.apply(check_pmf, axis="columns")
+    p_hat = p_hat.apply(util.check_pmf, axis="columns")
 
     # pick out the entry for the correct label in each row
     p_y = pd.Series({n: p_hat.loc[n, label] for n, label in y.items()})

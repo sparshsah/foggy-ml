@@ -1,3 +1,6 @@
+# data structures
+import pandas as pd
+# calculations and algorithms
 import numpy as np
 
 EPSILON: float = 1e-6
@@ -36,3 +39,14 @@ def check_dtype(obj: object, type_: type, check_not: bool=False) -> object:
 
 def check_not_type(obj: object, type_: type, check_dtype: bool=False) -> object:
     return check_type(obj=obj, type_=type_, check_dtype=check_dtype, check_not=True)
+
+
+def check_pmf(pmf: object) -> object:
+    # e.g. list, dict, np.ndarray, pd.Series
+    _pmf = pd.Series(pmf)
+    check_dtype(_pmf, float)
+    if not np.alltrue(_pmf >= -EPSILON):
+        raise ValueError("{_pmf} not non-negative!".format(_pmf=_pmf))
+    if not np.isclose(sum(_pmf), 1.00):
+        raise ValueError("{_pmf} sums to {sum_} not 1.00!".format(_pmf=_pmf, sum_=sum(_pmf)))
+    return pmf
