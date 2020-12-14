@@ -281,14 +281,14 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     # not `[(curr_layer, 0), (curr_layer, 1), (curr_layer, 2), ..]` but rather `[0, 1, 2, ..]`,
     # so don't use `curr_layer = nn.loc[pd.IndexSlice[curr_layer, :], :]`.
     curr_layer = nn.loc[curr_layer]
-    check_layer(curr_layer)
+    curr_layer = check_layer(curr_layer)
     x = __fprop(x=x, layer=curr_layer)
 
     # recurse
     remainining_layers = layers[1:]
     if len(remainining_layers) > 0:
         remainining_layers = nn.loc[pd.IndexSlice[remainining_layers, :], :]
-        check_nn(remainining_layers)
+        remaining_layers = check_nn(remainining_layers)
         return _fprop(x=x, nn=remainining_layers)
     else:
         return x
