@@ -69,7 +69,7 @@ def check_layer(layer: object) -> Layer:
     util.check_type(layer, Layer)
     util.check_not_type(layer.index, pd.MultiIndex)
     util.check_not_type(layer.columns, pd.MultiIndex)
-    util.check_dtype(layer, float)
+    layer.apply(check_neuron, axis="columns")
     """
     Because different layers can have different widths, some rows may not be completely filled across.
     But obviously, for neurons on the same layer, the number of neurons on the previous layer is also the same.
