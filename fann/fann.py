@@ -30,13 +30,9 @@ represents the weights feeding into a single neuron on that layer.
 The first column (having index key "_bias_" on axis=1)
 is always reserved for the bias term.
 
-(E.g. the first row represents the bias/weights feeding from the input layer into
+E.g. the first row represents the bias/weights feeding from the input layer into
 the first hidden layer's first neuron; the second row---if applicable---could represent
-the bias/weights feeding from the input layer into the first hidden layer's second neuron.)
-
-Because different layers can have different widths, some rows may not be completely filled across.
-But obviously, for neurons on the same layer, the number of neurons on the previous layer is also the same.
-Hence, any two rows on the same block will be filled to the same width.
+the bias/weights feeding from the input layer into the first hidden layer's second neuron.
 """
 
 # types
@@ -74,6 +70,18 @@ def check_layer(layer: object) -> Layer:
     util.check_not_type(layer.index, pd.MultiIndex)
     util.check_not_type(layer.columns, pd.MultiIndex)
     util.check_dtype(layer, float)
+    """
+    Because different layers can have different widths, some rows may not be completely filled across.
+    But obviously, for neurons on the same layer, the number of neurons on the previous layer is also the same.
+    Hence, any two rows on the same layer must be filled to the same width.
+    """
+    colnames = layer.dropna(how="all", axis="columns").columns
+    for _, row in layer.iterrows():
+        colnames_ = row.dropna().index
+        if not colnames_.equals(colnames):
+            raise ValueError("{colnames_} != {colnames}!".format(colnames_=colnames_, colnames=colnames))
+        del colnames_
+    del colnames
     return layer
 
 
