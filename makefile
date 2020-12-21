@@ -1,3 +1,5 @@
+.PHONY: diff commit
+
 diff:
 	clear && git status && git diff
 
