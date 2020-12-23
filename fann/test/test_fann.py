@@ -1,5 +1,5 @@
 # project source code
-import fann
+from ..fann import *
 # testing suite
 import unittest
 from unittest import mock
