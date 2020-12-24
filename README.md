@@ -5,7 +5,7 @@ homebrew machine learning
 ## fann
 Arbitrary-depth, arbitrary-width feedforward artificial neural network.
 Easy-to-read Python implementation of deep learning for multinomial classification.
-Source code in `fann/fann.py`, unit tests in `fann/test/test_fann.py`, demo in `fann/demo/demo_fann.ipynb`.
+Source code in `foggy-ml/fann/fann.py`, unit tests in `foggy-ml/fann/test/test_fann.py`, demo in `foggy-ml/fann/demo/demo_fann.ipynb`.
 
 # Style notes
 
