@@ -1,4 +1,4 @@
-# ml
+# foggyML
 homebrew machine learning
 (inspired by a variety of lessons, blog posts, and StackOverflow answers on the Web)
 
