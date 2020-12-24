@@ -5,7 +5,7 @@ Easy-to-read Python implementation of deep learning for multinomial classificati
 
 # syntax utils
 from typing import List, Callable, Union
-from ..util import check_type, check_dtype, check_not_type, check_pmf
+from ..util import check_type, check_dtype, check_not_type, check_pmf, get_neg_llh as get_loss
 # data structures
 import pandas as pd
 # calculations and algorithms
