@@ -7,18 +7,24 @@ See style notes in top-level repository README.md.
 
 # syntax utils
 from typing import List, Callable, Union
-from ..util import check_type, check_dtype, check_not_type, check_pmf, get_neg_llh as get_loss
 # data structures
 import pandas as pd
+# data wrangling
+from ..util import check_type, check_dtype, check_not_type, check_pmf
 # calculations and algorithms
 import numpy as np
 from scipy.special import expit, softmax
+from ..util import get_neg_llh as get_loss
 
 __all__ = [
+    # data structures
     "Neuron", "Layer", "NN",
+    # magic numbers
     "NN_INDEX_NLEVELS", "BIAS_INDEX",
+    # data wrangling
     "check_data_point", "check_neuron", "check_layer", "check_nn",
     "nnify", "get_bias", "get_w_in", "get_a_in", "get_a_out",
+    # calculations and algorithms
     "activate", "squash",
     "____fprop", "___fprop", "__fprop", "_fprop", "fprop", "predict",
 ]
