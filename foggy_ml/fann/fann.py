@@ -14,6 +14,14 @@ import pandas as pd
 import numpy as np
 from scipy.special import expit, softmax
 
+__all__ = [
+    "Neuron", "Layer", "NN",
+    "NN_INDEX_NLEVELS", "BIAS_INDEX",
+    "check_data_point", "check_neuron", "check_layer", "check_nn",
+    "nnify", "get_bias", "get_w_in", "get_a_in", "get_a_out",
+    "activate", "squash",
+    "____fprop", "___fprop", "__fprop", "_fprop", "fprop", "predict",
+]
 
 ########################################################################################################################
 # NN OBJECT ############################################################################################################
@@ -181,7 +189,7 @@ squash: Callable[[pd.Series], pd.Series] = softmax  # function[[pd.Series[float]
 # FEED FORWARD AKA FORWARD PASS AKA FORWARD PROPAGATION ################################################################
 ########################################################################################################################
 
-def ___fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activate) -> float:
+def ____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activate) -> float:
     """
     Forward-propagate the previous layer's output with the current neuron's weights and activation function.
 
@@ -211,7 +219,7 @@ def ___fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activate
     return a_out
 
 
-def __fprop(x: pd.Series, layer: Layer) -> pd.Series:
+def ___fprop(x: pd.Series, layer: Layer) -> pd.Series:
     """
     Forward-propagate the previous layer's output with the current layer's weights and activation function.
 
@@ -232,10 +240,10 @@ def __fprop(x: pd.Series, layer: Layer) -> pd.Series:
     """
     x = check_data_point(x=x)
     layer = check_layer(layer=layer)
-    return layer.apply(lambda neuron: ___fprop(x=x, neuron=neuron), axis="columns")
+    return layer.apply(lambda neuron: ____fprop(x=x, neuron=neuron), axis="columns")
 
 
-def _fprop(x: pd.Series, nn: NN) -> pd.Series:
+def __fprop(x: pd.Series, nn: NN) -> pd.Series:
     """
     Forward-propagate the input through the network.
 
@@ -262,20 +270,20 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     # so don't use `curr_layer = nn.loc[pd.IndexSlice[curr_layer, :], :]`
     curr_layer = nn.loc[curr_layer]
     curr_layer = check_layer(layer=curr_layer)
-    x = __fprop(x=x, layer=curr_layer)
+    x = ___fprop(x=x, layer=curr_layer)
 
     # recurse
     remainining_layers = layers[1:]
     if len(remainining_layers) > 0:
         remainining_layers = nn.loc[pd.IndexSlice[remainining_layers, :], :]
         remaining_layers = check_nn(nn=remainining_layers)
-        return _fprop(x=x, nn=remainining_layers)
+        return __fprop(x=x, nn=remainining_layers)
     else:
         # this was the final i.e. output layer
         return x
 
 
-def fprop(x: pd.Series, nn: NN) -> pd.Series:
+def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     """
     Forward-propagate the input through the network.
 
@@ -291,10 +299,10 @@ def fprop(x: pd.Series, nn: NN) -> pd.Series:
     """
     x = check_data_point(x=x)
     nn = check_nn(nn=nn)
-    return squash(_fprop(x=x, nn=nn))
+    return squash(__fprop(x=x, nn=nn))
 
 
-def fprop_(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
+def fprop(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     """
     Forward-propagate each input through the network.
     Could be done more efficiently with some clever linear algebra, but this does the job.
@@ -314,7 +322,7 @@ def fprop_(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     X = X.apply(check_data_point, axis="columns")
     nn = check_nn(nn=nn)
 
-    p_hat = X.apply(lambda x: fprop(x=x, nn=nn), axis="columns")
+    p_hat = X.apply(lambda x: _fprop(x=x, nn=nn), axis="columns")
     p_hat = p_hat.apply(check_pmf, axis="columns")
     return p_hat
 
@@ -337,7 +345,7 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
     X = X.apply(check_data_point, axis="columns")
     nn = check_nn(nn=nn)
 
-    p_hat = fprop_(X=X, nn=nn)
+    p_hat = fprop(X=X, nn=nn)
     p_hat = p_hat.apply(check_pmf, axis="columns")
     return p_hat.apply(lambda _p_hat: _p_hat.idxmax(), axis="columns")  # argmax of each row
 
