@@ -131,10 +131,49 @@ to "regularize" parameters by penalizing deviations from zero.
 This is like LASSO or Ridge or ElasticNet OLS regression.
 """
 
-def get_neg_llh(y: pd.DataFrame, p_hat: pd.DataFrame, normalize: bool=True) -> float:
+def _get_neg_llh(p_y: pd.Series, normalize: bool=True) -> float:
+    """
+    Negative log likelihood.
+
+    input
+    -----
+    p_y: pd.Series, how much probability mass we assigned to the correct label for each point.
+        E.g. if p_y = [0.10, 0.85, 0.50], then there were 3 data points. For the first point,
+        we distributed 1-0.10=0.90 probability mass among incorrect labels. Depending on
+        how many categories there are, this is pretty poor. In particular, if this is a
+        binary classification task, then a simple coin flip would distribute only 0.50
+        probability mass to the incorrect label (whichever that might be).
+        For the second point, we distributed only 1-0.85=0.15 probability mass
+        among incorrect labels. This is pretty good. For the last point,
+        we distributed exactly half the probability mass among incorrect labels.
+
+    normalize: bool (default True), whether to divide by |dataset|;
+        False -> joint log-likelihood, True -> mean log-likelihood.
+
+    output
+    ------
+    float, the negative (joint or mean) log-likelihood.
+    """
+    p_y = check_type(p_y, type_=pd.Series)
+
+    # convert to negative joint log-likelihood
+    neg_llh = -np.sum(np.log(p_y))
+    if normalize:
+        r"""
+        negative arithmetic mean log-likelihood
+        = $ - \sum_i{\log p_i} / n $
+        = $ - \log(\prod_i{p_i}) / n $
+        = $ - \log((\prod_i{p_i})^{1/n}) $
+        = negative log geometric mean likelihood.
+        """
+        neg_llh /= len(p_y.index)
+    return check_type(neg_llh, type_=float)
+
+
+def get_neg_llh(y: pd.DataFrame, p: pd.DataFrame, normalize: bool=True) -> float:
     """
     Get negative (joint or mean) log-likelihood of the set of independent outcomes specified by `y`,
-    given the "model" specified by `p_hat`.
+    given the "model" specified by `p`.
     Log-likelihood is more numerically stable than raw likelihood,
     and negative makes this suitable for use as loss function in minization problem formulation.
 
@@ -142,7 +181,7 @@ def get_neg_llh(y: pd.DataFrame, p_hat: pd.DataFrame, normalize: bool=True) -> f
     -----
     y: pd.DataFrame (one-hot), the correct category label for each point.
 
-    p_hat: pd.DataFrame (index = observations, columns = category labels),
+    p: pd.DataFrame (index = observations, columns = category labels),
         how much probability mass we assigned to each category label for each point.
         Each row should be a well-formed probability mass function
         AKA discrete probability distribution.
@@ -155,22 +194,11 @@ def get_neg_llh(y: pd.DataFrame, p_hat: pd.DataFrame, normalize: bool=True) -> f
     float, the negative (joint or mean) log-likelihood.
     """
     y = check_one_hot(y=y)
-    p_hat = check_type(p_hat, type_=pd.DataFrame)
-    p_hat = p_hat.apply(check_pmf, axis="columns")
+    p = p.apply(check_pmf, axis="columns")
 
-    # pick out the entry corresponding to the probability assigned to the correct label in each row
-    p_hat_for_correct_label_per_row = (y * p_hat).sum(axis="columns")
-    p_hat_for_correct_label_per_row = check_type(p_hat_for_correct_label_per_row, type_=pd.Series)
-    # convert to negative joint log-likelihood
-    neg_llh = -np.sum(np.log(p_hat_for_correct_label_per_row))
-    neg_llh = check_type(neg_llh, type_=float)
-    if normalize:
-        r"""
-        negative arithmetic mean log-likelihood
-        = $ - \sum_i{\log p_i} / n $
-        = $ - \log(\prod_i{p_i}) / n $
-        = $ - \log((\prod_i{p_i})^{1/n}) $
-        = negative log geometric mean likelihood.
-        """
-        neg_llh /= len(y.index)
-    return neg_llh
+    """
+    y is one-hot, so this picks out the entry corresponding to
+    the probability assigned to the correct label in each row
+    """
+    p_y = (p * y).sum(axis="columns")
+    return _get_neg_llh(p_y=p_y, normalize=normalize)
