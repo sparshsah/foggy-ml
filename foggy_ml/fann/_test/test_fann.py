@@ -5,3 +5,11 @@ from foggy_ml.fann import *
 # testing suite
 import unittest
 from unittest import mock
+
+class TestSkeleton(unittest.TestCase):
+
+    def test_skeleton(self):
+        self.assertTrue(True)
+
+if __name__ == "__main__":
+    unittest.main()
