@@ -64,11 +64,15 @@ def check_pmf(pmf: object) -> object:
     return pmf
 
 
+def _check_one_hot(_y: pd.Series) -> pd.Series:
+    _y = check_pmf(_y)
+    if not np.alltrue(np.isclose(_y, 0) | np.isclose(_y, 1)):
+        raise ValueError(_y)
+    return _y
+
+
 def check_one_hot(y: pd.DataFrame) -> pd.DataFrame:
-    y = check_type(y, type_=pd.DataFrame)
-    y = y.apply(check_pmf, axis="columns")
-    if not np.alltrue(np.isclose(y, 0) | np.isclose(y, 1)):
-        raise ValueError
+    y = y.apply(_check_one_hot, axis="columns")
     return y
 
 
@@ -76,7 +80,29 @@ def check_one_hot(y: pd.DataFrame) -> pd.DataFrame:
 # DATA WRANGLING #######################################################################################################
 ########################################################################################################################
 
-def one_hotify(y: pd.Series, y_choices: Optional[list]=None) -> pd.DataFrame:
+def _one_hotify(_y: object, _y_choices: list) -> pd.Series:
+    """
+    Convert a single category label to one-hot vector representation.
+
+    E.g.
+    >>> _one_hotify(2, range(4)) == pd.Series({0: 0, 1: 0, 2: 1, 3: 0})
+    or
+    >>> _one_hotify("Away", ["Home", "Away"]) == pd.Series({"Home": 0, "Away": 1})
+
+    input
+    -----
+    _y: object, e.g. int or str, the actual category label.
+
+    _y_choices: list, the possible choices of category label.
+
+    output
+    ------
+    pd.Series, the one-hot vector representation.
+    """
+    return pd.Series({_y: 1}, index=_y_choices).fillna(0)
+
+
+def one_hotify(y: pd.Series, _y_choices: Optional[list]=None) -> pd.DataFrame:
     """
     Convert a flat vector of category labels to a one-hot DataFrame.
 
@@ -84,16 +110,16 @@ def one_hotify(y: pd.Series, y_choices: Optional[list]=None) -> pd.DataFrame:
     -----
     y: pd.Series, the flat vector.
 
-    y_choices: Optional[list] (default None), if you want to enforce a particular
+    _y_choices: Optional[list] (default None), use if you want to enforce a particular
         column order for the output. Default column order follows default sort.
         For example, if your category labels are ["Home", "Away"], that might be a more
         natural order than the default alphabetical sort ["Away", "Home"].
     """
-    y_choices = sorted(y.unique()) if y_choices is None else y_choices
-    _ = check_subset(sub=set(y.unique()), sup=set(y_choices))
-    assert False, "Implement this!"
-    y = check_one_hot(y)
-    return y
+    _y_choices = sorted(y.unique()) if _y_choices is None else _y_choices
+    _ = check_subset(sub=set(y.unique()), sup=set(_y_choices))
+
+    y = y.apply(_one_hotify, _y_choices=_y_choices)
+    return check_one_hot(y)
 
 
 ########################################################################################################################
