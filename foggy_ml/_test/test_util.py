@@ -1,5 +1,5 @@
 # project source code
-from ..util import *
+from foggy_ml.util import *
 # testing suite
 import unittest
 
