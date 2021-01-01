@@ -162,8 +162,8 @@ def _get_neg_llh(p_y: pd.Series, normalize: bool=True) -> float:
         r"""
         negative arithmetic mean log-likelihood
         = $ - \sum_i{\log p_i} / n $
-        = $ - \log(\prod_i{p_i}) / n $
-        = $ - \log((\prod_i{p_i})^{1/n}) $
+        = $ - \log(\prod_i p_i) / n $
+        = $ - \log((\prod_i p_i)^{1/n}) $
         = negative log geometric mean likelihood.
         """
         neg_llh /= len(p_y.index)
