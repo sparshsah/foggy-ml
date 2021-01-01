@@ -72,8 +72,7 @@ def _check_one_hot(_y: pd.Series) -> pd.Series:
 
 
 def check_one_hot(y: pd.DataFrame) -> pd.DataFrame:
-    y = y.apply(_check_one_hot, axis="columns")
-    return y
+    return y.apply(_check_one_hot, axis="columns")
 
 
 ########################################################################################################################

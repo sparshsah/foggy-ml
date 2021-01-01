@@ -118,8 +118,7 @@ def check_nn(nn: object) -> NN:
 def nnify(nn: List[Layer]) -> NN:
     nn = [check_layer(layer=layer) for layer in nn]
     nn = pd.concat(nn, keys=range(len(nn)))
-    nn = check_nn(nn=nn)
-    return nn
+    return check_nn(nn=nn)
 
 
 def get_bias(neuron: Neuron) -> float:
@@ -155,8 +154,7 @@ def get_a_in(x: pd.Series, w_in: pd.Series) -> float:
     # w_in = check_type(w_in, pd.Series)
 
     a_in = x.dot(w_in)
-    a_in = check_type(a_in, float)
-    return a_in
+    return check_type(a_in, float)
 
 
 def get_a_out(bias: float, a_in: float, fn: Callable[[float], float]) -> float:
@@ -166,8 +164,7 @@ def get_a_out(bias: float, a_in: float, fn: Callable[[float], float]) -> float:
     # fn = check_type(fn, Callable[[float], float])
 
     a_out = fn(bias + a_in)
-    a_out = check_type(a_out, float)
-    return a_out
+    return check_type(a_out, float)
 
 
 ########################################################################################################################
@@ -221,8 +218,7 @@ def ____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activat
     bias = get_bias(neuron=neuron)
     w_in = get_w_in(x=x, neuron=neuron)
     a_in = get_a_in(x=x, w_in=w_in)
-    a_out = get_a_out(bias=bias, a_in=a_in, fn=fn)
-    return a_out
+    return get_a_out(bias=bias, a_in=a_in, fn=fn)
 
 
 def ___fprop(x: pd.Series, layer: Layer) -> pd.Series:
@@ -279,11 +275,11 @@ def __fprop(x: pd.Series, nn: NN) -> pd.Series:
     x = ___fprop(x=x, layer=curr_layer)
 
     # recurse
-    remainining_layers = layers[1:]
-    if len(remainining_layers) > 0:
-        remainining_layers = nn.loc[pd.IndexSlice[remainining_layers, :], :]
-        remaining_layers = check_nn(nn=remainining_layers)
-        return __fprop(x=x, nn=remainining_layers)
+    remaining_layers = layers[1:]
+    if len(remaining_layers) > 0:
+        remaining_layers = nn.loc[pd.IndexSlice[remaining_layers, :], :]
+        remaining_layers = check_nn(nn=remaining_layers)
+        return __fprop(x=x, nn=remaining_layers)
     else:
         # this was the final i.e. output layer
         return x
@@ -329,8 +325,7 @@ def fprop(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     nn = check_nn(nn=nn)
 
     p_hat = X.apply(lambda x: _fprop(x=x, nn=nn), axis="columns")
-    p_hat = p_hat.apply(check_pmf, axis="columns")
-    return p_hat
+    return p_hat.apply(check_pmf, axis="columns")
 
 
 def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
@@ -365,7 +360,6 @@ some tutorials for basic 2-layer perceptrons:
 https://towardsdatascience.com/how-to-build-your-own-neural-network-from-scratch-in-python-68998a08e4f6
 https://towardsdatascience.com/step-by-step-guide-to-building-your-own-neural-network-from-scratch-df64b1c5ab6e
 https://towardsdatascience.com/how-to-build-a-deep-neural-network-without-a-framework-5d46067754d5
-"""
 
 def bprop():
     # This function learns parameters for the neural network and returns the model.
@@ -412,3 +406,4 @@ def bprop():
         model = { 'W1': W1, 'b1': b1, 'W2': W2, 'b2': b2}
 
     return model
+"""
