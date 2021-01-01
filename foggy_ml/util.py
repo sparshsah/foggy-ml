@@ -1,3 +1,5 @@
+# syntax utils
+from typing import Optional
 # data structures
 import pandas as pd
 # calculations and algorithms
@@ -45,6 +47,12 @@ def check_not_type(obj: object, type_: type, check_dtype: bool=False) -> object:
     return check_type(obj=obj, type_=type_, check_dtype=check_dtype, check_not=True)
 
 
+def check_subset(sub: set=set(), sup: set=set()) -> set:
+    if not sub.issubset(sup):
+        raise ValueError(sub.difference(sup))
+    return sub
+
+
 def check_pmf(pmf: object) -> object:
     # e.g. list, dict, np.ndarray, pd.Series
     pmf_ = pd.Series(pmf)
@@ -57,19 +65,39 @@ def check_pmf(pmf: object) -> object:
 
 
 def check_one_hot(y: pd.DataFrame) -> pd.DataFrame:
-    raise NotImplementedError
+    y = check_type(y, type_=pd.DataFrame)
+    y = y.apply(check_pmf, axis="columns")
+    if not np.alltrue(np.isclose(y, 0) | np.isclose(y, 1)):
+        raise ValueError
+    return y
 
 
 ########################################################################################################################
 # DATA WRANGLING #######################################################################################################
 ########################################################################################################################
 
-def one_hotify(y: pd.Series) -> pd.DataFrame:
-    raise NotImplementedError
+def one_hotify(y: pd.Series, y_choices: Optional[list]=None) -> pd.DataFrame:
+    """
+    Convert a flat vector of category labels to a one-hot DataFrame.
+
+    input
+    -----
+    y: pd.Series, the flat vector.
+
+    y_choices: Optional[list] (default None), if you want to enforce a particular
+        column order for the output. Default column order follows default sort.
+        For example, if your category labels are ["Home", "Away"], that might be a more
+        natural order than the default alphabetical sort ["Away", "Home"].
+    """
+    y_choices = sorted(y.unique()) if y_choices is None else y_choices
+    _ = check_subset(sub=set(y.unique()), sup=set(y_choices))
+    assert False, "Implement this!"
+    y = check_one_hot(y)
+    return y
 
 
 ########################################################################################################################
-# LOSS #################################################################################################################
+# LOSS | |- || |_ ######################################################################################################
 ########################################################################################################################
 
 """
@@ -78,84 +106,46 @@ to "regularize" parameters by penalizing deviations from zero.
 This is like LASSO or Ridge or ElasticNet OLS regression.
 """
 
-def get_llh(p: pd.Series) -> float:
+def get_neg_llh(y: pd.DataFrame, p_hat: pd.DataFrame, normalize: bool=True) -> float:
     """
-    Log likelihood of a series of independent outcomes.
-    More numerically stable than raw likelihood.
+    Get negative (joint or mean) log-likelihood of the set of independent outcomes specified by `y`,
+    given the "model" specified by `p_hat`.
+    Log-likelihood is more numerically stable than raw likelihood,
+    and negative makes this suitable for use as loss function in minization problem formulation.
 
     input
     -----
-    p: pd.Series, the probability of each outcome.
-
-    output
-    ------
-    float, the joint log likelihood of the outcomes.
-    """
-    p = check_pmf(pmf=p)
-
-    llh = np.log(p).sum()
-    llh = check_type(llh, float)
-    return llh
-
-
-def _get_loss(p_y: pd.Series) -> float:
-    """
-    Negative log likelihood loss.
-
-    input
-    -----
-    p_y: pd.Series, how much probability mass we assigned to the correct label for each point.
-        E.g. if p_y = [0.10, 0.85, 0.50], then there were 3 data points. For the first point,
-        we distributed 1-0.10=0.90 probability mass among incorrect labels. Depending on
-        how many categories there are, this is pretty poor. In particular, if this is a
-        binary classification task, then a simple coin flip would distribute only 0.50
-        probability mass to the incorrect label (whichever that might be).
-        For the second point, we distributed only 1-0.85=0.15 probability mass
-        among incorrect labels. This is pretty good. For the last point,
-        we distributed exactly half the probability mass among incorrect labels.
-
-    output
-    ------
-    float, the calculated loss.
-    """
-    loss = -get_llh(p=p_y)
-    loss = check_type(loss, float)
-    return loss
-
-
-def get_loss(y: pd.Series, p_hat: pd.DataFrame) -> float:
-    """
-    Negative log likelihood loss (normalized by |training data|).
-
-    input
-    -----
-    y: pd.Series, the correct category label for each point.
+    y: pd.DataFrame (one-hot), the correct category label for each point.
 
     p_hat: pd.DataFrame (index = observations, columns = category labels),
         how much probability mass we assigned to each category label for each point.
         Each row should be a well-formed probability mass function
         AKA discrete probability distribution.
 
+    normalize: bool (default True), whether to divide by |dataset|;
+        False -> joint log-likelihood, True -> mean log-likelihood.
+
     output
     ------
-    float, the calculated loss.
+    float, the negative (joint or mean) log-likelihood.
     """
-    y = check_type(y, pd.Series)
-    p_hat = check_type(p_hat, pd.DataFrame)
+    y = check_one_hot(y=y)
+    p_hat = check_type(p_hat, type_=pd.DataFrame)
     p_hat = p_hat.apply(check_pmf, axis="columns")
 
-    # pick out the entry for the correct label in each row
-    p_y = pd.Series({n: p_hat.loc[n, label] for n, label in y.items()})
-    loss = _get_loss(p_y=p_y) / y.count()
-    loss = check_type(loss, float)
-    return loss
-
-
-def get_neg_llh(y: pd.DataFrame, p_hat: pd.DataFrame, normalize: bool=True) -> float:
-    neg_llh = -np.sum(np.log(y * p_hat))
+    # pick out the entry corresponding to the probability assigned to the correct label in each row
+    p_hat_for_correct_label_per_row = (y * p_hat).sum(axis="columns")
+    p_hat_for_correct_label_per_row = check_type(p_hat_for_correct_label_per_row, type_=pd.Series)
+    # convert to negative joint log-likelihood
+    neg_llh = -np.sum(np.log(p_hat_for_correct_label_per_row))
+    neg_llh = check_type(neg_llh, type_=float)
     if normalize:
-        # negative log geom mean likelihood
-        # since geom mean corresponds to _**(1/n)
-        # and log(_**(1/n)) corresponds to (1/n)*log(_)
+        r"""
+        negative arithmetic mean log-likelihood
+        = $ - \sum_i{\log p_i} / n $
+        = $ - \log(\prod_i{p_i}) / n $
+        = $ - \log((\prod_i{p_i})^{1/n}) $
+        = negative log geometric mean likelihood.
+        """
         neg_llh /= len(y.index)
     return neg_llh
