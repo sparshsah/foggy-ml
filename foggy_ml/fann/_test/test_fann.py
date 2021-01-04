@@ -4,7 +4,6 @@
 # from foggy_ml.fann import *
 # testing suite
 import unittest
-from unittest import mock
 
 class TestSkeleton(unittest.TestCase):
 
