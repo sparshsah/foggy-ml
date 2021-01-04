@@ -355,12 +355,12 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
 # TRAINING AKA BACK-PROPAGATION ########################################################################################
 ########################################################################################################################
 
-"""
-some tutorials for basic 2-layer perceptrons:
-https://towardsdatascience.com/how-to-build-your-own-neural-network-from-scratch-in-python-68998a08e4f6
-https://towardsdatascience.com/step-by-step-guide-to-building-your-own-neural-network-from-scratch-df64b1c5ab6e
-https://towardsdatascience.com/how-to-build-a-deep-neural-network-without-a-framework-5d46067754d5
+def bprop():
+    # TODO(sparshsah)
+    raise NotImplementedError
 
+
+"""
 def bprop():
     # This function learns parameters for the neural network and returns the model.
     # - nn_hdim: Number of nodes in the hidden layer
@@ -406,4 +406,9 @@ def bprop():
         model = { 'W1': W1, 'b1': b1, 'W2': W2, 'b2': b2}
 
     return model
+
+some tutorials for basic 2-layer perceptrons:
+https://towardsdatascience.com/how-to-build-your-own-neural-network-from-scratch-in-python-68998a08e4f6
+https://towardsdatascience.com/step-by-step-guide-to-building-your-own-neural-network-from-scratch-df64b1c5ab6e
+https://towardsdatascience.com/how-to-build-a-deep-neural-network-without-a-framework-5d46067754d5
 """
