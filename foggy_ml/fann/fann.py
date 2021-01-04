@@ -13,7 +13,7 @@ import pandas as pd
 from ..util import check_type, check_dtype, check_not_type, check_pmf
 # calculations and algorithms
 import numpy as np
-from scipy.special import expit, softmax
+from scipy.special import expit, softmax  # pylint: disable=no-name-in-module
 from ..util import get_neg_llh as get_loss
 
 __all__ = [
