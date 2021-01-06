@@ -1,6 +1,7 @@
 # foggyML
 homebrew machine learning
-(inspired by a variety of lessons, blog posts, and StackOverflow answers on the Web)
+(inspired by my college courses, plus a
+heaping spoonful of lessons, blog posts, and StackOverflow answers on the Web)
 
 ## fann
 Arbitrary-depth, arbitrary-width feedforward artificial neural network.
