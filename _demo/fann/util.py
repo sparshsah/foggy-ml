@@ -20,8 +20,8 @@ sys.path.append(os.path.abspath(os.path.join("..", "..")))  # ../.. = fann/ -> _
 del sys, os
 
 # target source code
-import foggy_ml.util as util
-import foggy_ml.fann as fann  # homebrew implementation
+import foggy_ml.util as util  # we set the path, so pylint: disable=import-error
+import foggy_ml.fann as fann  # homebrew implementation.. we set the path, so pylint: disable=import-error
 
 # syntax utils
 from typing import Tuple, Dict, Callable, Union, Optional
