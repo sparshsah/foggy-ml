@@ -12,8 +12,8 @@ interactive demo in `_demo/fann/demo_fann.ipynb`.
 
 # Style notes
 
-- Many readers will see this code and instinctively want to
-refactor from functional to OOP. Resist this urge.
+- Many readers will see this code and instinctively want to refactor
+from a more functional to a more object-oriented style. Resist this urge.
 
 - Obviously, we've added a lot of sometimes-redundant
 type checking and assertions, which tend to be slow,
