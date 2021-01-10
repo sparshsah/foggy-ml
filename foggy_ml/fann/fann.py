@@ -10,7 +10,7 @@ from typing import List, Callable, Union
 # data structures
 import pandas as pd
 # data wrangling
-from ..util import check_type, check_dtype, check_not_type, check_pmf
+from .. import util
 # calculations and algorithms
 import numpy as np
 from scipy.special import expit, softmax  # pylint: disable=no-name-in-module
@@ -63,27 +63,27 @@ BIAS_INDEX: Union[int, str] = "_bias_"
 # type checkers
 
 def check_data_point(x: object) -> pd.Series:
-    check_type(x, pd.Series)
-    check_not_type(x.index, pd.MultiIndex)
+    util.check_type(x, pd.Series)
+    util.check_not_type(x.index, pd.MultiIndex)
     if BIAS_INDEX in x.index:
         raise ValueError("Data point \n{x}\n contains reserved index {i}!".format(x=x, i=BIAS_INDEX))
-    check_dtype(x, float)
+    util.check_dtype(x, float)
     return x
 
 
 def check_neuron(neuron: object) -> Neuron:
-    check_type(neuron, Neuron)
-    check_not_type(neuron.index, pd.MultiIndex)
+    util.check_type(neuron, Neuron)
+    util.check_not_type(neuron.index, pd.MultiIndex)
     if BIAS_INDEX not in neuron.index:
         raise ValueError("Neuron \n{neuron}\n missing bias index {i}!".format(neuron=neuron, i=BIAS_INDEX))
-    check_dtype(neuron, float)
+    util.check_dtype(neuron, float)
     return neuron
 
 
 def check_layer(layer: object) -> Layer:
-    check_type(layer, Layer)
-    check_not_type(layer.index, pd.MultiIndex)
-    check_not_type(layer.columns, pd.MultiIndex)
+    util.check_type(layer, Layer)
+    util.check_not_type(layer.index, pd.MultiIndex)
+    util.check_not_type(layer.columns, pd.MultiIndex)
     layer.apply(check_neuron, axis="columns")
     """
     Because different layers can have different widths, some rows may not be completely filled across.
@@ -101,13 +101,13 @@ def check_layer(layer: object) -> Layer:
 
 
 def check_nn(nn: object) -> NN:
-    check_type(nn, NN)
-    check_type(nn.index, pd.MultiIndex)
+    util.check_type(nn, NN)
+    util.check_type(nn.index, pd.MultiIndex)
     # levels[0] indexes the layers, levels[1] indexes the neurons on each layer
     if nn.index.nlevels != NN_INDEX_NLEVELS:
         raise ValueError("NN \n{nn}\n index nlevels = {nlevels} not {nlevels_}!".format(
             nn=nn, nlevels=nn.index.nlevels, nlevels_=NN_INDEX_NLEVELS))
-    check_not_type(nn.columns, pd.MultiIndex)
+    util.check_not_type(nn.columns, pd.MultiIndex)
     for layer in nn.index.remove_unused_levels().levels[0]:
         check_layer(layer=nn.loc[layer])
     return nn
@@ -126,7 +126,7 @@ def get_bias(neuron: Neuron) -> float:
     # neuron = check_neuron(neuron=neuron)
 
     bias = neuron[BIAS_INDEX]
-    bias = check_type(bias, float)
+    bias = util.check_type(bias, float)
     if pd.isnull(bias):
         raise ValueError("Neuron \n{neuron}\n missing bias!".format(neuron=neuron))
     return bias
@@ -154,7 +154,7 @@ def get_a_in(x: pd.Series, w_in: pd.Series) -> float:
     # w_in = check_type(w_in, pd.Series)
 
     a_in = x.dot(w_in)
-    return check_type(a_in, float)
+    return util.check_type(a_in, float)
 
 
 def get_a_out(bias: float, a_in: float, fn: Callable[[float], float]) -> float:
@@ -164,7 +164,7 @@ def get_a_out(bias: float, a_in: float, fn: Callable[[float], float]) -> float:
     # fn = check_type(fn, Callable[[float], float])
 
     a_out = fn(bias + a_in)
-    return check_type(a_out, float)
+    return util.check_type(a_out, float)
 
 
 ########################################################################################################################
@@ -325,7 +325,7 @@ def fprop(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     nn = check_nn(nn=nn)
 
     p_hat = X.apply(lambda x: _fprop(x=x, nn=nn), axis="columns")
-    return p_hat.apply(check_pmf, axis="columns")
+    return p_hat.apply(util.check_pmf, axis="columns")
 
 
 def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
@@ -347,7 +347,7 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
     nn = check_nn(nn=nn)
 
     p_hat = fprop(X=X, nn=nn)
-    p_hat = p_hat.apply(check_pmf, axis="columns")
+    p_hat = p_hat.apply(util.check_pmf, axis="columns")
     return p_hat.apply(lambda _p_hat: _p_hat.idxmax(), axis="columns")  # argmax of each row
 
 
