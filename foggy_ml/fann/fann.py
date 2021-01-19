@@ -92,10 +92,11 @@ def check_layer(layer: object) -> Layer:
     """
     colnames = layer.dropna(how="all", axis="columns").columns
     for _, row in layer.iterrows():
-        colnames_ = row.dropna().index
-        if not colnames_.equals(colnames):
-            raise ValueError("{colnames_} != {colnames}!".format(colnames_=colnames_, colnames=colnames))
-        del colnames_
+        _colnames = row.dropna().index
+        if not _colnames.equals(colnames):
+            raise ValueError("Neuron weights not filled across full Layer.. {_colnames} != {colnames}!".format(
+                _colnames=_colnames, colnames=colnames))
+        del _colnames
     del colnames
     return layer
 
