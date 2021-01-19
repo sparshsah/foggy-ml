@@ -90,14 +90,16 @@ def check_layer(layer: object) -> Layer:
     But obviously, for neurons on the same layer, the number of neurons on the previous layer is also the same.
     Hence, any two rows on the same layer must be filled to the same width.
     """
-    colnames = layer.dropna(how="all", axis="columns").columns
-    for _, row in layer.iterrows():
-        _colnames = row.dropna().index
-        if not _colnames.equals(colnames):
-            raise ValueError("Neuron weights not filled across full Layer.. {_colnames} != {colnames}!".format(
-                _colnames=_colnames, colnames=colnames))
-        del _colnames
-    del colnames
+    layer_index = layer.dropna(how="all", axis="columns").columns  # names of neurons on incoming Layer
+    for _, neuron in layer.iterrows():
+        neuron = check_neuron(neuron=neuron)
+        neuron_index = neuron.dropna().index
+        if not neuron_index.equals(layer_index):
+            raise ValueError(
+                "Neuron's weights not filled across its full Layer.. {neuron_index} != {layer_index}!".format(
+                    neuron_index=neuron_index, layer_index=layer_index))
+        del neuron_index
+    del layer_index
     return layer
 
 
@@ -134,7 +136,7 @@ def get_bias(neuron: Neuron) -> float:
 
 
 def get_w_in(x: pd.Series, neuron: Neuron) -> pd.Series:
-    """Get feed-in weights from neuron."""
+    """Extract feed-in weights from neuron, conforming to x's shape."""
     # x = check_data_point(x=x)
     # neuron = check_neuron(neuron=neuron)
 
