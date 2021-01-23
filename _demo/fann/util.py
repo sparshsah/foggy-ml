@@ -1,11 +1,11 @@
 """
 Helper packages and functions we'll use in our demo.
 
-It's not important to read every single line of every single one.
 They mainly just wrangle data into the various formats
 expected by us, `sklearn`, `matplotlib`, etc.
 
 Not necessarily the most elegant API or implementation.
+It's not important to read every single line of every single one.
 """
 
 # set path: add top-level local repo dir to PYTHONPATH
