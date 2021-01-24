@@ -8,20 +8,9 @@ Not necessarily the most elegant API or implementation.
 It's not important to read every single line of every single one.
 """
 
-# set path: add top-level local repo dir to PYTHONPATH
-# allows e.g. `import foggy_ml.fann` to work
-"""
-could also accomplish by:
-for Mac: `sh$ export PYTHONPATH="$PYTHONPATH:/path/to/foggy-ml"`
-for Windows: edit your environment variables
-"""
-import os, sys
-sys.path.append(os.path.abspath(os.path.join("..", "..")))  # ../.. = fann/ -> _demo/ -> foggy-ml/ = /path/to/foggy-ml
-del sys, os
-
 # target source code
-import foggy_ml.util as util  # we set the path, so pylint: disable=import-error
-import foggy_ml.fann as fann  # homebrew implementation.. we set the path, so pylint: disable=import-error
+import foggy_ml.util as util  # assumes `/path/to/foggy-ml` in `PYTHONPATH`, so pylint: disable=import-error
+import foggy_ml.fann as fann  # again, pylint: disable=import-error
 
 # syntax utils
 from typing import Tuple, Dict, Callable, Union, Optional
