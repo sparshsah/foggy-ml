@@ -163,7 +163,7 @@ def plot_data(X: pd.DataFrame, y: pd.Series, title: Optional[str]=None,
               ax: Optional[plt.matplotlib.axes._base._AxesBase]=None):
     ax = plt if ax is None else ax
     # caution: in scatterplot, `x` is actually X[0] i.e. the 1st feature, `y` is X[1] i.e. 2nd feature
-    ax.scatter(x=X[0], y=X[1], c=y, cmap=plt.cm.coolwarm)  # pylint: disable=no-member
+    ax.scatter(x=X[0], y=X[1], c=y, cmap=plt.cm.get_cmap("coolwarm"))
     try:
         ax.set_title(title)
     except AttributeError:
