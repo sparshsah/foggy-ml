@@ -13,7 +13,7 @@ import pandas as pd
 from .. import util
 # calculations and algorithms
 import numpy as np
-from scipy.special import expit, softmax  # pylint: disable=no-name-in-module
+from scipy.special import expit, softmax  # linter can't see C funcs, so pylint: disable=no-name-in-module
 from ..util import get_neg_llh as get_loss
 
 __all__ = [
