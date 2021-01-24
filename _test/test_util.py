@@ -72,6 +72,12 @@ class TestCheckDtype(unittest.TestCase):
         x = pd.DataFrame({"c0": {"r0": 0, "r1": 1}, "c1": {"r0": 2, "r1": 3}})
         self.assertIs(util.check_dtype(x, type_=int), x)
 
+    def test_int_df_fail(self):
+        import pandas as pd
+        x = pd.DataFrame({"c0": {"r0": 0, "r1": 1}, "c1": {"r0": 2, "r1": 3.}})
+        with self.assertRaises(TypeError):
+            util.check_dtype(x, type_=int)
+
 
 if __name__ == "__main__":
     unittest.main()
