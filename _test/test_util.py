@@ -10,6 +10,11 @@ class TestCheckType(unittest.TestCase):
         for x in -128, -2, -1, 0, 1, 2, 172:
             self.assertEqual(util.check_type(x, type_=int), x)
 
+    def test_primitive_int_fail(self):
+        for x in "a", 3.14, (0, 1), [0, 1]:
+            with self.assertRaises(TypeError):
+                util.check_type(x, type_=int)
+
 
 if __name__ == "__main__":
     unittest.main()
