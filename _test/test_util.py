@@ -211,5 +211,40 @@ class TestCheckNotDtype(unittest.TestCase):
         self.assertIs(util.check_dtype(x, type_=int, check_not=True), x)
 
 
+class TestCheckSubset(unittest.TestCase):
+
+    def check_same_succ(self):
+        sub = {"a", 0}
+        sup = {"a", 0}
+        self.assertEqual(util.check_subset(sub=sub, sup=sup), sub)
+
+    def check_set_succ(self):
+        sub = {"a", 0}
+        sup = {"a", 0, 1}
+        self.assertEqual(util.check_subset(sub=sub, sup=sup), sub)
+
+    def check_set_fail(self):
+        sub = {"a", 0}
+        sup = {"a", 1, 2}
+        with self.assertRaises(ValueError):
+            util.check_subset(sub=sub, sup=sup)
+
+    def check_list_succ(self):
+        sub = ["a", 0, 0]
+        sup = ["a", 0, 1]
+        self.assertEqual(util.check_subset(sub=sub, sup=sup), sub)
+
+    def check_list_fail(self):
+        sub = ["a", 0]
+        sup = ["a", 1, 2]
+        with self.assertRaises(ValueError):
+            util.check_subset(sub=sub, sup=sup)
+
+    def check_mixed_succ(self):
+        sub = ["a", 0, 0]
+        sup = {"a", 0, 1}
+        self.assertEqual(util.check_subset(sub=sub, sup=sup), sub)
+
+
 if __name__ == "__main__":
     unittest.main()
