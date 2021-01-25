@@ -103,7 +103,8 @@ def _one_hotify(_y: object, _y_choices: list) -> pd.Series:
     ------
     pd.Series, the one-hot vector representation.
     """
-    return pd.Series({_y: 1}, index=_y_choices).fillna(0)
+    _y = pd.Series({_y: 1}, index=_y_choices).fillna(0)
+    return _check_one_hot(_y)
 
 
 def one_hotify(y: pd.Series, _y_choices: Optional[list]=None) -> pd.DataFrame:
