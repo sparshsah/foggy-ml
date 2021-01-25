@@ -308,6 +308,20 @@ class TestCheckOneHot(unittest.TestCase):
         with self.assertRaises(ValueError):
             util._check_one_hot(r0)
 
+    def test_df_succ(self):
+        import pandas as pd
+        import numpy as np
+        # both data points belong to category b
+        df = pd.DataFrame({"is_category_a": [0, 0], "is_category_b": [1, 1]})
+        # returns a copy, not the original -> can't check identity
+        self.assertTrue(np.allclose(util.check_one_hot(df), df))
+
+    def test_df_fail(self):
+        import pandas as pd
+        df = pd.DataFrame({"a": [0, 0], "b": [0, 1]})
+        with self.assertRaises(ValueError):
+            util.check_one_hot(df)
+
 
 if __name__ == "__main__":
     unittest.main()
