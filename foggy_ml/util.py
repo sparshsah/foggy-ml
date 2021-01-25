@@ -56,7 +56,10 @@ def check_subset(sub: set=set(), sup: set=set()) -> set:
 def check_pmf(pmf: object, permit_nan=False) -> object:
     # e.g. list, dict, np.ndarray, pd.Series
     pmf_ = pd.Series(pmf)
-    check_dtype(pmf_, float)
+    try:
+        pmf_ = check_dtype(pmf_, float)
+    except TypeError:
+        pmf_ = check_dtype(pmf_, int)
     if not permit_nan and pmf_.isnull().any():
         raise ValueError("{pmf_} not non-null!".format(pmf_=pmf_))
     if (pmf_ < -EPSILON).any():

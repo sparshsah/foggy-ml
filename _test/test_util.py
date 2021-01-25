@@ -271,5 +271,43 @@ class TestPMF(unittest.TestCase):
             util.check_pmf(pmf)
 
 
+class TestCheckOneHot(unittest.TestCase):
+
+    def test_row_succ(self):
+        import pandas as pd
+        r0 = pd.Series([0, 0, 1, 0])
+        self.assertIs(util._check_one_hot(r0), r0)
+
+    def test_row_none_hot_fail(self):
+        import pandas as pd
+        r0 = pd.Series([0, 0, 0, 0])
+        with self.assertRaises(ValueError):
+            util._check_one_hot(r0)
+
+    def test_row_un_hot_fail(self):
+        import pandas as pd
+        r0 = pd.Series([1, 1, 0, 1])
+        with self.assertRaises(ValueError):
+            util._check_one_hot(r0)
+
+    def test_row_all_hot_fail(self):
+        import pandas as pd
+        r0 = pd.Series([1, 1, 1, 1])
+        with self.assertRaises(ValueError):
+            util._check_one_hot(r0)
+
+    def test_row_nan_hot_fail(self):
+        import pandas as pd
+        r0 = pd.Series([0, 0, float("nan"), 0])
+        with self.assertRaises(ValueError):
+            util._check_one_hot(r0)
+
+    def test_row_nan_one_hot_fail(self):
+        import pandas as pd
+        r0 = pd.Series([0, float("nan"), 1, 0])
+        with self.assertRaises(ValueError):
+            util._check_one_hot(r0)
+
+
 if __name__ == "__main__":
     unittest.main()
