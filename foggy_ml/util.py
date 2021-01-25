@@ -53,10 +53,12 @@ def check_subset(sub: set=set(), sup: set=set()) -> set:
     return sub
 
 
-def check_pmf(pmf: object) -> object:
+def check_pmf(pmf: object, permit_nan=False) -> object:
     # e.g. list, dict, np.ndarray, pd.Series
     pmf_ = pd.Series(pmf)
     check_dtype(pmf_, float)
+    if not permit_nan and pmf_.isnull().any():
+        raise ValueError("{pmf_} not non-null!".format(pmf_=pmf_))
     if (pmf_ < -EPSILON).any():
         raise ValueError("{pmf_} not non-negative!".format(pmf_=pmf_))
     if not np.isclose(pmf_.sum(), 1.00):

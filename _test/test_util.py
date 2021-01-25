@@ -258,7 +258,7 @@ class TestPMF(unittest.TestCase):
 
     def test_nan_zero_succ(self):
         pmf = [0.2, 0, float("nan"), 0.8]
-        self.assertEqual(util.check_pmf(pmf), pmf)
+        self.assertEqual(util.check_pmf(pmf, permit_nan=True), pmf)
 
     def test_neg_fail(self):
         pmf = [0.2, -0.1, 0.1, 0.8]
