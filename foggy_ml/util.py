@@ -57,9 +57,9 @@ def check_pmf(pmf: object) -> object:
     # e.g. list, dict, np.ndarray, pd.Series
     pmf_ = pd.Series(pmf)
     check_dtype(pmf_, float)
-    if not np.alltrue(pmf_ >= -EPSILON):
+    if (pmf_ < -EPSILON).any():
         raise ValueError("{pmf_} not non-negative!".format(pmf_=pmf_))
-    if not np.isclose(sum(pmf_), 1.00):
+    if not np.isclose(pmf_.sum(), 1.00):
         raise ValueError("{pmf_} sums to {sum_} not 1.00!".format(pmf_=pmf_, sum_=sum(pmf_)))
     return pmf
 
