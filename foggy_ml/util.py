@@ -30,7 +30,7 @@ def check_type(obj: object, type_: type, check_dtype: bool=False, check_not: boo
     else:
         type_obj = type(obj)
         check = isinstance(obj, type_)
-    check = np.alltrue(check)
+    check = np.all(check)
     if check_not:
         check = not check
     if not check:
@@ -66,7 +66,7 @@ def check_pmf(pmf: object) -> object:
 
 def _check_one_hot(_y: pd.Series) -> pd.Series:
     _y = check_pmf(_y)
-    if not np.alltrue(np.isclose(_y, 0) | np.isclose(_y, 1)):
+    if not np.all(np.isclose(_y, 0) | np.isclose(_y, 1)):
         raise ValueError(_y)
     return _y
 
