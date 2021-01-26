@@ -153,8 +153,8 @@ def one_hotify(y: pd.Series, _y_options: Optional[list]=None) -> pd.DataFrame:
 
     _y_options: Optional[list] (default None), use if you want to enforce a particular
         column order for the output. Default column order follows default sort.
-        For example, if your category labels are ["Home", "Away"], that might be a more
-        natural order than the default alphabetical sort ["Away", "Home"].
+        For example, if your category labels are ['Home', 'Away'], that might be a more
+        natural order than the default alphabetical sort ['Away', 'Home'].
     """
     _y_options = sorted(y.unique()) if _y_options is None else _y_options
     _ = check_subset(sub=set(y.unique()), sup=set(_y_options))
@@ -168,8 +168,21 @@ def one_hotify(y: pd.Series, _y_options: Optional[list]=None) -> pd.DataFrame:
 ########################################################################################################################
 
 """
-One choice (not implemented) that can help combat overfitting is
-to "regularize" parameters by penalizing deviations from zero.
+We implement the "log loss" rather than e.g. MSE loss. One reason I find the MSE
+intuitively appealing is that it more severely penalizes more "confident" wrong answers.
+For example, if the possible category labels are A, B, C, with the correct
+label being A, and we assign Pr[A] = 0.50, the log loss will be the same
+regardless of whether we assign Pr[B] = 0.25 and Pr[C] = 0.25, or
+Pr[B] = 0.49 and Pr[C] = 0.01. On the other hand, the MSE loss will
+be worse in the latter case.
+
+With that said, in general maximum-likelihood estimators have nice properties
+and whereas in the OLS setting minimizing MSE yields an MLE, in the
+Binomial (or Multinomial) classification setting minimizing log loss
+yields an MLE.
+
+One legitimate additional choice (not implemented) that can help combat
+overfitting is to also "regularize" weights by penalizing deviations from zero.
 This is like LASSO or Ridge or ElasticNet OLS regression.
 """
 
