@@ -419,6 +419,19 @@ class TestGetNegLLH(unittest.TestCase):
     def test_reduced_zero_one(self):
         self.assertEqual(util._get_neg_llh(p_y=[0, 1]), float("inf"))
 
+    def test_df(self):
+        import pandas as pd
+        import numpy as np
+        y = util.one_hotify(pd.Series(["a", "b", "a"]))
+        p = pd.DataFrame({
+            "a": [0.50, 0.20, 0.70],
+            "b": [0.50, 0.80, 0.30]
+        })
+        res = util.get_neg_llh(y=y, p=p)
+        expected = np.log((0.50 * 0.80 * 0.70) ** (-1. / 3))
+        test = np.isclose(res, expected)
+        self.assertTrue(test)
+
 
 if __name__ == "__main__":
     unittest.main()
