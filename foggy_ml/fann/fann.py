@@ -6,7 +6,7 @@ See style notes in top-level repository README.md.
 """
 
 # syntax utils
-from typing import List, Iterable, Callable, Union
+from typing import List, Iterable, Callable, Union, Optional
 # data structures
 import pandas as pd
 # data wrangling
@@ -425,10 +425,12 @@ learning rate (or fine-enough step size, if that's how you want to specify the u
 can find local minima using the first derivative alone. The tradeoff is that Newton-Raphson can be faster.
 """
 
-def bprop(mini_batch_size=None, random_seed=1337):
-    if mini_batch_size is not None:
-        # technically, batch gradient descent is like trivial SGD where each epoch
-        # learns from a single mini-batch containing all the training data but OK
+def bprop(y: pd.Series, X: pd.DataFrame, nn: NN,
+          mini_batch_size: Optional[int]=None, random_seed: int=1337):
+    mini_batch_size = X.shape[0] if mini_batch_size is None else mini_batch_size
+    if mini_batch_size != X.shape[0]:
+        # technically, batch gradient descent is just trivial SGD where each epoch
+        # learns from a single mini-batch containing all the training data, but OK
         raise NotImplementedError("Don't yet support Stochastic Gradient Descent!")
     # TODO(sparshsah)
     raise NotImplementedError
