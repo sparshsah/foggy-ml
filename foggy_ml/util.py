@@ -240,5 +240,5 @@ def get_neg_llh(y: pd.DataFrame, p: pd.DataFrame, normalize: bool=True) -> float
     y is one-hot, so this picks out the entry corresponding to
     the probability assigned to the correct label in each row
     """
-    p_y = (p * y).sum(axis="columns")
+    p_y = (y * p).sum(axis="columns")
     return _get_neg_llh(p_y=p_y, normalize=normalize)
