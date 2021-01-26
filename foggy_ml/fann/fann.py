@@ -370,11 +370,11 @@ Then my professor reminded me that even in high-school statistics, logistic regr
 iterative "gradient descent"[1]. Some models just aren't amenable to fitting in closed form.
 This reminds me, TODO(sparshsah): why can't a logistic regression model be fitted in closed form?
 
-[1] More precisely, ordinary logistic regression uses the Newton-Raphson method,
-which is a bit like gradient descent in spirit but works by constructing a Taylor approximation of a function in
-the neighborhood of a suspected root---incidentally, this latter part means that for the Newton-Raphson
-method we must operate on the first derivative of the loss function, finding its root(s), and therefore
-must know the derivative of the first derivative i.e. the second derivative of the loss function.
+[1] More precisely, ordinary logistic regression uses the Newton-Raphson method, which is like gradient descent
+in spirit but finds roots by constructing a first-order Taylor approximation of a function in the neighborhood
+of a suspected root. Incidentally, the "finds roots" (instead of "finds local minima") part means that for the
+Newton-Raphson method we must operate on the first derivative of the loss function, finding its root(s), and
+therefore must know the derivative of the first derivative i.e. the second derivative of the loss function.
 """
 
 def bprop():
