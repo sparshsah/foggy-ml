@@ -194,7 +194,7 @@ def _get_neg_llh(p_y: Collection, normalize: bool=True) -> float:
     ------
     float, the negative (joint or mean) log-likelihood.
     """
-    p_y = check_type(p_y, type_=Collection)
+    p_y = check_type(p_y, type_={tuple, list, pd.Series})
 
     # convert to negative joint log-likelihood
     neg_llh = -np.sum(np.log(p_y))
@@ -215,7 +215,7 @@ def get_neg_llh(y: pd.DataFrame, p: pd.DataFrame, normalize: bool=True) -> float
     Get negative (joint or mean) log-likelihood of the set of independent outcomes specified by `y`,
     given the "model" specified by `p`.
     Log-likelihood is more numerically stable than raw likelihood,
-    and negative makes this suitable for use as loss function in minization problem formulation.
+    and negative makes this suitable for use as loss function in minimization problem formulation.
 
     input
     -----

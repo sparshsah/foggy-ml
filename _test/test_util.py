@@ -373,7 +373,7 @@ class TestOneHotify(unittest.TestCase):
         import pandas as pd
         raw = "this"
         options = ["other_a", "this", "other_b"]
-        res = util._one_hotify(_y=raw, _y_options=options)
+        res = util._one_hotify(raw, _y_options=options)
 
         expected = pd.Series({"other_a": 0, "this": 1, "other_b": 0})
         test = res == expected
@@ -396,7 +396,28 @@ class TestOneHotify(unittest.TestCase):
 class TestGetNegLLH(unittest.TestCase):
 
     def test_reduced(self):
-        pass
+        import numpy as np
+        p_y = [0.50, 0.20, 0.80]
+        expected = np.log(np.prod(p_y) ** (-1. / len(p_y)))
+        test = np.isclose(util._get_neg_llh(p_y=p_y), expected)
+        self.assertTrue(test)
+
+    def test_reduced_dup(self):
+        import numpy as np
+        p_y = [0.50, 0.20, 0.80]
+        expected = np.log(np.prod(p_y) ** (-1. / len(p_y)))
+        # default is to norm, so duplicating shouldn't matter!
+        test = np.isclose(util._get_neg_llh(p_y=p_y + p_y), expected)
+        self.assertTrue(test)
+
+    def test_reduced_zero(self):
+        self.assertEqual(util._get_neg_llh(p_y=[0.50, 0, 0.80]), float("inf"))
+
+    def test_reduced_one(self):
+        self.assertEqual(util._get_neg_llh(p_y=[1]), 0)
+
+    def test_reduced_zero_one(self):
+        self.assertEqual(util._get_neg_llh(p_y=[0, 1]), float("inf"))
 
 
 if __name__ == "__main__":
