@@ -408,7 +408,7 @@ When I was first studying machine learning algorithms in college, the whole conc
 from high-school statistics classes, where too we have a prediction problem and a loss function
 (in that case, the MSE loss), and simply calculate (X'X)^{-1}X'y to fit our linear model's coefficients.
 Why not do the same here, use calculus (first- and second-order conditions) plus some algebra
-to solve for the neural network's weights in closed form?
+to solve for the neural network's optimal weights in closed form?
 
 Then my professor reminded me that even in high-school statistics, logistic regression requires
 iterative "gradient descent"[1]. Some models just aren't amenable to fitting in closed form.
