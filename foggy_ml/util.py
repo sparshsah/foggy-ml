@@ -132,7 +132,7 @@ def one_hotify(y: pd.Series, _y_options: Optional[list]=None) -> pd.DataFrame:
 ########################################################################################################################
 
 """
-One option (not implemented) that can help combat overfitting is
+One choice (not implemented) that can help combat overfitting is
 to "regularize" parameters by penalizing deviations from zero.
 This is like LASSO or Ridge or ElasticNet OLS regression.
 """
