@@ -90,16 +90,16 @@ def check_layer(layer: object) -> Layer:
     But obviously, for neurons on the same layer, the number of neurons on the previous layer is also the same.
     Hence, any two rows on the same layer must be filled to the same width.
     """
-    layer_index = layer.dropna(how="all", axis="columns").columns  # names of neurons on incoming Layer
+    layer_cols = layer.dropna(how="all", axis="columns").columns  # names of neurons on incoming Layer
     for _, neuron in layer.iterrows():
         neuron = check_neuron(neuron=neuron)
-        neuron_index = neuron.dropna().index
-        if not neuron_index.equals(layer_index):
+        neuron_cols = neuron.dropna().index
+        if not neuron_cols.equals(layer_cols):
             raise ValueError(
-                "Neuron's weights not filled across its full Layer.. {neuron_index} != {layer_index}!".format(
-                    neuron_index=neuron_index, layer_index=layer_index))
-        del neuron_index
-    del layer_index
+                "Neuron's weights not filled across its full Layer.. {neuron_cols} != {layer_cols}!".format(
+                    neuron_cols=neuron_cols, layer_cols=layer_cols))
+        del neuron_cols
+    del layer_cols
     return layer
 
 
