@@ -42,7 +42,7 @@ Each "block" or "super-row" (i.e. collection of rows sharing an index key on axi
 represents a layer.
 Each row (having a unique pair of index keys on axis=0, levels=[0, 1])
 represents the weights feeding into a single neuron on that layer.
-The first column (having index key "_bias_" on axis=1)
+The first column (having index key '_bias_' on axis=1)
 is always reserved for the bias term.
 
 E.g. the first row represents the bias/weights feeding from the input layer into
@@ -66,7 +66,7 @@ def check_data_point(x: object) -> pd.Series:
     util.check_type(x, pd.Series)
     util.check_not_type(x.index, pd.MultiIndex)
     if BIAS_INDEX in x.index:
-        raise ValueError("Data point \n{x}\n contains reserved index {i}!".format(x=x, i=BIAS_INDEX))
+        raise ValueError("Data point \n{x}\n contains reserved index `{i}`!".format(x=x, i=BIAS_INDEX))
     util.check_dtype(x, float)
     return x
 
@@ -75,7 +75,7 @@ def check_neuron(neuron: object) -> Neuron:
     util.check_type(neuron, Neuron)
     util.check_not_type(neuron.index, pd.MultiIndex)
     if BIAS_INDEX not in neuron.index:
-        raise ValueError("Neuron \n{neuron}\n missing bias index {i}!".format(neuron=neuron, i=BIAS_INDEX))
+        raise ValueError("Neuron \n{neuron}\n missing bias index `{i}`!".format(neuron=neuron, i=BIAS_INDEX))
     util.check_dtype(neuron, float)
     return neuron
 
@@ -423,57 +423,3 @@ def bprop(mini_batch_size=None, random_seed=1337):
         raise NotImplementedError("Don't yet support Stochastic Gradient Descent!")
     # TODO(sparshsah)
     raise NotImplementedError
-
-
-"""
-def bprop():
-    # This function learns parameters for the neural network and returns the model.
-    # - nn_hdim: Number of nodes in the hidden layer
-    # - num_passes: Number of passes through the training data for gradient descent
-    # Initialize the parameters to random values. We need to learn these.
-    nn_hdim = 3
-    num_passes = 20_000
-    np.random.seed(1337)
-    W1 = np.random.randn(nn_input_dim, nn_hdim) / np.sqrt(nn_input_dim)
-    b1 = np.zeros((1, nn_hdim))
-    W2 = np.random.randn(nn_hdim, nn_output_dim) / np.sqrt(nn_hdim)
-    b2 = np.zeros((1, nn_output_dim))
-
-    # This is what we return at the end
-    model = {}
-
-    # Gradient descent. For each batch...
-    for i in range(0, num_passes):
-
-        # Forward propagation
-        z1 = X.dot(W1) + b1
-        a1 = np.tanh(z1)
-        z2 = a1.dot(W2) + b2
-        exp_scores = np.exp(z2)
-        probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
-
-        # Backpropagation
-        delta3 = probs
-        delta3[range(num_examples), y] -= 1
-        dW2 = (a1.T).dot(delta3)
-        db2 = np.sum(delta3, axis=0, keepdims=True)
-        delta2 = delta3.dot(W2.T) * (1 - np.power(a1, 2))
-        dW1 = np.dot(X.T, delta2)
-        db1 = np.sum(delta2, axis=0)
-
-        # Gradient descent parameter update
-        W1 += -epsilon * dW1
-        b1 += -epsilon * db1
-        W2 += -epsilon * dW2
-        b2 += -epsilon * db2
-
-        # Assign new parameters to the model
-        model = { 'W1': W1, 'b1': b1, 'W2': W2, 'b2': b2}
-
-    return model
-
-some tutorials for basic 2-layer perceptrons:
-https://towardsdatascience.com/how-to-build-your-own-neural-network-from-scratch-in-python-68998a08e4f6
-https://towardsdatascience.com/step-by-step-guide-to-building-your-own-neural-network-from-scratch-df64b1c5ab6e
-https://towardsdatascience.com/how-to-build-a-deep-neural-network-without-a-framework-5d46067754d5
-"""

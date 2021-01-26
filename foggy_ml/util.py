@@ -125,13 +125,14 @@ def _one_hotify(_y: object, _y_options: list) -> pd.Series:
     Convert a single category label to one-hot vector representation.
 
     E.g.
-    >>> _one_hotify(2, range(4)) == pd.Series({0: 0, 1: 0, 2: 1, 3: 0})
-    or
-    >>> _one_hotify("Away", ["Home", "Away"]) == pd.Series({"Home": 0, "Away": 1})
+    >>> _one_hotify(2, range(4))
+    pd.Series({0: 0, 1: 0, 2: 1, 3: 0})
+    >>> _one_hotify('Away', ['Home', 'Away'])
+    pd.Series({'Home': 0, 'Away': 1})
 
     input
     -----
-    _y: object, e.g. int or str, the actual category label.
+    _y: object, e.g. int or str, the correct category label.
 
     _y_options: list, the possible options of category label.
 
