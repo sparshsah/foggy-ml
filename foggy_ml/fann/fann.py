@@ -422,7 +422,7 @@ a function in the neighborhood of a suspected root. Incidentally, the "finds roo
 first derivative of the loss function, finding its root(s), and therefore must know and calculate the derivative of
 the first derivative i.e. the second-partial and cross-derivatives of the loss function. Assuming a slow-enough
 learning rate (or fine-enough step size, if that's how you want to specify the update rule), gradient descent
-can find local minima using the first derivative alone.
+can find local minima using the first derivative alone. The tradeoff is that Newton-Raphson can be faster.
 """
 
 def bprop(mini_batch_size=None, random_seed=1337):
