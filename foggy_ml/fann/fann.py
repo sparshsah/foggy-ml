@@ -380,7 +380,13 @@ learning rate (or fine-enough step size, if that's how you want to specify the u
 can find local minima using the first derivative alone.
 """
 
-def bprop():
+def bprop(mini_batch_size=None, random_seed=1337):
+    # TODO(sparshsah): apparently now 'best practice' is to instantiate new 'random states' instead of reseeding??
+    np.random.seed(random_seed)
+    if mini_batch_size is not None:
+        # technically, batch gradient descent is like trivial SGD where each epoch
+        # learns from a single mini-batch containing all the training data but OK
+        raise NotImplementedError("Don't yet support Stochastic Gradient Descent!")
     # TODO(sparshsah)
     raise NotImplementedError
 
