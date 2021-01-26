@@ -374,9 +374,9 @@ This reminds me, TODO(sparshsah): why can't a logistic regression model be fitte
 in spirit but finds roots by constructing a first-order Taylor approximation of a function in the neighborhood
 of a suspected root. Incidentally, the "finds roots" (instead of "finds local minima") part means that for the
 Newton-Raphson method we must operate on the first derivative of the loss function, finding its root(s), and
-therefore must know the derivative of the first derivative i.e. the second derivative of the loss function.
-Assuming a slow-enough learning rate (or fine-enough step size, if that's how you want to specify the update rule),
-gradient descent can find local minima using the first derivative alone.
+therefore must know and calculate the derivative of the first derivative i.e. the second-partial and
+cross-derivatives of the loss function. Assuming a slow-enough learning rate (or fine-enough step size, if that's
+how you want to specify the update rule), gradient descent can find local minima using the first derivative alone.
 """
 
 def bprop():
