@@ -349,5 +349,11 @@ class TestOneHotify(unittest.TestCase):
         self.assertTrue(test.all().all())
 
 
+class TestGetNegLLH(unittest.TestCase):
+
+    def test_reduced(self):
+        pass
+
+
 if __name__ == "__main__":
     unittest.main()
