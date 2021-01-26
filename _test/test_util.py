@@ -335,7 +335,7 @@ class TestOneHotify(unittest.TestCase):
         test = res == expected
         self.assertTrue(test.all())
 
-    def test_df(self):
+    def test_points(self):
         import pandas as pd
         raw = pd.Series(["a", "b", "c", "a"])
         res = util.one_hotify(raw)
