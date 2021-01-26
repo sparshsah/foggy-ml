@@ -27,6 +27,17 @@ class TestCheckType(unittest.TestCase):
             with self.assertRaises(TypeError):
                 util.check_type(x, type_=pd.Series)
 
+    def test_multi_succ(self):
+        types = {str, float, tuple, list}
+        for x in "a", 3.14, (0, 1), [0, 1]:
+            self.assertEqual(util.check_type(x, type_=types), x)
+
+    def test_multi_fail(self):
+        types = {str, float, tuple, list}
+        x = 0
+        with self.assertRaises(TypeError):
+            util.check_type(x, type_=types)
+
 
 class TestCheckNotType(unittest.TestCase):
     """Complement of TestCheckType."""
@@ -71,11 +82,33 @@ class TestCheckNotType(unittest.TestCase):
         for x in "a", 0, pd.DataFrame(), pd.DataFrame(0, index=["r0", "r1"], columns=["c0", "c1"]):
             self.assertIs(util.check_not_type(x, type_=pd.Series), x)
 
+    def test_multi_fail_direct(self):
+        types = [str, float, tuple, list]
+        for x in "a", 3.14, (0, 1), [0, 1]:
+            with self.assertRaises(TypeError):
+                util.check_type(x, type_=types, check_not=True)
+
+    def test_multi_fail_wrapped(self):
+        types = [str, float, tuple, list]
+        for x in "a", 3.14, (0, 1), [0, 1]:
+            with self.assertRaises(TypeError):
+                util.check_not_type(x, type_=types)
+
+    def test_multi_succ_direct(self):
+        types = {str, float, tuple, list}
+        x = 0
+        self.assertEqual(util.check_type(x, type_=types, check_not=True), x)
+
+    def test_multi_succ_wrapped(self):
+        types = {str, float, tuple, list}
+        x = 0
+        self.assertEqual(util.check_not_type(x, type_=types), x)
+
 
 class TestCheckDtype(unittest.TestCase):
 
-    def test_non_container_fail(self):
-        # `str` is arguably a container type but OK
+    def test_non_collection_fail(self):
+        # `str` is arguably a collection type but certainly not a collection of ints
         for x in "a", 0, 3.14:
             with self.assertRaises(TypeError):
                 util.check_dtype(x, type_=int)
@@ -121,6 +154,17 @@ class TestCheckDtype(unittest.TestCase):
         x = pd.DataFrame({"c0": {"r0": 0, "r1": 1}, "c1": {"r0": 2, "r1": 3.}})
         with self.assertRaises(TypeError):
             util.check_dtype(x, type_=int)
+
+    def test_multi_succ_wrapped(self):
+        types = {int, str}
+        for x in ["a", "b"], [0, 1]:
+            self.assertEqual(util.check_dtype(x, type_=types), x)
+
+    def test_multi_fail_wrapped(self):
+        types = {int, str}
+        x = ["a", 0]
+        with self.assertRaises(TypeError):
+            util.check_dtype(x, type_=types)
 
 
 class TestCheckNotDtype(unittest.TestCase):

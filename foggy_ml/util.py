@@ -12,7 +12,7 @@ EPSILON: float = 1e-6
 # CHECKING #############################################################################################################
 ########################################################################################################################
 
-def check_type(obj: object, type_: type, check_dtype: bool=False, check_not: bool=False) -> object:
+def _check_type(obj: object, type_: type, check_dtype: bool=False, check_not: bool=False) -> object:
     if check_dtype:
         try:
             # e.g. pd.DataFrame
@@ -37,6 +37,43 @@ def check_type(obj: object, type_: type, check_dtype: bool=False, check_not: boo
         raise TypeError("{obj} is (dtype={check_dtype}) {type_obj}, failing against (not={check_not}) {type_}!".format(
             obj=obj, check_dtype=check_dtype, type_obj=type_obj, check_not=check_not, type_=type_))
     return obj
+
+
+def check_type(obj: object, type_: type, check_dtype: bool=False, check_not: bool=False) -> object:
+    """
+    Check `obj` against one or more types.
+
+    If `type_` is a collection of types, then
+    if `check_not`, check that `obj` isn't any of those types;
+    else, check that `obj` is at least one of those types.
+
+    In both of these subcases, if `check_dtype`, then
+    the object's dtype must pass against a SINGLE type.
+    For example,
+    >>> check_type([0, 1], type_={int, str}, check_dtype=True)
+    [0, 1]
+    >>> check_type(['a', 'b'], type_={int, str}, check_dtype=True)
+    ['a', 'b']
+    >>> check_type([0, 'a'], type_={int, str}, check_dtype=True)
+    TypeError
+    """
+    if isinstance(type_, type):  # the type being checked against is a type
+        return _check_type(obj=obj, type_=type_, check_dtype=check_dtype, check_not=check_not)
+    else:  # it must be an collection of possible types
+        types = list(type_)
+        del type_
+        if check_not:
+            # if obj IS any of the given types, _check_type will raise mid-comprehension
+            _ = [_check_type(obj=obj, type_=type_, check_dtype=check_dtype, check_not=check_not) for type_ in types]
+            return obj
+        else:
+            for type_ in types:
+                try:
+                    return _check_type(obj=obj, type_=type_, check_dtype=check_dtype, check_not=check_not)
+                except TypeError:
+                    continue
+            raise TypeError("{obj} (dtype={check_dtype}) failing against every (not={check_not}) {type_}!".format(
+                obj=obj, check_dtype=check_dtype, check_not=check_not, type_=type_))
 
 
 def check_dtype(obj: object, type_: type, check_not: bool=False) -> object:
