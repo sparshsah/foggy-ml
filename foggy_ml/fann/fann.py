@@ -375,6 +375,7 @@ in spirit but finds roots by constructing a first-order Taylor approximation of 
 of a suspected root. Incidentally, the "finds roots" (instead of "finds local minima") part means that for the
 Newton-Raphson method we must operate on the first derivative of the loss function, finding its root(s), and
 therefore must know the derivative of the first derivative i.e. the second derivative of the loss function.
+Assuming a fine enough step size, gradient descent can find local minima using the first derivative alone.
 """
 
 def bprop():
