@@ -323,5 +323,31 @@ class TestCheckOneHot(unittest.TestCase):
             util.check_one_hot(df)
 
 
+class TestOneHotify(unittest.TestCase):
+
+    def test_point(self):
+        import pandas as pd
+        raw = "this"
+        options = ["other_a", "this", "other_b"]
+        res = util._one_hotify(_y=raw, _y_options=options)
+
+        expected = pd.Series({"other_a": 0, "this": 1, "other_b": 0})
+        test = res == expected
+        self.assertTrue(test.all())
+
+    def test_df(self):
+        import pandas as pd
+        raw = pd.Series(["a", "b", "c", "a"])
+        res = util.one_hotify(raw)
+
+        expected = pd.DataFrame({
+            "a": [1, 0, 0, 1],
+            "b": [0, 1, 0, 0],
+            "c": [0, 0, 1, 0],
+        })
+        test = res == expected
+        self.assertTrue(test.all().all())
+
+
 if __name__ == "__main__":
     unittest.main()
