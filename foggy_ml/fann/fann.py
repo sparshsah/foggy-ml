@@ -6,7 +6,7 @@ See style notes in top-level repository README.md.
 """
 
 # syntax utils
-from typing import List, Callable, Union
+from typing import List, Iterable, Callable, Union
 # data structures
 import pandas as pd
 # data wrangling
@@ -168,6 +168,42 @@ def get_a_out(bias: float, a_in: float, fn: Callable[[float], float]) -> float:
 
     a_out = fn(bias + a_in)
     return util.check_type(a_out, float)
+
+
+# initialize
+
+def init_nn(input_width: int, layer_width: Union[int, Iterable[int]], output_width=int, random_seed=1337) -> NN:
+    """
+    Initialize an NN with Standard Normal random weights.
+
+    input
+    -----
+    intput_width: int, how many features. E.g. `3` for points in three-dimensional space.
+
+    layer_width: Union[int, Iterable[int]], the width(s) of the hidden layer(s).
+        E.g. `4` for a single hidden layer with 4 neurons,
+        or `(4, 5)` for a hidden layer of 4 neurons followed by a hidden layer of 5 neurons.
+
+    output_width: int, how many categories. E.g. `2` for binomial classification.
+
+    random_seed: int, the random seed.
+
+    output
+    ------
+    NN, a new Neural Network object.
+    """
+    # setup loop control
+    layer_width = [layer_width,] if isinstance(layer_width, int) else list(layer_width)
+    layer_width = [input_width,] + layer_width + [output_width,]
+    del output_width, input_width
+    layer_width = pd.Series(layer_width)
+    layer_width = pd.concat([layer_width, layer_width.shift()],
+                            axis="columns", keys=["curr", "prev"])
+
+    rng = np.random.default_rng(seed=random_seed)
+    layers = [Layer(rng.standard_normal(size=(width["curr"], width["prev"])))
+              for _, width in layer_width.iloc[1:].iterrows()]
+    return nnify(nn=layers)
 
 
 ########################################################################################################################
@@ -381,8 +417,6 @@ can find local minima using the first derivative alone.
 """
 
 def bprop(mini_batch_size=None, random_seed=1337):
-    # TODO(sparshsah): apparently now 'best practice' is to instantiate new 'random states' instead of reseeding??
-    np.random.seed(random_seed)
     if mini_batch_size is not None:
         # technically, batch gradient descent is like trivial SGD where each epoch
         # learns from a single mini-batch containing all the training data but OK
