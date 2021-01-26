@@ -43,6 +43,8 @@ def check_type(obj: object, type_: type, check_dtype: bool=False, check_not: boo
     """
     Check `obj` against one or more types.
 
+    note
+    ----
     If `type_` is a collection of types, then
     if `check_not`, check that `obj` isn't any of those types;
     else, check that `obj` is at least one of those types.
