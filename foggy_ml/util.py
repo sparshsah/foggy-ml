@@ -84,7 +84,7 @@ def check_one_hot(y: pd.DataFrame) -> pd.DataFrame:
 # DATA WRANGLING #######################################################################################################
 ########################################################################################################################
 
-def _one_hotify(_y: object, _y_choices: list) -> pd.Series:
+def _one_hotify(_y: object, _y_options: list) -> pd.Series:
     """
     Convert a single category label to one-hot vector representation.
 
@@ -97,17 +97,17 @@ def _one_hotify(_y: object, _y_choices: list) -> pd.Series:
     -----
     _y: object, e.g. int or str, the actual category label.
 
-    _y_choices: list, the possible choices of category label.
+    _y_options: list, the possible options of category label.
 
     output
     ------
     pd.Series, the one-hot vector representation.
     """
-    _y = pd.Series({_y: 1}, index=_y_choices).fillna(0)
+    _y = pd.Series({_y: 1}, index=_y_options).fillna(0)
     return _check_one_hot(_y)
 
 
-def one_hotify(y: pd.Series, _y_choices: Optional[list]=None) -> pd.DataFrame:
+def one_hotify(y: pd.Series, _y_options: Optional[list]=None) -> pd.DataFrame:
     """
     Convert a flat vector of category labels to a one-hot DataFrame.
 
@@ -115,15 +115,15 @@ def one_hotify(y: pd.Series, _y_choices: Optional[list]=None) -> pd.DataFrame:
     -----
     y: pd.Series, the flat vector.
 
-    _y_choices: Optional[list] (default None), use if you want to enforce a particular
+    _y_options: Optional[list] (default None), use if you want to enforce a particular
         column order for the output. Default column order follows default sort.
         For example, if your category labels are ["Home", "Away"], that might be a more
         natural order than the default alphabetical sort ["Away", "Home"].
     """
-    _y_choices = sorted(y.unique()) if _y_choices is None else _y_choices
-    _ = check_subset(sub=set(y.unique()), sup=set(_y_choices))
+    _y_options = sorted(y.unique()) if _y_options is None else _y_options
+    _ = check_subset(sub=set(y.unique()), sup=set(_y_options))
 
-    y = y.apply(_one_hotify, _y_choices=_y_choices)
+    y = y.apply(_one_hotify, _y_options=_y_options)
     return check_one_hot(y)
 
 
@@ -132,7 +132,7 @@ def one_hotify(y: pd.Series, _y_choices: Optional[list]=None) -> pd.DataFrame:
 ########################################################################################################################
 
 """
-One choice (not implemented) that can help combat overfitting is
+One option (not implemented) that can help combat overfitting is
 to "regularize" parameters by penalizing deviations from zero.
 This is like LASSO or Ridge or ElasticNet OLS regression.
 """
