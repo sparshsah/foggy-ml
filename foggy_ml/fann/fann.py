@@ -358,6 +358,25 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
 # TRAINING AKA BACK-PROPAGATION ########################################################################################
 ########################################################################################################################
 
+"""
+When I was first studying machine learning algorithms in college, the whole concept of gradient descent
+(which is the basis of back-propagation) seemed unnecessary to me. I was accustomed to the OLS method
+from high-school statistics classes, where too we have a prediction problem and a loss function
+(in that case, the MSE loss), and simply calculate (X'X)^{-1}X'y to fit our linear model's coefficients.
+Why not do the same here, use calculus (first- and second-order conditions) plus some algebra
+to solve for the neural network's weights in closed form?
+
+Then my professor reminded me that even in high-school statistics, logistic regression requires
+iterative "gradient descent"[1]. Some models just aren't amenable to fitting in closed form.
+This reminds me, TODO(sparshsah): why can't a logistic regression model be fitted in closed form?
+
+[1] More precisely, ordinary logistic regression uses the Newton-Raphson method,
+which is a bit like gradient descent in spirit but works by constructing a Taylor approximation of a function in
+the neighborhood of a suspected root---incidentally, this latter part means that for the Newton-Raphson
+method we must operate on the first derivative of the loss function, finding its root(s), and therefore
+must know the derivative of the first derivative i.e. the second derivative of the loss function.
+"""
+
 def bprop():
     # TODO(sparshsah)
     raise NotImplementedError
