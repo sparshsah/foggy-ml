@@ -12,6 +12,10 @@ interactive demo in `_demo/fann/demo_fann.ipynb`.
 
 # Style notes
 
+- In the interest of making this package feature-complete yet self-contained,
+we've included a `util` module that in a formal organization would have been
+better as a separate standalone package.
+
 - Many readers will see this code and instinctively want to
 refactor from functional to OOP. Resist this urge.
 
