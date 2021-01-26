@@ -1,5 +1,5 @@
 # syntax utils
-from typing import Optional
+from typing import Collection, Optional
 # data structures
 import pandas as pd
 # calculations and algorithms
@@ -171,13 +171,13 @@ to "regularize" parameters by penalizing deviations from zero.
 This is like LASSO or Ridge or ElasticNet OLS regression.
 """
 
-def _get_neg_llh(p_y: pd.Series, normalize: bool=True) -> float:
+def _get_neg_llh(p_y: Collection, normalize: bool=True) -> float:
     """
     Negative log likelihood.
 
     input
     -----
-    p_y: pd.Series, how much probability mass we assigned to the correct label for each point.
+    p_y: Collection, how much probability mass we assigned to the correct label for each point.
         E.g. if p_y = [0.10, 0.85, 0.50], then there were 3 data points. For the first point,
         we distributed 1-0.10=0.90 probability mass among incorrect labels. Depending on
         how many categories there are, this is pretty poor. In particular, if this is a
@@ -194,7 +194,7 @@ def _get_neg_llh(p_y: pd.Series, normalize: bool=True) -> float:
     ------
     float, the negative (joint or mean) log-likelihood.
     """
-    p_y = check_type(p_y, type_=pd.Series)
+    p_y = check_type(p_y, type_=Collection)
 
     # convert to negative joint log-likelihood
     neg_llh = -np.sum(np.log(p_y))
@@ -206,7 +206,7 @@ def _get_neg_llh(p_y: pd.Series, normalize: bool=True) -> float:
         = $ - \log((\prod_i p_i)^{1/n}) $
         = negative log geometric mean likelihood.
         """
-        neg_llh /= len(p_y.index)
+        neg_llh /= len(p_y)
     return check_type(neg_llh, type_=float)
 
 
