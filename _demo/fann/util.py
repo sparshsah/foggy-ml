@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 
 NUM_FEATURES: int = 2  # aka num of neurons on input layer
 NUM_CATEGORIES: int = 2  # aka num of neurons on output layer
-LAYER_SZ: Tuple[int] = (4, 3)  # first hidden layer has 4 neurons, second hidden layer has 3 neurons
+LAYER_WIDTH: Tuple[int] = (4, 3)  # first hidden layer has 4 neurons, second hidden layer has 3 neurons
 
 
 def lrange(*args) -> list:
@@ -53,15 +53,15 @@ def gen_data(n: int=256, noise: float=0.32, random_seed: int=1337, x_scaler: Opt
     return data, x_scaler
 
 
-def homebrewify(ref_nn: RefNN, layer_sz: Tuple[float]=LAYER_SZ) -> fann.NN:
+def homebrewify(ref_nn: RefNN, layer_width: Tuple[float]=LAYER_WIDTH) -> fann.NN:
     """Reformat reference implementation weights data structure as homebrew."""
     # hidden layers
     hidden_layers = []
     # init: in 1st iteration, each neuron on input layer will get weighted & fed into each neuron on 1st hidden layer
     prev_neuron_indices = lrange(NUM_FEATURES)
-    for l, sz in enumerate(layer_sz):
-        curr_neuron_indices = lrange(sz)
-        del sz
+    for l, width in enumerate(layer_width):
+        curr_neuron_indices = lrange(width)
+        del width
         layer = fann.Layer(index=curr_neuron_indices, columns=[fann.BIAS_INDEX] + prev_neuron_indices)
         # populate bias weights
         layer.loc[:, fann.BIAS_INDEX] = ref_nn.intercepts_[l]
@@ -73,7 +73,7 @@ def homebrewify(ref_nn: RefNN, layer_sz: Tuple[float]=LAYER_SZ) -> fann.NN:
         # in next iteration, each neuron on this layer will get weighted & fed into each neuron on next layer
         prev_neuron_indices = curr_neuron_indices
         del curr_neuron_indices
-    del layer_sz
+    del layer_width
 
     # output layer
     """
