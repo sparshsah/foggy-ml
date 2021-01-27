@@ -446,7 +446,7 @@ learning rate (or fine-enough step size, if that's how you want to specify the u
 can find local minima using the first derivative alone. The tradeoff is that Newton-Raphson can be faster.
 """
 
-def _bprop(y_batch: pd.Series, X_batch: pd.DataFrame, nn: NN, learn_r: float) -> NN:
+def _bprop(y: pd.Series, X: pd.DataFrame, nn: NN, learn_r: float) -> NN:
     return nn
 
 
@@ -459,7 +459,8 @@ def bprop(y: pd.Series, X: pd.DataFrame, nn: NN,
         raise NotImplementedError("Don't yet support Stochastic Gradient Descent!")
 
     for _ in range(max_epoch):
-        nn = _bprop(y_batch=y, X_batch=X, nn=nn, learn_r=learn_r)
+        y_batch, X_batch = y, X
+        nn = _bprop(y=y_batch, X=X_batch, nn=nn, learn_r=learn_r)
     return nn
 
 
