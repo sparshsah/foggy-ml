@@ -27,7 +27,7 @@ type checking and assertions, which tend to be slow,
 often 10-100x slower than even our non-vectorized calculations.
 However, they (we hope) make things easier to visualize and reason about,
 which is the whole point of a project like this.
-We've worked hard on our code, but it's not like it would be a viable
+It's not like our code would be a viable
 PyTorch alternative \~if only\~ we removed the type checks.
 
 - We make liberal use of `del` statements. This is not because
