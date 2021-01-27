@@ -54,6 +54,7 @@ the bias/weights feeding from the input layer into the first hidden layer's seco
 Neuron: type = pd.Series
 Layer: type = pd.DataFrame
 NN: type = pd.DataFrame  # w/ MultiIndex[layers, neurons]
+RNG: type = np.random.Generator
 
 # magic numbers
 NN_INDEX_NLEVELS: int = 2  # MultiIndex[layers, neurons]
@@ -63,17 +64,23 @@ MAX_ITER_DEFAULT: int = 2048
 
 # initialize
 
-def init_neuron():
-    raise NotImplementedError
+def init_neuron(prev_layer_width: int, rng: RNG) -> Neuron:
+    neuron = Neuron(index=[BIAS_INDEX,] + list(range(prev_layer_width)))
+    # generate bias
+    neuron.loc[BIAS_INDEX] = rng.normal()
+    # generate weights, normalizing so ex-ante stdev of their sum is exactly unity
+    neuron.loc[0:] = rng.normal(scale=1. / prev_layer_width**0.5, size=prev_layer_width)
+    return check_neuron(neuron=neuron)
 
 
-def init_layer():
-    raise NotImplementedError
+def init_layer(prev_layer_width: int, layer_width: int, rng: RNG) -> Layer:
+    layer = [init_neuron(prev_layer_width=prev_layer_width, rng=rng) for _ in range(layer_width)]
+    return layerify(layer=layer)
 
 
 def init_nn(input_width: int, layer_width: Union[int, Iterable[int]], output_width=int, random_seed=1337) -> NN:
     """
-    Initialize an NN with Standard Normal random weights.
+    Initialize an NN with random weights.
 
     input
     -----
@@ -96,13 +103,13 @@ def init_nn(input_width: int, layer_width: Union[int, Iterable[int]], output_wid
     layer_width = [input_width,] + layer_width + [output_width,]
     del output_width, input_width
     layer_width = pd.Series(layer_width)
-    layer_width = pd.concat([layer_width, layer_width.shift()],
-                            axis="columns", keys=["curr", "prev"])
+    layer_width = pd.concat([layer_width.shift(), layer_width], axis="columns", keys=["prev", "curr"])
 
     rng = np.random.default_rng(seed=random_seed)
-    layers = [Layer(rng.standard_normal(size=(width["curr"], width["prev"])))
-              for _, width in layer_width.iloc[1:].iterrows()]
-    return nnify(nn=layers)
+
+    nn = [init_layer(prev_layer_width=width["prev"], layer_width=width["curr"], rng=rng)
+          for _, width in layer_width.loc[1:].iterrows()]
+    return nnify(nn=nn)
 
 
 # type checkers
@@ -162,6 +169,11 @@ def check_nn(nn: object) -> NN:
 
 
 # check-and-return calculation utils
+
+def layerify(layer: List[Neuron]) -> Layer:
+    layer = pd.concat(layer, axis="columns").T
+    return check_layer(layer=layer)
+
 
 def nnify(nn: List[Layer]) -> NN:
     nn = [check_layer(layer=layer) for layer in nn]
