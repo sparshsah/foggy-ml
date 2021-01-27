@@ -503,5 +503,5 @@ def fit(y: pd.Series, X: pd.DataFrame,
 
     nn = init_nn(input_width=X.shape[1], layer_width=layer_width, output_width=y.shape[1],
                  random_seed=random_seed)
-    nn = bprop(y=y, X=X, nn=nn, mini_batch_sz=mini_batch_sz, max_epoch=max_epoch)
+    nn = bprop(y=y, X=X, nn=nn, learn_r=learn_r, mini_batch_sz=mini_batch_sz, max_epoch=max_epoch)
     return check_nn(nn=nn)
