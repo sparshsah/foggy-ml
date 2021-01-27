@@ -73,7 +73,8 @@ def init_neuron(prev_layer_width: int, rng: RNG) -> Neuron:
     # generate bias
     neuron.loc[BIAS_INDEX] = rng.normal()
     # generate weights, normalizing so ex-ante stdev of their sum is exactly unity
-    neuron.loc[0:] = rng.normal(scale=1. / prev_layer_width**0.5, size=prev_layer_width)
+    # skip the bias index
+    neuron.iloc[1:] = rng.normal(scale=1. / prev_layer_width**0.5, size=prev_layer_width)
     return check_neuron(neuron=neuron)
 
 
@@ -108,11 +109,13 @@ def init_nn(input_width: int, layer_width: Union[int, Iterable[int]], output_wid
     del output_width, input_width
     layer_width = pd.Series(layer_width)
     layer_width = pd.concat([layer_width.shift(), layer_width], axis="columns", keys=["prev", "curr"])
+    # the shift introduced a NaN, forcing the dtype to float.. fix that here
+    layer_width = layer_width.loc[1:].astype(int)
 
     rng = np.random.default_rng(seed=random_seed)
 
     nn = [init_layer(prev_layer_width=width["prev"], layer_width=width["curr"], rng=rng)
-          for _, width in layer_width.loc[1:].iterrows()]
+          for _, width in layer_width.iterrows()]
     return nnify(nn=nn)
 
 
