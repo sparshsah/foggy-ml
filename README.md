@@ -28,7 +28,7 @@ often 10-100x slower than even our non-vectorized calculations.
 However, they (we hope) make things easier to visualize and reason about,
 which is the whole point of a project like this.
 It's not like our code would be a viable
-PyTorch alternative \~if only\~ we removed the type checks.
+TensorFlow alternative \~if only\~ we removed the type checks.
 
 - We make liberal use of `del` statements. This is not because
 we're C programmers who never learned how to use `free()` calls properly,
