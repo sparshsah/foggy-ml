@@ -253,7 +253,7 @@ ReLU (not implemented) is cool too, and has another cool connection, this time t
 
 activate: Callable[[float], float] = expit
 
-def d_activate(x):
+def d_activate(x: float) -> float:
     """
     Derivative of activation function, in our case expit.
 
