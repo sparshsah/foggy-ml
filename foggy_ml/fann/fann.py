@@ -20,7 +20,7 @@ __all__ = [
     # data structures
     "Neuron", "Layer", "NN",  # don't include "RNG"
     # magic numbers
-    "NN_INDEX_NLEVELS", "BIAS_INDEX", "MAX_EPOCH_DEFAULT",
+    "NN_INDEX_NLEVELS", "BIAS_INDEX", "LEARN_R_DEFAULT", "MAX_EPOCH_DEFAULT",
     # initialization
     "init_neuron", "init_layer", "init_nn",
     # data wrangling
@@ -63,6 +63,7 @@ RNG: type = np.random.Generator
 # magic numbers
 NN_INDEX_NLEVELS: int = 2  # MultiIndex[layers, neurons]
 BIAS_INDEX: Union[int, str] = "_bias_"
+LEARN_R_DEFAULT: float = 0.20
 MAX_EPOCH_DEFAULT: int = 2048
 
 
@@ -445,12 +446,12 @@ learning rate (or fine-enough step size, if that's how you want to specify the u
 can find local minima using the first derivative alone. The tradeoff is that Newton-Raphson can be faster.
 """
 
-def _bprop(y_batch: pd.Series, X_batch: pd.DataFrame, nn: NN) -> NN:
+def _bprop(y_batch: pd.Series, X_batch: pd.DataFrame, nn: NN, learn_r: float) -> NN:
     return nn
 
 
 def bprop(y: pd.Series, X: pd.DataFrame, nn: NN,
-          mini_batch_sz: Optional[int]=None, max_epoch: int=MAX_EPOCH_DEFAULT) -> NN:
+          learn_r: float=LEARN_R_DEFAULT, mini_batch_sz: Optional[int]=None, max_epoch: int=MAX_EPOCH_DEFAULT) -> NN:
     mini_batch_sz = X.shape[0] if mini_batch_sz is None else mini_batch_sz
     if mini_batch_sz != X.shape[0]:
         # technically, batch gradient descent is just trivial SGD where each epoch
@@ -458,13 +459,13 @@ def bprop(y: pd.Series, X: pd.DataFrame, nn: NN,
         raise NotImplementedError("Don't yet support Stochastic Gradient Descent!")
 
     for _ in range(max_epoch):
-        nn = _bprop(y_batch=y, X_batch=X, nn=nn)
+        nn = _bprop(y_batch=y, X_batch=X, nn=nn, learn_r=learn_r)
     return nn
 
 
 def fit(y: pd.Series, X: pd.DataFrame,
         layer_width: Union[int, Iterable[int]],
-        mini_batch_sz: Optional[int]=None, max_epoch:int=MAX_EPOCH_DEFAULT,
+        learn_r: float=LEARN_R_DEFAULT, mini_batch_sz: Optional[int]=None, max_epoch: int=MAX_EPOCH_DEFAULT,
         random_seed: int=1337) -> NN:
     y = util.one_hotify(y=y)
 
