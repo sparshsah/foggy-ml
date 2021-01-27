@@ -28,9 +28,9 @@ __all__ = [
     "layerify", "nnify",
     "get_bias", "get_w_in", "get_a_in", "get_a_out",
     # calculations and algorithms
-    "activate", "squash",
+    "activate", "d_activate", "squash",
     "____fprop", "___fprop", "__fprop", "_fprop", "fprop", "predict",
-    "bprop", "fit"
+    "__bprop", "_bprop", "bprop", "fit"
 ]
 
 ########################################################################################################################
