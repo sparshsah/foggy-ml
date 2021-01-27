@@ -493,6 +493,13 @@ def fit(y: pd.Series, X: pd.DataFrame,
         learn_r: float=LEARN_R_DEFAULT, mini_batch_sz: Optional[int]=None, max_epoch: int=MAX_EPOCH_DEFAULT,
         random_seed: int=1337) -> NN:
     y = util.one_hotify(y=y)
+    if y.shape[1] != 2:
+        # TODO(sparshsah): support Multinomial Classification
+        raise NotImplementedError("Don't yet support Multinomial Classification!")
+
+    if not isinstance(layer_width, int):
+        # TODO(sparshsah): support DL
+        raise NotImplementedError("Don't yet support Deep Learning!")
 
     nn = init_nn(input_width=X.shape[1], layer_width=layer_width, output_width=y.shape[1],
                  random_seed=random_seed)
