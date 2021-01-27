@@ -349,7 +349,7 @@ def __fprop(x: pd.Series, nn: NN) -> pd.Series:
         return x
 
 
-def _fprop(x: pd.Series, nn: NN) -> pd.Series:
+def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> pd.Series:
     """
     Forward-propagate the input through the network.
 
@@ -359,18 +359,19 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
 
     nn: NN, the model.
 
+    expand: bool, whether to return the intermediate layer-by-layer, neuron-by-neuron activations.
+       If `true`, returns a pd.DataFrame MultiIndexed like `nn`, with columns ['a_in', 'a_out'].
+
     output
     ------
     pd.Series, the probability the model assigns to each category label.
     """
     x = check_data_point(x=x)
     nn = check_nn(nn=nn)
-    return squash(__fprop(x=x, nn=nn))
-
-
-def _fprop_expand(x: pd.Series, nn: NN) -> pd.DataFrame:
-    """Return all intermediate activations plus output, for use in back-propagation for Deep Learning."""
-    raise NotImplementedError("Don't yet support Deep Learning!")
+    if expand:
+        raise NotImplementedError
+    else:
+        return squash(__fprop(x=x, nn=nn))
 
 
 def fprop(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
@@ -453,18 +454,26 @@ learning rate (or fine-enough step size, if that's how you want to specify the u
 can find local minima using the first derivative alone. The tradeoff is that Newton-Raphson can be faster.
 """
 
-def ___bprop(y: pd.Series, X: pd.DataFrame, nn: NN) -> object:
+def ___bprop(_y: object, x: pd.Series, nn: NN) -> pd.DataFrame:
+    A = _fprop(x=x, nn=nn, expand=True)  # pylint: disable=unused-variable
+    # get loss
+    # get gradient
+    raise NotImplementedError
+
+
+def ___bprop(y: pd.Series, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     """Get the gradient."""
     raise NotImplementedError
 
 
-def __bprop(y: pd.Series, X: pd.DataFrame, nn: NN) -> object:
+def __bprop(y: pd.Series, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     """Get the gradient, shaped like the NN."""
     raise NotImplementedError
 
 
 def _bprop(y: pd.Series, X: pd.DataFrame, nn: NN, learn_r: float) -> NN:
     grad = __bprop(y=y, X=X, nn=nn)
+    # descend a step along gradient
     return nn - learn_r * grad
 
 
