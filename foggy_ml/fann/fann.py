@@ -256,7 +256,8 @@ d_activate: Callable[[util.Floatlike], util.Floatlike] = util.d_expit
 # FEED FORWARD AKA FORWARD PASS AKA FORWARD PROPAGATION ################################################################
 ########################################################################################################################
 
-def ____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activate) -> float:
+def ____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activate,
+              expand: bool=False) -> Union[float, pd.Series]:
     """
     Forward-propagate the previous layer's output with the current neuron's weights and activation function.
 
@@ -271,9 +272,12 @@ def ____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activat
 
     fn: function, the current neuron's activation function.
 
+    expand: bool, whether to return both incoming and outgoing activation.
+        If ``True``, returns `pd.Series({'a_in': ``a_in``, 'a_out': ``a_out``})`.
+
     output
     ------
-    float: the current neuron's output.
+    Union[float, pd.Series]: the current neuron's activation(s).
     """
     x = check_data_point(x=x)
     neuron = check_neuron(neuron=neuron)
@@ -282,7 +286,11 @@ def ____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activat
     bias = get_bias(neuron=neuron)
     w_in = get_w_in(x=x, neuron=neuron)
     a_in = get_a_in(x=x, w_in=w_in)
-    return get_a_out(bias=bias, a_in=a_in, fn=fn)
+    a_out = get_a_out(bias=bias, a_in=a_in, fn=fn)
+    if expand:
+        return pd.Series({"a_in": a_in, "a_out": a_out}, index=["a_in", "a_out"])
+    else:
+        return a_out
 
 
 def ___fprop(x: pd.Series, layer: Layer) -> pd.Series:
@@ -360,7 +368,7 @@ def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> pd.Series:
     nn: NN, the model.
 
     expand: bool, whether to return the intermediate layer-by-layer, neuron-by-neuron activations.
-       If `true`, returns a pd.DataFrame MultiIndexed like `nn`, with columns ['a_in', 'a_out'].
+       If ``True``, returns a pd.DataFrame MultiIndexed like ``nn``, with columns ['a_in', 'a_out'].
 
     output
     ------
