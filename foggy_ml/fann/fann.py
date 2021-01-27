@@ -389,6 +389,11 @@ def _fprop(x: pd.Series, nn: NN) -> pd.Series:
     return squash(__fprop(x=x, nn=nn))
 
 
+def _fprop_expand(x: pd.Series, nn: NN) -> pd.DataFrame:
+    """Return all intermediate activations plus output, for use in back-propagation for Deep Learning."""
+    raise NotImplementedError("Don't yet support Deep Learning!")
+
+
 def fprop(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     """
     Forward-propagate each input through the network.
@@ -501,7 +506,6 @@ def fit(y: pd.Series, X: pd.DataFrame,
         # TODO(sparshsah): support DL
         raise NotImplementedError("Don't yet support Deep Learning!")
 
-    nn = init_nn(input_width=X.shape[1], layer_width=layer_width, output_width=y.shape[1],
-                 random_seed=random_seed)
+    nn = init_nn(input_width=X.shape[1], layer_width=layer_width, output_width=y.shape[1], random_seed=random_seed)
     nn = bprop(y=y, X=X, nn=nn, learn_r=learn_r, mini_batch_sz=mini_batch_sz, max_epoch=max_epoch)
     return check_nn(nn=nn)
