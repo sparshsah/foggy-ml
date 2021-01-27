@@ -463,14 +463,19 @@ learning rate (or fine-enough step size, if that's how you want to specify the u
 can find local minima using the first derivative alone. The tradeoff is that Newton-Raphson can be faster.
 """
 
-def __bprop(y: pd.Series, X: pd.DataFrame, nn: NN) -> object:
+def ___bprop(y: pd.Series, X: pd.DataFrame, nn: NN) -> object:
     """Get the gradient."""
+    raise NotImplementedError
+
+
+def __bprop(y: pd.Series, X: pd.DataFrame, nn: NN) -> object:
+    """Get the gradient, shaped like the NN."""
     raise NotImplementedError
 
 
 def _bprop(y: pd.Series, X: pd.DataFrame, nn: NN, learn_r: float) -> NN:
     grad = __bprop(y=y, X=X, nn=nn)
-    return nn - grad * learn_r
+    return nn - learn_r * grad
 
 
 def bprop(y: pd.Series, X: pd.DataFrame, nn: NN,
