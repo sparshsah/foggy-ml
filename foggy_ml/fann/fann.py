@@ -8,8 +8,6 @@ import pandas as pd
 from .. import util
 # calculations and algorithms
 import numpy as np
-from scipy.special import softmax as squash  # linter can't see C funcs, so pylint: disable=no-name-in-module
-from ..util import get_neg_llh as get_loss
 
 __all__ = [
     # data structures
@@ -23,9 +21,9 @@ __all__ = [
     "layerify", "nnify",
     "get_bias", "get_w_in", "get_a_in", "get_a_out",
     # calculations and algorithms
-    "activate", "d_activate", "squash",
+    "activate", "d_activate", "squash", "d_squash",
     "____fprop", "___fprop", "__fprop", "_fprop", "fprop", "predict",
-    "__bprop", "_bprop", "bprop", "fit"
+    "____bprop", "___bprop", "__bprop", "_bprop", "bprop", "fit"
 ]
 
 ########################################################################################################################
@@ -246,10 +244,11 @@ of Real numbers into a probability mass distribution. (And tanh is simply a scal
 ReLU (not implemented) is cool too, and has another cool connection, this time to the hinge loss function.
 """
 
-activate: Callable[[util.Floatlike], util.Floatlike] = util.expit
-d_activate: Callable[[util.Floatlike], util.Floatlike] = util.d_expit
+activate = util.expit
+d_activate = util.d_expit
 
-# during imports, `squash` was defined as `scipy.special.softmax`
+squash = util.softmax
+d_squash = util.d_softmax
 
 
 ########################################################################################################################
@@ -433,7 +432,7 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
 # LOSS | |- || |_ ######################################################################################################
 ########################################################################################################################
 
-# during imports, `get_loss` was defined as cross-entropy AKA negative log-likelihood
+get_loss = util.get_neg_llh
 
 
 ########################################################################################################################
@@ -463,7 +462,7 @@ learning rate (or fine-enough step size, if that's how you want to specify the u
 can find local minima using the first derivative alone. The tradeoff is that Newton-Raphson can be faster.
 """
 
-def ___bprop(_y: object, x: pd.Series, nn: NN) -> pd.DataFrame:
+def ____bprop(_y: object, x: pd.Series, nn: NN) -> pd.DataFrame:
     A = _fprop(x=x, nn=nn, expand=True)  # pylint: disable=unused-variable
     # get loss
     # get gradient

@@ -4,7 +4,7 @@ from typing import Iterable, Union, Optional
 import pandas as pd
 # calculations and algorithms
 import numpy as np
-from scipy.special import expit  # linter can't see C funcs, so pylint: disable=no-name-in-module
+from scipy.special import expit, softmax  # linter can't see C funcs, so pylint: disable=no-name-in-module
 
 Floatlike = Union[float, Iterable[float]]
 
@@ -185,6 +185,11 @@ def d_expit(x: Floatlike) -> Floatlike:
                    = expit(x) * (1 - expit(x)).
     """
     return expit(x) * (1 - expit(x))
+
+
+def d_softmax():
+    _ = softmax
+    raise NotImplementedError
 
 
 ########################################################################################################################
