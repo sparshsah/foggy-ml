@@ -459,8 +459,8 @@ def bprop(y: pd.Series, X: pd.DataFrame, nn: NN,
         raise NotImplementedError("Don't yet support Stochastic Gradient Descent!")
 
     for _ in range(max_epoch):
-        y_batch, X_batch = y, X
-        nn = _bprop(y=y_batch, X=X_batch, nn=nn, learn_r=learn_r)
+        y_mini_batch, X_mini_batch = y, X
+        nn = _bprop(y=y_mini_batch, X=X_mini_batch, nn=nn, learn_r=learn_r)
     return nn
 
 
