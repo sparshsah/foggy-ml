@@ -457,7 +457,7 @@ def bprop(y: pd.Series, X: pd.DataFrame, nn: NN,
         # technically, batch gradient descent is just trivial SGD where each epoch
         # learns from a single mini-batch containing all the training data, but OK
         raise NotImplementedError("Don't yet support Stochastic Gradient Descent!")
-    for t in range(max_epoch):
+    for _ in range(max_epoch):
         nn = _bprop(y_batch=y, X_batch=X, nn=nn)
     return nn
 
