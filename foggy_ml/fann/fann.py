@@ -18,15 +18,19 @@ from ..util import get_neg_llh as get_loss
 
 __all__ = [
     # data structures
-    "Neuron", "Layer", "NN",
+    "Neuron", "Layer", "NN",  # don't include "RNG"
     # magic numbers
-    "NN_INDEX_NLEVELS", "BIAS_INDEX",
+    "NN_INDEX_NLEVELS", "BIAS_INDEX", "MAX_ITER_DEFAULT",
+    # initialization
+    "init_neuron", "init_layer", "init_nn",
     # data wrangling
     "check_data_point", "check_neuron", "check_layer", "check_nn",
-    "nnify", "get_bias", "get_w_in", "get_a_in", "get_a_out",
+    "layerify", "nnify",
+    "get_bias", "get_w_in", "get_a_in", "get_a_out",
     # calculations and algorithms
     "activate", "squash",
     "____fprop", "___fprop", "__fprop", "_fprop", "fprop", "predict",
+    "bprop", "fit"
 ]
 
 ########################################################################################################################
