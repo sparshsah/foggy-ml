@@ -446,9 +446,9 @@ can find local minima using the first derivative alone. The tradeoff is that New
 """
 
 def bprop(y: pd.Series, X: pd.DataFrame, nn: NN,
-          mini_batch_size: Optional[int]=None, max_iter: int=MAX_ITER_DEFAULT) -> NN:
-    mini_batch_size = X.shape[0] if mini_batch_size is None else mini_batch_size
-    if mini_batch_size != X.shape[0]:
+          mini_batch_sz: Optional[int]=None, max_iter: int=MAX_ITER_DEFAULT) -> NN:
+    mini_batch_sz = X.shape[0] if mini_batch_sz is None else mini_batch_sz
+    if mini_batch_sz != X.shape[0]:
         # technically, batch gradient descent is just trivial SGD where each epoch
         # learns from a single mini-batch containing all the training data, but OK
         raise NotImplementedError("Don't yet support Stochastic Gradient Descent!")
@@ -456,6 +456,6 @@ def bprop(y: pd.Series, X: pd.DataFrame, nn: NN,
 
 
 def fit(y: pd.Series, X: pd.DataFrame,
-        mini_batch_size: Optional[int]=None, max_iter:int=MAX_ITER_DEFAULT,
+        mini_batch_sz: Optional[int]=None, max_iter:int=MAX_ITER_DEFAULT,
         random_seed: int=1337) -> NN:
     raise NotImplementedError
