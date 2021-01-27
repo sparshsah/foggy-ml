@@ -1,14 +1,14 @@
 """See description & style notes in top-level repository README.md."""
 
 # syntax utils
-from typing import List, Iterable, Callable, Union, Optional
+from typing import Iterable, Callable, Union, Optional
 # data structures
 import pandas as pd
 # data wrangling
 from .. import util
 # calculations and algorithms
 import numpy as np
-from scipy.special import expit, softmax  # linter can't see C funcs, so pylint: disable=no-name-in-module
+from scipy.special import softmax as squash  # linter can't see C funcs, so pylint: disable=no-name-in-module
 from ..util import get_neg_llh as get_loss
 
 __all__ = [
@@ -173,12 +173,12 @@ def check_nn(nn: object) -> NN:
 
 # check-and-return calculation utils
 
-def layerify(layer: List[Neuron]) -> Layer:
+def layerify(layer: Iterable[Neuron]) -> Layer:
     layer = pd.concat(layer, axis="columns").T
     return check_layer(layer=layer)
 
 
-def nnify(nn: List[Layer]) -> NN:
+def nnify(nn: Iterable[Layer]) -> NN:
     nn = [check_layer(layer=layer) for layer in nn]
     nn = pd.concat(nn, keys=range(len(nn)))
     return check_nn(nn=nn)
@@ -246,26 +246,10 @@ of Real numbers into a probability mass distribution. (And tanh is simply a scal
 ReLU (not implemented) is cool too, and has another cool connection, this time to the hinge loss function.
 """
 
-activate: Callable[[float], float] = expit
+activate: Callable[[util.Floatlike], util.Floatlike] = util.expit
+d_activate: Callable[[util.Floatlike], util.Floatlike] = util.d_expit
 
-def d_activate(x: float) -> float:
-    """
-    Derivative of activation function, in our case expit.
-
-    Use the chain rule:
-    expit(x)        = (1 + exp(-x))^{-1}
-    d expit(x) / dx = -1 (1 + exp(-x))^{-2} * exp(-x) * -1
-                    = (1 + exp(-x))^{-2} * exp(-x)
-                    = (1 + exp(-x))^{-1} * exp(-x) / (1 + exp(-x))
-                    = expit(x) * (exp(-x) + 1 - 1) / (1 + exp(-x))
-                    = expit(x) * [ (exp(-x) + 1) / (1 + exp(-x)) - 1 / (1 + exp(-x)) ]
-                    = expit(x) * [ (1 + exp(-x)) / (1 + exp(-x)) - (1 + exp(-x))^{-1} ]
-                    = expit(x) * (1 - expit(x)).
-    """
-    return activate(x) * (1 - activate(x))
-
-
-squash: Callable[[pd.Series], pd.Series] = softmax  # function[[pd.Series[float]] -> pd.Series[float]]
+# during imports, `squash` was defined as `scipy.special.softmax`
 
 
 ########################################################################################################################

@@ -1,9 +1,12 @@
 # syntax utils
-from typing import Collection, Optional
+from typing import Iterable, Union, Optional
 # data structures
 import pandas as pd
 # calculations and algorithms
 import numpy as np
+from scipy.special import expit  # linter can't see C funcs, so pylint: disable=no-name-in-module
+
+Floatlike = Union[float, Iterable[float]]
 
 EPSILON: float = 1e-6
 
@@ -165,6 +168,26 @@ def one_hotify(y: pd.Series, _y_options: Optional[list]=None) -> pd.DataFrame:
 
 
 ########################################################################################################################
+# GRADIENT #############################################################################################################
+########################################################################################################################
+
+def d_expit(x: Floatlike) -> Floatlike:
+    """
+    Vectorized derivative of expit function.
+
+    expit(x)      := (1 + exp(-x))^{-1}
+    d/dx expit(x)  = -1 (1 + exp(-x))^{-2} * exp(-x) * -1  # chain rule
+                   = (1 + exp(-x))^{-2} * exp(-x)
+                   = (1 + exp(-x))^{-1} * exp(-x) / (1 + exp(-x))
+                   = expit(x) * (exp(-x) + 1 - 1) / (1 + exp(-x))
+                   = expit(x) * [ (exp(-x) + 1) / (1 + exp(-x)) - 1 / (1 + exp(-x)) ]
+                   = expit(x) * [ (1 + exp(-x)) / (1 + exp(-x)) - (1 + exp(-x))^{-1} ]
+                   = expit(x) * (1 - expit(x)).
+    """
+    return expit(x) * (1 - expit(x))
+
+
+########################################################################################################################
 # LOSS | |- || |_ ######################################################################################################
 ########################################################################################################################
 
@@ -188,13 +211,13 @@ overfitting is to also "regularize" weights by penalizing deviations from zero.
 This is like LASSO or Ridge or ElasticNet OLS regression.
 """
 
-def _get_neg_llh(p_y: Collection, normalize: bool=True) -> float:
+def _get_neg_llh(p_y: Iterable[float], normalize: bool=True) -> float:
     """
     Negative log likelihood.
 
     input
     -----
-    p_y: Collection, how much probability mass we assigned to the correct label for each point.
+    p_y: Iterable[float], how much probability mass we assigned to the correct label for each point.
         E.g. if p_y = [0.10, 0.85, 0.50], then there were 3 data points. For the first point,
         we distributed 1-0.10=0.90 probability mass among incorrect labels. Depending on
         how many categories there are, this is pretty poor. In particular, if this is a
