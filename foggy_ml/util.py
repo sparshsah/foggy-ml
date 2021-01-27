@@ -169,8 +169,9 @@ def one_hotify(y: pd.Series, _y_options: Optional[list]=None) -> pd.DataFrame:
 ########################################################################################################################
 
 """
-We implement the "log loss" rather than e.g. MSE loss. One reason I find the MSE
-intuitively appealing is that it more severely penalizes more "confident" wrong answers.
+We implement the cross-entropy loss AKA "log loss" rather than e.g. MSE loss.
+One reason I find the MSE intuitively appealing is that
+it more severely penalizes more "confident" wrong answers.
 For example, if the possible category labels are A, B, C, with the correct
 label being A, and we assign Pr[A] = 0.50, the log loss will be the same
 regardless of whether we assign Pr[B] = 0.25 and Pr[C] = 0.25, or
