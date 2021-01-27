@@ -292,7 +292,7 @@ def ____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activat
         return a_out
 
 
-def ___fprop(x: pd.Series, layer: Layer) -> pd.Series:
+def ___fprop(x: pd.Series, layer: Layer, fn: Callable[[float], float]=activate) -> pd.Series:
     """
     Forward-propagate the previous layer's output with the current layer's weights and activation function.
 
@@ -306,6 +306,8 @@ def ___fprop(x: pd.Series, layer: Layer) -> pd.Series:
         a neuron on the current layer and each column corresponds to
         (the bias or) a neuron on the previous layer.
 
+    fn: function, the activation function.
+
     output
     ------
     pd.Series (index = layer.index), the current layer's output, where each entry corresponds to
@@ -313,10 +315,10 @@ def ___fprop(x: pd.Series, layer: Layer) -> pd.Series:
     """
     x = check_data_point(x=x)
     layer = check_layer(layer=layer)
-    return layer.apply(lambda neuron: ____fprop(x=x, neuron=neuron), axis="columns")
+    return layer.apply(lambda neuron: ____fprop(x=x, neuron=neuron, fn=fn), axis="columns")
 
 
-def __fprop(x: pd.Series, nn: NN) -> pd.Series:
+def __fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate) -> pd.Series:
     """
     Forward-propagate the input through the network.
 
@@ -325,6 +327,8 @@ def __fprop(x: pd.Series, nn: NN) -> pd.Series:
     x: pd.Series, a single raw data point.
 
     nn: NN, the model.
+
+    fn: function, the activation function.
 
     output
     ------
@@ -343,14 +347,20 @@ def __fprop(x: pd.Series, nn: NN) -> pd.Series:
     # so don't use `curr_layer = nn.loc[pd.IndexSlice[curr_layer, :], :]`
     curr_layer = nn.loc[curr_layer]
     curr_layer = check_layer(layer=curr_layer)
-    x = ___fprop(x=x, layer=curr_layer)
+    x = ___fprop(x=x, layer=curr_layer, fn=fn)
 
     # recurse
     remaining_layers = layers[1:]
     if len(remaining_layers) > 0:
         remaining_layers = nn.loc[pd.IndexSlice[remaining_layers, :], :]
         remaining_layers = check_nn(nn=remaining_layers)
-        return __fprop(x=x, nn=remaining_layers)
+
+        if len(remaining_layers) > 1:
+            return __fprop(x=x, nn=remaining_layers, fn=fn)
+        else:
+            # next is final i.e. output layer, which for now we leave alone but must *later* squash
+            return __fprop(x=x, nn=remaining_layers, fn=lambda x: x)
+
     else:
         # this was the final i.e. output layer
         return x
