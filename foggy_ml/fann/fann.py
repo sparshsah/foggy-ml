@@ -253,6 +253,23 @@ ReLU (not implemented) is cool too, and has another cool connection, this time t
 
 activate: Callable[[float], float] = expit
 
+def d_activate(x):
+    """
+    Derivative of activation function, in our case expit.
+
+    Use the chain rule:
+    expit(x)        = (1 + exp(-x))^{-1}
+    d expit(x) / dx = -1 (1 + exp(-x))^{-2} * exp(-x) * -1
+                    = (1 + exp(-x))^{-2} * exp(-x)
+                    = (1 + exp(-x))^{-1} * exp(-x) / (1 + exp(-x))
+                    = expit(x) * (exp(-x) + 1 - 1) / (1 + exp(-x))
+                    = expit(x) * [ (exp(-x) + 1) / (1 + exp(-x)) - 1 / (1 + exp(-x)) ]
+                    = expit(x) * [ (1 + exp(-x)) / (1 + exp(-x)) - (1 + exp(-x))^{-1} ]
+                    = expit(x) * (1 - expit(x)).
+    """
+    return activate(x) * (1 - activate(x))
+
+
 squash: Callable[[pd.Series], pd.Series] = softmax  # function[[pd.Series[float]] -> pd.Series[float]]
 
 
