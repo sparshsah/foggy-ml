@@ -4,7 +4,7 @@ homebrew machine learning
 heaping spoonful of lessons, blog posts, and StackOverflow answers on the Web)
 
 ## fann: Feedforward Artificial Neural Network
-Easy-to-read, step-by-step Python implementation of simple machine learning for binary classification.
+Easy-to-read, step-by-step Python implementation of deep learning for multinomial classification.
 Source code in `foggy_ml/fann/fann.py`,
 unit tests in `_test/fann/test_fann.py`,
 interactive demo in `_demo/fann/demo_fann.ipynb`.
