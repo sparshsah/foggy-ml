@@ -364,8 +364,6 @@ def __fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
     """
     x = check_data_point(x=x)
     nn = check_nn(nn=nn)
-    if expand:
-        raise NotImplementedError
 
     """
     levels[0] indexes the layers, levels[1] indexes the neurons on each layer, so
@@ -381,7 +379,8 @@ def __fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
     """
     curr_layer = nn.loc[curr_layer]
     curr_layer = check_layer(layer=curr_layer)
-    x = ___fprop(x=x, layer=curr_layer, fn=fn)
+    a = ___fprop(x=x, layer=curr_layer, fn=fn, expand=expand)
+    del x
 
     # recurse
     remaining_layers = layers[1:]
@@ -390,12 +389,24 @@ def __fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
         remaining_layers = check_nn(nn=remaining_layers)
 
         if len(remaining_layers) > 1:
-            return __fprop(x=x, nn=remaining_layers, fn=fn)
+            if expand:
+                return [a,] + __fprop(x=a, nn=remaining_layers, fn=fn, expand=expand)
+            else:
+                return __fprop(x=a, nn=remaining_layers, fn=fn, expand=expand)
         else:  # next is final i.e. output layer, which we will for now leave alone but must *later* squash
-            return __fprop(x=x, nn=remaining_layers, fn=lambda x: x)
+            if expand:
+                return [a,] + __fprop(x=a, nn=remaining_layers, fn=lambda x: x, expand=expand)
+            else:
+                return __fprop(x=a, nn=remaining_layers, fn=lambda x: x, expand=expand)
 
     else:  # this was the final i.e. output layer
-        return x
+        if expand:
+            return [a,]
+        else:
+            return a
+
+
+# TODO(sparshsah): add another level to pd.concat() the above
 
 
 def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.DataFrame]:
@@ -427,6 +438,7 @@ def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.Data
     nn = check_nn(nn=nn)
 
     a = __fprop(x=x, nn=nn, expand=expand)
+    del x
     if expand:  # isinstance(a, pd.DataFrame)
         # squash only the output layer's outgoing activations into a probability mass function
         # a.columns.get_loc("a_out") == 1, but this makes my intention more explicit
