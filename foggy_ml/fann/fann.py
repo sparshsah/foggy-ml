@@ -1,7 +1,7 @@
 """See description & style notes in top-level repository README.md."""
 
 # syntax utils
-from typing import Iterable, Callable, Union, Optional
+from typing import Tuple, Iterable, Callable, Union, Optional
 # data structures
 import pandas as pd
 # data wrangling
@@ -63,7 +63,7 @@ MAX_EPOCH_DEFAULT: int = 2048
 # initialize
 
 def init_neuron(prev_layer_width: int, rng: RNG) -> Neuron:
-    neuron = Neuron(index=[BIAS_INDEX,] + list(range(prev_layer_width)))
+    neuron = Neuron(index=(BIAS_INDEX,) + tuple(range(prev_layer_width)))
     # generate bias
     neuron.loc[BIAS_INDEX] = rng.normal()
     # generate weights
@@ -99,11 +99,11 @@ def init_nn(input_width: int, layer_width: Union[int, Iterable[int]], output_wid
     NN, a new Neural Network object.
     """
     # setup loop control
-    layer_width = [layer_width,] if isinstance(layer_width, int) else list(layer_width)
-    layer_width = [input_width,] + layer_width + [output_width,]
+    layer_width = (layer_width,) if isinstance(layer_width, int) else tuple(layer_width)
+    layer_width = (input_width,) + layer_width + (output_width,)
     del output_width, input_width
     layer_width = pd.Series(layer_width)
-    layer_width = pd.concat([layer_width.shift(), layer_width], axis="columns", keys=["prev", "curr"])
+    layer_width = pd.concat((layer_width.shift(), layer_width), axis="columns", keys=("prev", "curr"))
     # the shift introduced a NaN, forcing the dtype to float.. fix that here
     layer_width = layer_width.loc[1:].astype(int)
 
@@ -336,7 +336,7 @@ def ____fprop(x: pd.Series, layer: Layer, fn: Callable[[float], float]=activate,
 
 
 def ___fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
-             expand: bool=False) -> Union[pd.Series, pd.DataFrame]:
+             expand: bool=False) -> Union[pd.Series, Tuple[pd.DataFrame]]:
     """
     Forward-propagate the input through the network.
 
@@ -356,7 +356,8 @@ def ___fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
         pd.Series (index = layers[-1].index), the output layer's outgoing activation per neuron,
         where each entry corresponds to a neuron on the output layer. Not yet squashed!
     else:
-        pd.DataFrame (index = nn.index, columns = ['a_in', 'a_out']),
+        Tuple[pd.DataFrame]
+        pd.concat()-able to pd.DataFrame (index = nn.index, columns = ['a_in', 'a_out']),
         each layer's incoming and outgoing activation per neuron,
         where each "super-row" (axis=0, level=0) corresponds to a layer and
         each row (axis=0, level=1) corresponds to a neuron on that layer.
@@ -364,13 +365,11 @@ def ___fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
     """
     x = check_data_point(x=x)
     nn = check_nn(nn=nn)
-
     """
     levels[0] indexes the layers, levels[1] indexes the neurons on each layer, so
     this is basically a list of (names of) layers in this NN e.g. [0, 1, 2, ..]
     """
     layers = nn.index.remove_unused_levels().levels[0]
-
     curr_layer = layers[0]
     """
     we want to "squeeze" the MultiIndex i.e. we want indices to be
@@ -388,25 +387,42 @@ def ___fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
         remaining_layers = nn.loc[pd.IndexSlice[remaining_layers, :], :]
         remaining_layers = check_nn(nn=remaining_layers)
         # remaining layers activations
-        if len(remaining_layers) > 1:
-            a_ = ___fprop(x=a, nn=remaining_layers, fn=fn, expand=expand)
-        else:  # next is final i.e. output layer, which we will for now leave alone but must *later* squash
-            a_ = ___fprop(x=a, nn=remaining_layers, fn=lambda x: x, expand=expand)
-
-        if expand:  # isinstance(a_, List[pd.DataFrame])
-            return [a,] + a_
-        else:  # isinstance(a_, pd.Series)
-            return a_
-
+        a_ = ___fprop(x=a, nn=remaining_layers,
+                      # if next layer is output layer, don't pass thru activation fn (we will later squash)
+                      fn=(lambda x: x) if len(remaining_layers) == 1 else fn,
+                      expand=expand)
+        # std CPython doesn't implement tail-call optimization, hence I prefer this more legible syntax
+        return (a,) + a_ if expand else a_
     else:  # this was the final i.e. output layer
-        if expand:
-            return [a,]
-        else:
-            return a
+        return (a,) if expand else a
 
 
-def __fprop():
-    pass
+def __fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.DataFrame]:
+    """
+    Forward-propagate the input through the network.
+
+    input
+    -----
+    x: pd.Series, a single raw data point.
+
+    nn: NN, the model.
+
+    expand: bool, whether to return incoming and outgoing activation per neuron, per layer.
+
+    output
+    ------
+    if not `expand`:
+        pd.Series (index = layers[-1].index), the output layer's outgoing activation per neuron,
+        where each entry corresponds to a neuron on the output layer. Not yet squashed!
+    else:
+        pd.DataFrame (index = nn.index, columns = ['a_in', 'a_out']),
+        each layer's incoming and outgoing activation per neuron,
+        where each "super-row" (axis=0, level=0) corresponds to a layer and
+        each row (axis=0, level=1) corresponds to a neuron on that layer.
+        Output layer outgoing activations not yet squashed!
+    """
+    a = ___fprop(x=x, nn=nn, expand=expand)
+    return pd.concat(a, keys=nn.index.remove_unused_levels().levels[0]) if expand else a
 
 
 def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.DataFrame]:
@@ -559,6 +575,7 @@ def bprop(y: pd.Series, X: pd.DataFrame, nn: NN,
         raise NotImplementedError("Don't yet support nontrivial batching in SGD!")
 
     for _ in range(max_epoch):
+        # TODO(sparshsah): shuffle x's then use batch sz
         y_batch, X_batch = y, X
         nn = _bprop(y=y_batch, X=X_batch, nn=nn, learn_r=learn_r)
     return nn
