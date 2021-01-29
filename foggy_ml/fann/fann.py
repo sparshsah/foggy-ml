@@ -276,7 +276,7 @@ def ____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activat
 
     output
     ------
-    if ``expand``:
+    if `expand`:
         pd.Series (index = ['a_in', 'a_out']),
         current neuron's incoming and outgoing activation.
     else:
@@ -313,16 +313,16 @@ def ___fprop(x: pd.Series, layer: Layer, fn: Callable[[float], float]=activate,
 
     fn: function, the activation function.
 
-    expand: bool, whether to return both incoming and outgoing activations.
+    expand: bool, whether to return both incoming and outgoing activation per neuron.
 
     output
     ------
-    if ``expand``:
+    if `expand`:
         pd.DataFrame (index = layer.index, columns = ['a_in', 'a_out']),
-        current layer's incoming and outgoing activations,
+        current layer's incoming and outgoing activation per neuron,
         where each row corresponds to a neuron on the current layer.
     else:
-        pd.Series (index = layer.index), the current layer's outgoing activations,
+        pd.Series (index = layer.index), the current layer's outgoing activation per neuron,
         where each entry corresponds to a neuron on the current layer.
     """
     x = check_data_point(x=x)
@@ -335,7 +335,8 @@ def ___fprop(x: pd.Series, layer: Layer, fn: Callable[[float], float]=activate,
     return layer.apply(lambda neuron: ____fprop(x=x, neuron=neuron, fn=fn, expand=expand), axis="columns")
 
 
-def __fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate) -> pd.Series:
+def __fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
+            expand: bool=False) -> Union[pd.Series, pd.DataFrame]:
     """
     Forward-propagate the input through the network.
 
@@ -347,12 +348,23 @@ def __fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate) -> pd.S
 
     fn: function, the activation function.
 
+    expand: bool, whether to return incoming and outgoing activation per neuron, per layer.
+
     output
     ------
-    pd.Series, the final layer's output.
+    if `expand`:
+        pd.DataFrame (index = nn.index, columns = ['a_in', 'a_out']),
+        each layer's incoming and outgoing activation per neuron,
+        where each "super-row" (axis=0, level=0) corresponds to a layer and
+        each row (axis=0, level=1) corresponds to a neuron on that layer.
+    else:
+        pd.Series (index = layers[-1].index), the output layer's outgoing activation per neuron,
+        where each entry corresponds to a neuron on the output layer.
     """
     x = check_data_point(x=x)
     nn = check_nn(nn=nn)
+    if expand:
+        raise NotImplementedError
 
     # levels[0] indexes the layers, levels[1] indexes the neurons on each layer, so
     # this is basically a list of (names of) layers in this NN e.g. [0, 1, 2, ..]
@@ -383,7 +395,7 @@ def __fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate) -> pd.S
         return x
 
 
-def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> pd.Series:
+def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.DataFrame]:
     """
     Forward-propagate the input through the network.
 
@@ -393,8 +405,7 @@ def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> pd.Series:
 
     nn: NN, the model.
 
-    expand: bool, whether to return the intermediate layer-by-layer, neuron-by-neuron activations.
-       If ``True``, returns a pd.DataFrame MultiIndexed like ``nn``, with columns ['a_in', 'a_out'].
+    expand: bool, whether to return incoming and outgoing activation per neuron, per layer.
 
     output
     ------
@@ -411,7 +422,7 @@ def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> pd.Series:
 def fprop(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     """
     Forward-propagate each input through the network.
-    Could be done more efficiently with some clever linear algebra, but this does the job.
+    Could be done more efficiently with some clever linear algebra, but this is more step-by-step.
 
     input
     -----
