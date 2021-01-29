@@ -460,7 +460,7 @@ def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.Data
         # squash only the output layer's outgoing activations into a probability mass function
         # along a's MultiIndex's first level, get the last label
         output_layer = a.index.remove_unused_levels().levels[0][-1]
-        a.loc[output_layer, "a_out"] = squash(a.loc[output_layer, "a_out"])
+        a.loc[pd.IndexSlice[output_layer, :], "a_out"] = squash(a.loc[pd.IndexSlice[output_layer, :], "a_out"])
     else:  # isinstance(a, pd.Series)
         a = squash(a)
     return a
