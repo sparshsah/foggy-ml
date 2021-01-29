@@ -427,10 +427,15 @@ def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.Data
     """
     x = check_data_point(x=x)
     nn = check_nn(nn=nn)
-    if expand:
-        raise NotImplementedError
-    else:
-        return squash(__fprop(x=x, nn=nn))
+
+    a = __fprop(x=x, nn=nn, expand=expand)
+    if expand:  # isinstance(a, pd.DataFrame)
+        # squash only the output layer's outgoing activations into a probability mass function
+        # a.columns.get_loc("a_out") == 1, but this makes my intention more explicit
+        a.iloc[-1, a.columns.get_loc("a_out")] = squash(a.iloc[-1, a.columns.get_loc("a_out")])
+    else:  # isinstance(a, pd.Series)
+        a = squash(a)
+    return a
 
 
 def fprop(X: pd.DataFrame, nn: NN) -> pd.DataFrame:
