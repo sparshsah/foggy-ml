@@ -391,12 +391,10 @@ def __fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
 
         if len(remaining_layers) > 1:
             return __fprop(x=x, nn=remaining_layers, fn=fn)
-        else:
-            # next is final i.e. output layer, which we will for now leave alone but must *later* squash
+        else:  # next is final i.e. output layer, which we will for now leave alone but must *later* squash
             return __fprop(x=x, nn=remaining_layers, fn=lambda x: x)
 
-    else:
-        # this was the final i.e. output layer
+    else:  # this was the final i.e. output layer
         return x
 
 
