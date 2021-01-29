@@ -66,7 +66,8 @@ def init_neuron(prev_layer_width: int, rng: RNG) -> Neuron:
     neuron = Neuron(index=[BIAS_INDEX,] + list(range(prev_layer_width)))
     # generate bias
     neuron.loc[BIAS_INDEX] = rng.normal()
-    # generate weights, normalizing so ex-ante stdev of their sum is exactly unity
+    # generate weights
+    # normalize so ex-ante stdev of sum is exactly unity -> neuron saturation less likely -> learns faster
     # skip the bias index
     neuron.iloc[1:] = rng.normal(scale=1. / prev_layer_width**0.5, size=prev_layer_width)
     return check_neuron(neuron=neuron)
