@@ -273,11 +273,14 @@ def ____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activat
     fn: function, the current neuron's activation function.
 
     expand: bool, whether to return both incoming and outgoing activation.
-        If ``True``, returns `pd.Series({'a_in': ``a_in``, 'a_out': ``a_out``})`.
 
     output
     ------
-    Union[float, pd.Series]: the current neuron's activation(s).
+    if ``expand``:
+        pd.Series (index = ['a_in', 'a_out']),
+        current neuron's incoming and outgoing activation.
+    else:
+        float, current neuron's outgoing activation.
     """
     x = check_data_point(x=x)
     neuron = check_neuron(neuron=neuron)
@@ -293,7 +296,8 @@ def ____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activat
         return a_out
 
 
-def ___fprop(x: pd.Series, layer: Layer, fn: Callable[[float], float]=activate) -> pd.Series:
+def ___fprop(x: pd.Series, layer: Layer, fn: Callable[[float], float]=activate,
+             expand: bool=False) -> Union[pd.Series, pd.DataFrame]:
     """
     Forward-propagate the previous layer's output with the current layer's weights and activation function.
 
@@ -309,14 +313,26 @@ def ___fprop(x: pd.Series, layer: Layer, fn: Callable[[float], float]=activate) 
 
     fn: function, the activation function.
 
+    expand: bool, whether to return both incoming and outgoing activations.
+
     output
     ------
-    pd.Series (index = layer.index), the current layer's output, where each entry corresponds to
-        a neuron on the current layer.
+    if ``expand``:
+        pd.DataFrame (index = layer.index, columns = ['a_in', 'a_out']),
+        current layer's incoming and outgoing activations,
+        where each row corresponds to a neuron on the current layer.
+    else:
+        pd.Series (index = layer.index), the current layer's outgoing activations,
+        where each entry corresponds to a neuron on the current layer.
     """
     x = check_data_point(x=x)
     layer = check_layer(layer=layer)
-    return layer.apply(lambda neuron: ____fprop(x=x, neuron=neuron, fn=fn), axis="columns")
+    """
+    Layer.apply() will smartly return pd.DataFrame if ____fprop() returns pd.Series,
+    or pd.Series if ___fprop() returns scalar.
+    In either case, returned object's index will match layer.index.
+    """
+    return layer.apply(lambda neuron: ____fprop(x=x, neuron=neuron, fn=fn, expand=expand), axis="columns")
 
 
 def __fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate) -> pd.Series:
