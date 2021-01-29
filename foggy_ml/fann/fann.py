@@ -497,13 +497,10 @@ def _bprop(y: pd.Series, X: pd.DataFrame, nn: NN, learn_r: float) -> NN:
 
 
 def bprop(y: pd.Series, X: pd.DataFrame, nn: NN,
-          learn_r: float=LEARN_R_DEFAULT, batch_sz: Optional[int]=None, max_epoch: int=MAX_EPOCH_DEFAULT) -> NN:
+          learn_r: float=LEARN_R_DEFAULT, batch_sz: int=1, max_epoch: int=MAX_EPOCH_DEFAULT) -> NN:
     batch_sz = X.shape[0] if batch_sz is None else batch_sz
-    if batch_sz != X.shape[0]:
-        # technically, batch gradient descent is just trivial SGD where each epoch
-        # learns from a single mini-batch containing all the training data, but OK
-        # TODO(sparshsah): support SGD
-        raise NotImplementedError("Don't yet support nontrivial Stochastic Gradient Descent!")
+    if batch_sz != 1:
+        raise NotImplementedError("Don't yet support nontrivial batching in SGD!")
 
     for _ in range(max_epoch):
         y_batch, X_batch = y, X
@@ -513,7 +510,7 @@ def bprop(y: pd.Series, X: pd.DataFrame, nn: NN,
 
 def fit(y: pd.Series, X: pd.DataFrame,
         layer_width: Union[int, Iterable[int]],
-        learn_r: float=LEARN_R_DEFAULT, batch_sz: Optional[int]=None, max_epoch: int=MAX_EPOCH_DEFAULT,
+        learn_r: float=LEARN_R_DEFAULT, batch_sz: int=1, max_epoch: int=MAX_EPOCH_DEFAULT,
         random_seed: int=1337) -> NN:
     y = util.one_hotify(y=y)
     if y.shape[1] != 2:
