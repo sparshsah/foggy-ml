@@ -22,7 +22,7 @@ __all__ = [
     "get_bias", "get_w_in", "get_a_in", "get_a_out",
     # calculations and algorithms
     "activate", "d_activate", "squash", "d_squash",
-    "____fprop", "___fprop", "__fprop", "_fprop", "fprop", "predict",
+    "_____fprop", "____fprop", "___fprop", "__fprop", "_fprop", "fprop", "predict",
     "____bprop", "___bprop", "__bprop", "_bprop", "bprop", "fit"
 ]
 
@@ -256,8 +256,8 @@ d_squash = util.d_softmax
 # FEED FORWARD AKA FORWARD PASS AKA FORWARD PROPAGATION ################################################################
 ########################################################################################################################
 
-def ____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activate,
-              expand: bool=False) -> Union[float, pd.Series]:
+def _____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activate,
+               expand: bool=False) -> Union[float, pd.Series]:
     """
     Forward-propagate the previous layer's output with the current neuron's weights and activation function.
 
@@ -296,8 +296,8 @@ def ____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activat
         return a_out
 
 
-def ___fprop(x: pd.Series, layer: Layer, fn: Callable[[float], float]=activate,
-             expand: bool=False) -> Union[pd.Series, pd.DataFrame]:
+def ____fprop(x: pd.Series, layer: Layer, fn: Callable[[float], float]=activate,
+              expand: bool=False) -> Union[pd.Series, pd.DataFrame]:
     """
     Forward-propagate the previous layer's output with the current layer's weights and activation function.
 
@@ -332,11 +332,11 @@ def ___fprop(x: pd.Series, layer: Layer, fn: Callable[[float], float]=activate,
     or pd.Series if ___fprop() returns scalar.
     In either case, returned object's index will match layer.index.
     """
-    return layer.apply(lambda neuron: ____fprop(x=x, neuron=neuron, fn=fn, expand=expand), axis="columns")
+    return layer.apply(lambda neuron: _____fprop(x=x, neuron=neuron, fn=fn, expand=expand), axis="columns")
 
 
-def __fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
-            expand: bool=False) -> Union[pd.Series, pd.DataFrame]:
+def ___fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
+             expand: bool=False) -> Union[pd.Series, pd.DataFrame]:
     """
     Forward-propagate the input through the network.
 
@@ -379,7 +379,7 @@ def __fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
     """
     curr_layer = nn.loc[curr_layer]
     curr_layer = check_layer(layer=curr_layer)
-    a = ___fprop(x=x, layer=curr_layer, fn=fn, expand=expand)  # curr layer activations
+    a = ____fprop(x=x, layer=curr_layer, fn=fn, expand=expand)  # curr layer activations
     del x
 
     # recurse
@@ -389,9 +389,9 @@ def __fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
         remaining_layers = check_nn(nn=remaining_layers)
         # remaining layers activations
         if len(remaining_layers) > 1:
-            a_ = __fprop(x=a, nn=remaining_layers, fn=fn, expand=expand)
+            a_ = ___fprop(x=a, nn=remaining_layers, fn=fn, expand=expand)
         else:  # next is final i.e. output layer, which we will for now leave alone but must *later* squash
-            a_ = __fprop(x=a, nn=remaining_layers, fn=lambda x: x, expand=expand)
+            a_ = ___fprop(x=a, nn=remaining_layers, fn=lambda x: x, expand=expand)
 
         if expand:  # isinstance(a_, List[pd.DataFrame])
             return [a,] + a_
@@ -405,7 +405,8 @@ def __fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
             return a
 
 
-# TODO(sparshsah): add another level to pd.concat() the above
+def __fprop():
+    pass
 
 
 def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.DataFrame]:
@@ -436,7 +437,7 @@ def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.Data
     x = check_data_point(x=x)
     nn = check_nn(nn=nn)
 
-    a = __fprop(x=x, nn=nn, expand=expand)  # activations
+    a = ___fprop(x=x, nn=nn, expand=expand)  # activations
     del x
     if expand:  # isinstance(a, pd.DataFrame)
         # squash only the output layer's outgoing activations into a probability mass function
