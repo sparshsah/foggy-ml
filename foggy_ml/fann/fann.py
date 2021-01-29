@@ -276,11 +276,11 @@ def ____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activat
 
     output
     ------
-    if `expand`:
+    if not `expand`:
+        float, current neuron's outgoing activation.
+    else:
         pd.Series (index = ['a_in', 'a_out']),
         current neuron's incoming and outgoing activation.
-    else:
-        float, current neuron's outgoing activation.
     """
     x = check_data_point(x=x)
     neuron = check_neuron(neuron=neuron)
@@ -317,13 +317,13 @@ def ___fprop(x: pd.Series, layer: Layer, fn: Callable[[float], float]=activate,
 
     output
     ------
-    if `expand`:
+    if not `expand`:
+        pd.Series (index = layer.index), the current layer's outgoing activation per neuron,
+        where each entry corresponds to a neuron on the current layer.
+    else:
         pd.DataFrame (index = layer.index, columns = ['a_in', 'a_out']),
         current layer's incoming and outgoing activation per neuron,
         where each row corresponds to a neuron on the current layer.
-    else:
-        pd.Series (index = layer.index), the current layer's outgoing activation per neuron,
-        where each entry corresponds to a neuron on the current layer.
     """
     x = check_data_point(x=x)
     layer = check_layer(layer=layer)
@@ -352,14 +352,15 @@ def __fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
 
     output
     ------
-    if `expand`:
+    if not `expand`:
+        pd.Series (index = layers[-1].index), the output layer's outgoing activation per neuron,
+        where each entry corresponds to a neuron on the output layer. Not yet squashed!
+    else:
         pd.DataFrame (index = nn.index, columns = ['a_in', 'a_out']),
         each layer's incoming and outgoing activation per neuron,
         where each "super-row" (axis=0, level=0) corresponds to a layer and
         each row (axis=0, level=1) corresponds to a neuron on that layer.
-    else:
-        pd.Series (index = layers[-1].index), the output layer's outgoing activation per neuron,
-        where each entry corresponds to a neuron on the output layer.
+        Output layer outgoing activations not yet squashed!
     """
     x = check_data_point(x=x)
     nn = check_nn(nn=nn)
@@ -413,7 +414,16 @@ def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.Data
 
     output
     ------
-    pd.Series, the probability the model assigns to each category label.
+    if not `expand`:
+        pd.Series (index = layers[-1].index), the probability the model assigns to each category label,
+        where each entry corresponds to a neuron on the output layer.
+    else:
+        pd.DataFrame (index = nn.index, columns = ['a_in', 'a_out']),
+        each layer's incoming and outgoing activation per neuron,
+        where each "super-row" (axis=0, level=0) corresponds to a layer and
+        each row (axis=0, level=1) corresponds to a neuron on that layer.
+        Output layer outgoing activations are the probability the model assigns
+        to each category label, where each entry corresponds to a neuron on the output layer.
     """
     x = check_data_point(x=x)
     nn = check_nn(nn=nn)
