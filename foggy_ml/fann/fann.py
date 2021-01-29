@@ -121,7 +121,7 @@ def check_data_point(x: object) -> pd.Series:
     util.check_not_type(x.index, pd.MultiIndex)
     if BIAS_INDEX in x.index:
         raise ValueError("Data point \n{x}\n contains reserved index `{i}`!".format(x=x, i=BIAS_INDEX))
-    util.check_dtype(x, float)
+    util.check_dtype(x, type_={int, float})
     return x
 
 
