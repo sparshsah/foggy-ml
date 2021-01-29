@@ -366,14 +366,18 @@ def __fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
     if expand:
         raise NotImplementedError
 
-    # levels[0] indexes the layers, levels[1] indexes the neurons on each layer, so
-    # this is basically a list of (names of) layers in this NN e.g. [0, 1, 2, ..]
+    """
+    levels[0] indexes the layers, levels[1] indexes the neurons on each layer, so
+    this is basically a list of (names of) layers in this NN e.g. [0, 1, 2, ..]
+    """
     layers = nn.index.remove_unused_levels().levels[0]
 
     curr_layer = layers[0]
-    # we want to "squeeze" the MultiIndex i.e. we want indices to be
-    # not `[(curr_layer, 0), (curr_layer, 1), (curr_layer, 2), ..]` but simply `[0, 1, 2, ..]`,
-    # so don't use `curr_layer = nn.loc[pd.IndexSlice[curr_layer, :], :]`
+    """
+    we want to "squeeze" the MultiIndex i.e. we want indices to be
+    not `[(curr_layer, 0), (curr_layer, 1), (curr_layer, 2), ..]` but simply `[0, 1, 2, ..]`,
+    so don't use `curr_layer = nn.loc[pd.IndexSlice[curr_layer, :], :]`
+    """
     curr_layer = nn.loc[curr_layer]
     curr_layer = check_layer(layer=curr_layer)
     x = ___fprop(x=x, layer=curr_layer, fn=fn)
