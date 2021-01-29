@@ -379,6 +379,7 @@ def ___fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
     curr_layer = nn.loc[curr_layer]
     curr_layer = check_layer(layer=curr_layer)
     a = ____fprop(x=x, layer=curr_layer, fn=fn, expand=expand)  # curr layer activations
+    a_out = a["a_out"] if expand else a  # curr layer outgoing activations
     del x
 
     # recurse
@@ -387,7 +388,7 @@ def ___fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
         remaining_layers = nn.loc[pd.IndexSlice[remaining_layers, :], :]
         remaining_layers = check_nn(nn=remaining_layers)
         # remaining layers activations
-        a_ = ___fprop(x=a, nn=remaining_layers,
+        a_ = ___fprop(x=a_out, nn=remaining_layers,
                       # if next layer is output layer, don't pass thru activation fn (we will later squash)
                       fn=(lambda x: x) if len(remaining_layers) == 1 else fn,
                       expand=expand)
@@ -453,12 +454,13 @@ def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.Data
     x = check_data_point(x=x)
     nn = check_nn(nn=nn)
 
-    a = ___fprop(x=x, nn=nn, expand=expand)  # activations
+    a = __fprop(x=x, nn=nn, expand=expand)  # activations
     del x
     if expand:  # isinstance(a, pd.DataFrame)
         # squash only the output layer's outgoing activations into a probability mass function
-        # a.columns.get_loc("a_out") == 1, but this makes my intention more explicit
-        a.iloc[-1, a.columns.get_loc("a_out")] = squash(a.iloc[-1, a.columns.get_loc("a_out")])
+        # along a's MultiIndex's first level, get the last label
+        output_layer = a.index.remove_unused_levels().levels[0][-1]
+        a.loc[output_layer, "a_out"] = squash(a.loc[output_layer, "a_out"])
     else:  # isinstance(a, pd.Series)
         a = squash(a)
     return a
