@@ -291,7 +291,7 @@ def _____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activa
     a_in = get_a_in(x=x, w_in=w_in)
     a_out = get_a_out(bias=bias, a_in=a_in, fn=fn)
     if expand:
-        return pd.Series({"a_in": a_in, "a_out": a_out}, index=["a_in", "a_out"])
+        return pd.Series({"a_in": a_in, "a_out": a_out}, index=("a_in", "a_out"))
     else:
         return a_out
 
