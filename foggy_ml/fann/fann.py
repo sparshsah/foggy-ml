@@ -553,6 +553,7 @@ can find local minima using the first derivative alone. The tradeoff is that New
 def __bprop(_y: object, x: pd.Series, nn: NN) -> pd.DataFrame:
     A = _fprop(x=x, nn=nn, expand=True)  # pylint: disable=unused-variable
     # get loss
+
     # get gradient
     raise NotImplementedError
 
@@ -568,8 +569,8 @@ def bprop(y: pd.Series, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
 
 
 def __train(y: pd.Series, X: pd.DataFrame, nn: NN, learn_r: float) -> NN:
+    """Descend a step along the gradient."""
     grad = bprop(y=y, X=X, nn=nn)
-    # descend a step along gradient
     return nn - learn_r * grad
 
 
@@ -586,15 +587,9 @@ def _train(y: pd.Series, X: pd.DataFrame, nn: NN,
 def train(y: pd.Series, X: pd.DataFrame,
           layer_width: Union[int, Iterable[int]],
           learn_r: float=LEARN_R_DEFAULT, batch_frac: float=BATCH_FRAC_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT,
-          random_seed: int=1337) -> NN:
+          random_seed: int=1337
+         )-> NN:
     y = util.one_hotify(y=y)
-    if y.shape[1] != 2:
-        # TODO(sparshsah): support Multinomial Classification
-        raise NotImplementedError("Don't yet support Multinomial Classification!")
-
-    if not isinstance(layer_width, int):
-        # TODO(sparshsah): support DL
-        raise NotImplementedError("Don't yet support Deep Learning!")
 
     nn = init_nn(input_width=X.shape[1], layer_width=layer_width, output_width=y.shape[1], random_seed=random_seed)
     nn = _train(y=y, X=X, nn=nn, learn_r=learn_r, batch_frac=batch_frac, max_epoch=max_epoch)
