@@ -1,5 +1,5 @@
 # syntax utils
-from typing import Iterable, Union, Optional
+from typing import Iterable, Callable, Union, Optional
 # data structures
 import pandas as pd
 # calculations and algorithms
@@ -171,26 +171,34 @@ def one_hotify(y: pd.Series, _y_options: Optional[list]=None) -> pd.DataFrame:
 # GRADIENT #############################################################################################################
 ########################################################################################################################
 
-def d_expit(x: Floatlike) -> Floatlike:
+
+def d(x: Floatlike, fn: Callable[[Floatlike], Floatlike]) -> Floatlike:
     """
-    Vectorized derivative of expit function.
+    Vectorized (partial) derivative, i.e. d(x, fn) = [d/dx_i fn(x)_i for i in range(len(x))].
 
-    expit(x)      := (1 + exp(-x))^{-1}
-    d/dx expit(x)  = -1 (1 + exp(-x))^{-2} * exp(-x) * -1  # chain rule
-                   = (1 + exp(-x))^{-2} * exp(-x)
-                   = (1 + exp(-x))^{-1} * exp(-x) / (1 + exp(-x))
-                   = expit(x) * (exp(-x) + 1 - 1) / (1 + exp(-x))
-                   = expit(x) * [ (exp(-x) + 1) / (1 + exp(-x)) - 1 / (1 + exp(-x)) ]
-                   = expit(x) * [ (1 + exp(-x)) / (1 + exp(-x)) - (1 + exp(-x))^{-1} ]
-                   = expit(x) * (1 - expit(x)).
+    Proof:
+
+    expit(x)        := (1 + exp(-x))^{-1}
+    d/dx expit(x)    = -1 (1 + exp(-x))^{-2} * exp(-x) * -1  # chain rule
+                     = (1 + exp(-x))^{-2} * exp(-x)
+                     = (1 + exp(-x))^{-1} * exp(-x) / (1 + exp(-x))
+                     = expit(x) * (exp(-x) + 1 - 1) / (1 + exp(-x))
+                     = expit(x) * [ (exp(-x) + 1) / (1 + exp(-x)) - 1 / (1 + exp(-x)) ]
+                     = expit(x) * [ (1 + exp(-x)) / (1 + exp(-x)) - (1 + exp(-x))^{-1} ]
+                     = expit(x) * (1 - expit(x)).
+
+    softmax(x)      := exp(x) / sum(exp(x))
+    d/dx softmax(x)  = [sum(exp(x)) d/dx exp(x) - exp(x) d/dx sum(exp(x))] / sum(exp(x))^2  # quotient rule
+                     = [sum(exp(x)) * exp(x) - exp(x) * exp(x)] / sum(exp(x))^2
+                     = exp(x) * [sum(exp(x)) - exp(x)] / sum(exp(x))^2
+                     = exp(x) * [sum(exp(x)) / sum(exp(x))^2 - exp(x) / sum(exp(x))^2]
+                     = exp(x) * [1 / sum(exp(x)) - softmax(x) / sum(exp(x))]
+                     = exp(x) / sum(exp(x)) * (1 - softmax(x))
+                     = softmax(x) * (1 - softmax(x)).
     """
-    return expit(x) * (1 - expit(x))
-
-
-def d_softmax():
-    # TODO
-    _ = softmax
-    raise NotImplementedError
+    if fn not in (expit, softmax):
+        raise NotImplementedError(fn)
+    return fn(x) * (1 - fn(x))
 
 
 ########################################################################################################################

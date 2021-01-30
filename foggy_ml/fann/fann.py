@@ -21,9 +21,9 @@ __all__ = [
     "layerify", "nnify",
     "get_bias", "get_w_in", "get_a_in", "get_a_out",
     # calculations and algorithms
-    "activate", "d_activate", "squash", "d_squash",
+    "activate", "squash",
     "_____fprop", "____fprop", "___fprop", "__fprop", "_fprop", "fprop", "predict",
-    "____bprop", "___bprop", "__bprop", "_bprop", "bprop", "fit"
+    "__bprop", "_bprop", "bprop", "__train", "_train", "train",
 ]
 
 ########################################################################################################################
@@ -246,10 +246,7 @@ ReLU (not implemented) is cool too, and has another cool connection, this time t
 """
 
 activate = util.expit
-d_activate = util.d_expit
-
 squash = util.softmax
-d_squash = util.d_softmax
 
 
 ########################################################################################################################
@@ -526,7 +523,7 @@ get_loss = util.get_neg_llh
 
 """
 When I was first studying machine learning algorithms in college, the whole concept of gradient descent
-(which is the basis of back-propagation) seemed unnecessary to me. I was accustomed to the OLS method
+(which is the basis of NN training) seemed unnecessary to me. I was accustomed to the OLS method
 from high-school statistics classes, where too we have a prediction problem and a loss function
 (in that case, the MSE loss), and simply calculate (X'X)^{-1}X'y to fit our linear model's coefficients.
 Why not do the same here, use calculus (first- and second-order conditions) plus some algebra
@@ -536,6 +533,8 @@ Then my professor reminded me that even in high-school statistics, logistic regr
 iterative "gradient descent"[1]. This reminds me,
 TODO(sparshsah): why can't a logistic regression model be fitted in closed form?
 Point is, some models just aren't amenable to fitting in closed form.
+
+With that in mind, backpropagation is just a fast way to compute the gradient we want to descend.
 
 [1] Possibly-wrong Math Lesson: More precisely, ordinary logistic regression uses the Newton-Raphson method,
 which is like gradient descent in spirit but finds roots by constructing a first-order Taylor approximation of
@@ -547,31 +546,31 @@ learning rate (or fine-enough step size, if that's how you want to specify the u
 can find local minima using the first derivative alone. The tradeoff is that Newton-Raphson can be faster.
 """
 
-def ____bprop(_y: object, x: pd.Series, nn: NN) -> pd.DataFrame:
+def __bprop(_y: object, x: pd.Series, nn: NN) -> pd.DataFrame:
     A = _fprop(x=x, nn=nn, expand=True)  # pylint: disable=unused-variable
     # get loss
     # get gradient
     raise NotImplementedError
 
 
-def ___bprop(y: pd.Series, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
-    """Get the gradient."""
+def _bprop(y: pd.Series, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
+    """Get the gradient, averaged over the batch."""
     raise NotImplementedError
 
 
-def __bprop(y: pd.Series, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
+def bprop(y: pd.Series, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     """Get the gradient, shaped like the NN."""
     raise NotImplementedError
 
 
-def _bprop(y: pd.Series, X: pd.DataFrame, nn: NN, learn_r: float) -> NN:
-    grad = __bprop(y=y, X=X, nn=nn)
+def __train(y: pd.Series, X: pd.DataFrame, nn: NN, learn_r: float) -> NN:
+    grad = bprop(y=y, X=X, nn=nn)
     # descend a step along gradient
     return nn - learn_r * grad
 
 
-def bprop(y: pd.Series, X: pd.DataFrame, nn: NN,
-          learn_r: float=LEARN_R_DEFAULT, batch_sz: int=1, max_epoch: int=MAX_EPOCH_DEFAULT) -> NN:
+def _train(y: pd.Series, X: pd.DataFrame, nn: NN,
+           learn_r: float=LEARN_R_DEFAULT, batch_sz: int=1, max_epoch: int=MAX_EPOCH_DEFAULT) -> NN:
     batch_sz = X.shape[0] if batch_sz is None else batch_sz
     if batch_sz != 1:
         raise NotImplementedError("Don't yet support nontrivial batching in SGD!")
@@ -579,14 +578,14 @@ def bprop(y: pd.Series, X: pd.DataFrame, nn: NN,
     for _ in range(max_epoch):
         # TODO(sparshsah): shuffle x's then use batch sz
         y_batch, X_batch = y, X
-        nn = _bprop(y=y_batch, X=X_batch, nn=nn, learn_r=learn_r)
+        nn = __train(y=y_batch, X=X_batch, nn=nn, learn_r=learn_r)
     return nn
 
 
-def fit(y: pd.Series, X: pd.DataFrame,
-        layer_width: Union[int, Iterable[int]],
-        learn_r: float=LEARN_R_DEFAULT, batch_sz: int=1, max_epoch: int=MAX_EPOCH_DEFAULT,
-        random_seed: int=1337) -> NN:
+def train(y: pd.Series, X: pd.DataFrame,
+          layer_width: Union[int, Iterable[int]],
+          learn_r: float=LEARN_R_DEFAULT, batch_sz: int=1, max_epoch: int=MAX_EPOCH_DEFAULT,
+          random_seed: int=1337) -> NN:
     y = util.one_hotify(y=y)
     if y.shape[1] != 2:
         # TODO(sparshsah): support Multinomial Classification
@@ -597,5 +596,5 @@ def fit(y: pd.Series, X: pd.DataFrame,
         raise NotImplementedError("Don't yet support Deep Learning!")
 
     nn = init_nn(input_width=X.shape[1], layer_width=layer_width, output_width=y.shape[1], random_seed=random_seed)
-    nn = bprop(y=y, X=X, nn=nn, learn_r=learn_r, batch_sz=batch_sz, max_epoch=max_epoch)
+    nn = _train(y=y, X=X, nn=nn, learn_r=learn_r, batch_sz=batch_sz, max_epoch=max_epoch)
     return check_nn(nn=nn)
