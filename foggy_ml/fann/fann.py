@@ -534,7 +534,8 @@ iterative "gradient descent"[1]. This reminds me,
 TODO(sparshsah): why can't a logistic regression model be fitted in closed form?
 Point is, some models just aren't amenable to fitting in closed form.
 
-With that in mind, backpropagation is just a fast way to compute the gradient we want to descend.
+With that in mind, backpropagation is just a fast way to compute the gradient we want to descend,
+using dynamic programming to implement the Chain Rule from calculus.
 
 [1] Possibly-wrong Math Lesson: More precisely, ordinary logistic regression uses the Newton-Raphson method,
 which is like gradient descent in spirit but finds roots by constructing a first-order Taylor approximation of
