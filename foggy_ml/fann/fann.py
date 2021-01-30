@@ -235,7 +235,7 @@ def get_a_out(bias: float, a_in: float, fn: Callable[[float], float]) -> float:
 ########################################################################################################################
 
 """
-Three common neuron activation functions are logistic (AKA expit AKA inverse-logit AKA sigmoid), tanh, and ReLU.
+Three common neuron activation functions are logistic (AKA inverse-logit AKA expit AKA sigmoid), tanh, and ReLU.
 
 We like the logistic for (binary) classification tasks, for the slightly arbitrary reason
 that its output lies in [0, 1], so it can potentially be interpreted as this neuron's "best guess"
