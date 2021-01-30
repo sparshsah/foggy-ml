@@ -287,7 +287,7 @@ def _____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activa
     bias = get_bias(neuron=neuron)
     w_in = get_w_in(x=x, neuron=neuron)
     a_in = get_a_in(x=x, w_in=w_in)
-    del x
+    del w_in, neuron, x
     a_out = get_a_out(bias=bias, a_in=a_in, fn=fn)
     del bias, fn
     if expand:
