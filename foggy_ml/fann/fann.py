@@ -13,7 +13,7 @@ __all__ = [
     # data structures
     "Neuron", "Layer", "NN",  # don't include "RNG"
     # magic numbers
-    "NN_INDEX_NLEVELS", "BIAS_INDEX", "LEARN_R_DEFAULT", "MAX_EPOCH_DEFAULT",
+    "NN_INDEX_NLEVELS", "BIAS_INDEX", "LEARN_R_DEFAULT", "BATCH_FRAC_DEFAULT", "MAX_EPOCH_DEFAULT",
     # initialization
     "init_neuron", "init_layer", "init_nn",
     # data wrangling
@@ -57,6 +57,7 @@ RNG: type = np.random.Generator
 NN_INDEX_NLEVELS: int = 2  # MultiIndex[layers, neurons]
 BIAS_INDEX: Union[int, str] = "_bias_"
 LEARN_R_DEFAULT: float = 0.20
+BATCH_FRAC_DEFAULT: float = 0.05
 MAX_EPOCH_DEFAULT: int = 2048
 
 
@@ -571,13 +572,10 @@ def __train(y: pd.Series, X: pd.DataFrame, nn: NN, learn_r: float) -> NN:
 
 
 def _train(y: pd.Series, X: pd.DataFrame, nn: NN,
-           learn_r: float=LEARN_R_DEFAULT, batch_sz: int=1, max_epoch: int=MAX_EPOCH_DEFAULT) -> NN:
-    batch_sz = X.shape[0] if batch_sz is None else batch_sz
-    if batch_sz != 1:
-        raise NotImplementedError("Don't yet support nontrivial batching in SGD!")
-
+           learn_r: float=LEARN_R_DEFAULT, batch_frac: float=BATCH_FRAC_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT
+          ) -> NN:
     for _ in range(max_epoch):
-        # TODO(sparshsah): shuffle x's then use batch sz
+        # TODO(sparshsah): shuffle x's then use batch frac
         y_batch, X_batch = y, X
         nn = __train(y=y_batch, X=X_batch, nn=nn, learn_r=learn_r)
     return nn
@@ -585,7 +583,7 @@ def _train(y: pd.Series, X: pd.DataFrame, nn: NN,
 
 def train(y: pd.Series, X: pd.DataFrame,
           layer_width: Union[int, Iterable[int]],
-          learn_r: float=LEARN_R_DEFAULT, batch_sz: int=1, max_epoch: int=MAX_EPOCH_DEFAULT,
+          learn_r: float=LEARN_R_DEFAULT, batch_frac: float=BATCH_FRAC_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT,
           random_seed: int=1337) -> NN:
     y = util.one_hotify(y=y)
     if y.shape[1] != 2:
@@ -597,5 +595,5 @@ def train(y: pd.Series, X: pd.DataFrame,
         raise NotImplementedError("Don't yet support Deep Learning!")
 
     nn = init_nn(input_width=X.shape[1], layer_width=layer_width, output_width=y.shape[1], random_seed=random_seed)
-    nn = _train(y=y, X=X, nn=nn, learn_r=learn_r, batch_sz=batch_sz, max_epoch=max_epoch)
+    nn = _train(y=y, X=X, nn=nn, learn_r=learn_r, batch_frac=batch_frac, max_epoch=max_epoch)
     return check_nn(nn=nn)
