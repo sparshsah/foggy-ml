@@ -31,8 +31,8 @@ __all__ = [
 ########################################################################################################################
 
 """
-Fixing the neuron activation---in our case, logistic---and output squashing---in our case, softmax---function,
-a FANN is essentially identified by its feed-forward AKA forward-pass AKA forward-propagation weights.
+Fixing the neuron activation---in our case, expit---and output-squashing---in our case, softmax---function,
+a (trained) FANN is essentially identified by its forward-propagation (AKA forward-pass AKA feedforward) weights.
 
 We store the model as a pd.DataFrame with MultiIndex.
 Each "block" or "super-row" (i.e. collection of rows sharing an index key on axis=0, level=0)
@@ -235,15 +235,18 @@ def get_a_out(bias: float, a_in: float, fn: Callable[[float], float]) -> float:
 ########################################################################################################################
 
 """
-Three common neuron activation functions are logistic (AKA inverse-logit AKA expit AKA sigmoid), tanh, and ReLU.
+Three common neuron-activation functions are ReLU, tanh, and expit (AKA inverse-logit AKA logistic AKA sigmoid).
 
-We like the logistic for (binary) classification tasks, for the slightly arbitrary reason
-that its output lies in [0, 1], so it can potentially be interpreted as this neuron's "best guess"
-of the probability that the input belongs to Category 1. As further support, the logistic's generalization, the softmax,
-is a commonly-used "output squashing" function for multinomial classification tasks: It transforms a `n`-vector
-of Real numbers into a probability mass distribution. (And tanh is simply a scaled-and-shifted version of logistic.)
+ReLU (not implemented) is quite versatile, and has a cool connection to the hinge loss function.
 
-ReLU (not implemented) is cool too, and has another cool connection, this time to the hinge loss function.
+Tanh is simply a scaled-and-shifted version of expit.
+
+We choose the expit, for the slightly arbitrary reason that its output lies in [0, 1],
+so (at least for binary classification) it can potentially be interpreted as this neuron's "best guess"
+of the probability that the input belongs to Category 1.
+As further support, the expit's generalization, the softmax,
+is a commonly-used output-squashing function for multinomial classification:
+It transforms a `n`-vector of Real numbers into a probability mass distribution.
 """
 
 activate = util.expit
@@ -251,7 +254,7 @@ squash = util.softmax
 
 
 ########################################################################################################################
-# FEED FORWARD AKA FORWARD PASS AKA FORWARD PROPAGATION ################################################################
+# FORWARD PROPAGATION AKA FORWARD PASS AKA FEEDFORWARD (PREDICTION) ####################################################
 ########################################################################################################################
 
 def _____fprop(x: pd.Series, neuron: Neuron, fn: Callable[[float], float]=activate,
@@ -521,7 +524,7 @@ get_loss = util.get_neg_llh
 
 
 ########################################################################################################################
-# TRAINING AKA BACKPROPAGATION #########################################################################################
+# BACKPROPAGATION (TRAINING) ###########################################################################################
 ########################################################################################################################
 
 """
