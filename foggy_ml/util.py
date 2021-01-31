@@ -310,38 +310,71 @@ def get_cross_entropy(y: pd.DataFrame, p: pd.DataFrame, normalize: bool=True) ->
     return ce / y.shape[0] if normalize else ce
 
 
+def crossmax(_y: pd.Series, x: pd.Series):
+    """
+    Get cross-entropy of softmax of `x`.
+
+    input
+    -----
+    _y: pd.Series, the ground-truth probability distribution.
+        For use as NN loss, this should be one-hot encoding of correct category label.
+
+    x: pd.Series, incoming data.
+
+    output
+    ------
+    float, the cross-entropy of the softmax.
+    """
+    return _get_cross_entropy(_y=_y, p_y=softmax(x))
+
+
 ########################################################################################################################
 # GRADIENT #############################################################################################################
 ########################################################################################################################
 
-def d(x: Floatvec, fn: Callable[[Floatvec], Floatvec]) -> Floatvec:
+def d_dx(x: Floatvec, fn: Callable[[Floatvec], Floatvec], _y: Optional=None) -> Floatvec:
     """
     Vectorized (partial) derivative, i.e. d(x, fn) = [d/dx_i fn(x)_i for i in range(len(x))].
 
-    Proof:
+    proof
+    -----
+    expit(x)                 := (1 + exp(-x))^{-1}
+    d/dx expit(x)             = -1 (1 + exp(-x))^{-2} * exp(-x) * -1  # chain rule
+                              = (1 + exp(-x))^{-2} * exp(-x)
+                              = (1 + exp(-x))^{-1} * exp(-x) / (1 + exp(-x))
+                              = expit(x) * (exp(-x) + 1 - 1) / (1 + exp(-x))
+                              = expit(x) * [ (exp(-x) + 1) / (1 + exp(-x)) - 1 / (1 + exp(-x)) ]
+                              = expit(x) * [ (1 + exp(-x)) / (1 + exp(-x)) - (1 + exp(-x))^{-1} ]
+                              = expit(x) * (1 - expit(x)).
 
-    expit(x)        := (1 + exp(-x))^{-1}
-    d/dx expit(x)    = -1 (1 + exp(-x))^{-2} * exp(-x) * -1  # chain rule
-                     = (1 + exp(-x))^{-2} * exp(-x)
-                     = (1 + exp(-x))^{-1} * exp(-x) / (1 + exp(-x))
-                     = expit(x) * (exp(-x) + 1 - 1) / (1 + exp(-x))
-                     = expit(x) * [ (exp(-x) + 1) / (1 + exp(-x)) - 1 / (1 + exp(-x)) ]
-                     = expit(x) * [ (1 + exp(-x)) / (1 + exp(-x)) - (1 + exp(-x))^{-1} ]
-                     = expit(x) * (1 - expit(x)).
+    softmax(x)               := exp(x) / sum(exp(x))
+    d/dx softmax(x)           = [sum(exp(x)) d/dx exp(x) - exp(x) d/dx sum(exp(x))] / sum(exp(x))^2  # quotient rule
+                              = [sum(exp(x)) * exp(x) - exp(x) * exp(x)] / sum(exp(x))^2
+                              = exp(x) * [sum(exp(x)) - exp(x)] / sum(exp(x))^2
+                              = exp(x) * [sum(exp(x)) / sum(exp(x))^2 - exp(x) / sum(exp(x))^2]
+                              = exp(x) * [1 / sum(exp(x)) - softmax(x) / sum(exp(x))]
+                              = exp(x) / sum(exp(x)) * (1 - softmax(x))
+                              = softmax(x) * (1 - softmax(x)).
 
-    softmax(x)      := exp(x) / sum(exp(x))
-    d/dx softmax(x)  = [sum(exp(x)) d/dx exp(x) - exp(x) d/dx sum(exp(x))] / sum(exp(x))^2  # quotient rule
-                     = [sum(exp(x)) * exp(x) - exp(x) * exp(x)] / sum(exp(x))^2
-                     = exp(x) * [sum(exp(x)) - exp(x)] / sum(exp(x))^2
-                     = exp(x) * [sum(exp(x)) / sum(exp(x))^2 - exp(x) / sum(exp(x))^2]
-                     = exp(x) * [1 / sum(exp(x)) - softmax(x) / sum(exp(x))]
-                     = exp(x) / sum(exp(x)) * (1 - softmax(x))
-                     = softmax(x) * (1 - softmax(x)).
+    cross_entropy(_y, a)     := -sum(_y * log(a))
+    d/da cross_entropy(_y, a) = -_y/a.
+
+    crossmax(_y, x)          := cross_entropy(_y, a)  # letting a:= softmax(x)
+    d/dx crossmax(_y, x)      = d/da cross_entropy(_y, a) * d/dx a  # chain rule
+                              = -_y/a * a * (1 - a)
+                              = -_y * (1 - a)
+                              = _y * (a - 1)
+                              = _ya - _y
+                              = [i == true_label for i in range(len(x))].
+    This last one is *almost* right.. we're just failing to account for the cross-derivative:
+    This is a vector-valued function with vector-valued inputs.
+    Above, when we calculated d/dx softmax(x), we calculated only [d/dx_i softmax(x)_i for i in range(len(x))], but
+    in reality we of course have a Jacobian [[d/dx_i softmax(x)_j for i in range(len(x))] for j in range(len(x))].
+    If you do out that calculation, you arrive at a - _y.
     """
     if fn in (expit, softmax):
         return fn(x) * (1 - fn(x))
+    elif fn is crossmax:
+        return softmax(x) - _y
     else:
         raise NotImplementedError(fn)
-
-
-# def d_cross_entropy_softmax()
