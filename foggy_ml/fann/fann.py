@@ -539,7 +539,16 @@ to solve for the neural network's optimal weights in closed form?
 Then my professor reminded me that even in high-school statistics, logistic regression requires
 iterative "gradient descent"[1]. This reminds me,
 TODO(sparshsah): why can't a logistic regression model be fitted in closed form?
-Point is, some models just aren't amenable to fitting in closed form.
+Point is, take as given that some models just aren't amenable to fitting in closed form.
+
+So, we use (stochastic) gradient descent, stepping a bit in the most efficient direction each time.
+
+Batch size here is a tradeoff between (1) faster learning from small batches, and
+(2) more stable learning from large batches.
+Style note: Most authors call batch_sz=1 as "online" learning (which is a bit of a misnomer
+unless you also set max_epoch=1), batch_sz=|dataset| as "batch" learning, and anything in between as
+"mini-batch" or "stochastic" learning. I don't understand why this annoying and confusing
+"mini-batch" vs "batch" terminology distinction persists.
 
 With that in mind, backpropagation is just a fast way to compute the gradient we want to descend,
 using dynamic programming to implement the Chain Rule from calculus.
