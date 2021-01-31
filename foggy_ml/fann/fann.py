@@ -14,7 +14,7 @@ __all__ = [
     # data structures
     "Neuron", "Layer", "NN",
     # magic numbers
-    "NN_INDEX_NLEVELS", "BIAS_INDEX", "LEARN_R_DEFAULT", "BATCH_FRAC_DEFAULT", "MAX_EPOCH_DEFAULT",
+    "NN_INDEX_NLEVELS", "BIAS_INDEX", "LEARN_R_DEFAULT", "BATCH_SZ_DEFAULT", "MAX_EPOCH_DEFAULT",
     # initialization
     "init_neuron", "init_layer", "init_nn",
     # data wrangling
@@ -396,7 +396,7 @@ def ___fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
                       # if next layer is output layer, don't pass thru activation fn (we will later squash)
                       fn=(lambda x: x) if len(remaining_layers) == 1 else fn,
                       expand=expand)
-        # std CPython doesn't implement tail-call optimization, hence I prefer this more legible syntax
+        # std CPython doesn't implement tail-call optimization, hence we prefer this more legible syntax
         return (a,) + a_ if expand else a_
     else:  # this was the final i.e. output layer
         return (a,) if expand else a
@@ -566,7 +566,7 @@ can find local minima using the first derivative alone. The tradeoff is that New
 
 [2] Most authors call batch_sz=1 as "online" learning (which is a bit of a misnomer
 unless you also set max_epoch=1), batch_sz=|dataset| as "batch" learning, and anything in between as
-"mini-batch" or "stochastic" learning. I don't understand why this annoying and confusing
+"mini-batch" or "stochastic" learning. We don't understand why this annoying and confusing
 "mini-batch" vs "batch" terminology distinction persists.
 """
 
@@ -595,23 +595,28 @@ def __train(y: pd.Series, X: pd.DataFrame, nn: NN, learn_r: float) -> NN:
     return nn - learn_r * grad
 
 
-def _train(y: pd.Series, X: pd.DataFrame, nn: NN,
-           learn_r: float=LEARN_R_DEFAULT, batch_sz: float=BATCH_SZ_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT
-          ) -> NN:
+def _train(y: pd.Series, X: pd.DataFrame, nn: NN, num_batches: int,
+           learn_r: float=LEARN_R_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT,
+           random_seed: int=1337)-> NN:
     for _ in range(max_epoch):
-        # TODO(sparshsah): shuffle x's then use batch sz
-        y_batch, X_batch = y, X
-        nn = __train(y=y_batch, X=X_batch, nn=nn, learn_r=learn_r)
+        y_batches, X_batches = util.shuffle_split(y, X, n=num_batches,
+                                                  # same as ++random_seed, courtesy of PEP 572 :)
+                                                  random_seed=random_seed := random_seed + 1)
+        for batch in num_batches:
+            nn = __train(y=y_batches[batch], X=X_batches[batch], nn=nn, learn_r=learn_r)
     return check_nn(nn=nn)
 
 
 def train(y: pd.Series, X: pd.DataFrame,
           layer_width: Union[int, Iterable[int]],
           learn_r: float=LEARN_R_DEFAULT, batch_sz: float=BATCH_SZ_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT,
-          random_seed: int=1337
-         )-> NN:
+          random_seed: int=1337)-> NN:
     _ = util.check_shape_match(y, X)
     y = util.one_hotify(y=y)
 
-    nn = init_nn(input_width=X.shape[1], layer_width=layer_width, output_width=y.shape[1], random_seed=random_seed)
-    return _train(y=y, X=X, nn=nn, learn_r=learn_r, batch_sz=batch_sz, max_epoch=max_epoch)
+    nn = init_nn(output_width=y.shape[1], input_width=X.shape[1],
+                 layer_width=layer_width,
+                 random_seed=random_seed)
+    return _train(y=y, X=X,
+                  nn=nn, learn_r=learn_r, num_batches=y.shape[0]//batch_sz, max_epoch=max_epoch,
+                  random_seed=random_seed)

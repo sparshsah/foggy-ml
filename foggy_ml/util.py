@@ -2,6 +2,8 @@
 from typing import Tuple, Iterable, Callable, Union, Optional
 # data structures
 import pandas as pd
+# data wrangling
+from sklearn.utils import shuffle
 # calculations and algorithms
 import numpy as np
 from scipy.special import expit, softmax  # linter can't see C funcs, so pylint: disable=no-name-in-module
@@ -174,6 +176,20 @@ def one_hotify(y: pd.Series, _y_options: Optional[list]=None) -> pd.DataFrame:
     return check_one_hot(y)
 
 
+def shuffle_split(*arrays, n: int, random_seed: int=1337):
+    """
+    Shuffle then split each array, consistently with the others.
+
+    E.g.
+    >>> y, X = shuffle_split(y, X, n=3)
+    >>> y_first_split, X_first_split = y[0], X[0]
+    >>> y_last_split, X_last_split = y[2], X[2]
+    """
+    arrays = shuffle(*arrays, random_state=random_seed)
+    arrays = [np.array_split(ary=ary, indices_or_sections=n) for ary in arrays]
+    return arrays
+
+
 ########################################################################################################################
 # | |- || |_ ###########################################################################################################
 ########################################################################################################################
@@ -181,7 +197,7 @@ def one_hotify(y: pd.Series, _y_options: Optional[list]=None) -> pd.DataFrame:
 r"""
 Two common loss functions are MSE and cross-entropy AKA "log loss"[1].
 
-One reason I find the MSE intuitively appealing is that
+One reason we find the MSE intuitively appealing is that
 it more severely penalizes "confident" wrong answers.
 E.g. suppose the correct category label is A, the possible labels are [A, B, C],
 and we assign Pr[A] := 50% and Pr[B] := 25% =: Pr[C].
