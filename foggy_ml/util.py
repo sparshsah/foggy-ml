@@ -365,7 +365,7 @@ def d_dx(x: Floatvec, fn: Callable, _y: Optional=None) -> Floatvec:
                               = -_y * (1 - a)
                               = _y * (a - 1)
                               = _ya - _y
-                              = [i == true_label for i in range(len(x))].
+                              = [a_i - _y_i if i == true_label else 0 for i in range(len(x))].
     This last one is *almost* right.. we're just failing to account for the cross-derivative:
     This is a vector-valued function with vector-valued inputs.
     Above, when we calculated d/dx softmax(x), we calculated only [d/dx_i softmax(x)_i for i in range(len(x))], but
