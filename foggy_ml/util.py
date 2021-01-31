@@ -342,3 +342,6 @@ def d(x: Floatvec, fn: Callable[[Floatvec], Floatvec]) -> Floatvec:
         return fn(x) * (1 - fn(x))
     else:
         raise NotImplementedError(fn)
+
+
+# def d_cross_entropy_softmax()
