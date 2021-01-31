@@ -332,7 +332,7 @@ def crossmax(_y: pd.Series, x: pd.Series) -> float:
 # GRADIENT #############################################################################################################
 ########################################################################################################################
 
-def d_dx(x: Floatvec, fn: Callable[[Floatvec], Floatvec], _y: Optional=None) -> Floatvec:
+def d_dx(x: Floatvec, fn: Callable, _y: Optional=None) -> Floatvec:
     """
     Vectorized (partial) derivative, i.e. d(x, fn) = [d/dx_i fn(x)_i for i in range(len(x))].
 
