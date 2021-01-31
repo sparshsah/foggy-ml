@@ -370,7 +370,7 @@ def d_dx(x: Floatvec, fn: Callable, _y: Optional=None) -> Floatvec:
     This is a vector-valued function with vector-valued inputs.
     Above, when we calculated d/dx softmax(x), we calculated only [d/dx_i softmax(x)_i for i in range(len(x))], but
     in reality we of course have a Jacobian [[d/dx_i softmax(x)_j for i in range(len(x))] for j in range(len(x))].
-    If you do out that calculation, you arrive at a - _y.
+    If you do out that calculation, you arrive at a - _y, which is simply [a_i - _y_i for i in range(len(x))].
     """
     if fn in (expit, softmax):
         return fn(x) * (1 - fn(x))
