@@ -1,4 +1,4 @@
-# TODO(sparshsah): i replicate sklearn so for now i'm comfortable, but at some point i should fill this in..
+# TODO(sparshsah): we replicate sklearn so for now we're comfortable, but at some point we should fill this in..
 # target source code
 # import foggy_ml.fann as fann  # assumes `/path/to/foggy-ml` in `PYTHONPATH`, so pylint: disable=import-error
 # unit-testing suite
