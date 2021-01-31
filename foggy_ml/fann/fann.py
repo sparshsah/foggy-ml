@@ -599,9 +599,13 @@ def _train(y: pd.Series, X: pd.DataFrame, nn: NN, num_batches: int,
            learn_r: float=LEARN_R_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT,
            random_seed: int=1337)-> NN:
     for _ in range(max_epoch):
-        y_batches, X_batches = util.split_shuffle(y, X, n=num_batches,
-                                                  # same as ++random_seed, courtesy of PEP 572 :)
-                                                  random_seed=random_seed := random_seed + 1)
+        """
+        TODO(sparshsah): PEP 572 -- Assignment Expressions (Python 3.8) will support e.g.
+        `split_shuffle(.., random_seed=random_seed := random_seed + 1)`, to mean
+        `split_shuffle(.., random_seed = ++random_seed)`.
+        """
+        random_seed += 1
+        y_batches, X_batches = util.split_shuffle(y, X, n=num_batches, random_seed=random_seed)
         for batch in num_batches:
             nn = __train(y=y_batches[batch], X=X_batches[batch], nn=nn, learn_r=learn_r)
     return check_nn(nn=nn)
