@@ -588,7 +588,7 @@ def _train(y: pd.Series, X: pd.DataFrame, nn: NN,
         # TODO(sparshsah): shuffle x's then use batch frac
         y_batch, X_batch = y, X
         nn = __train(y=y_batch, X=X_batch, nn=nn, learn_r=learn_r)
-    return nn
+    return check_nn(nn=nn)
 
 
 def train(y: pd.Series, X: pd.DataFrame,
@@ -596,8 +596,8 @@ def train(y: pd.Series, X: pd.DataFrame,
           learn_r: float=LEARN_R_DEFAULT, batch_frac: float=BATCH_FRAC_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT,
           random_seed: int=1337
          )-> NN:
+    _ = util.check_shape_match(y, X)
     y = util.one_hotify(y=y)
 
     nn = init_nn(input_width=X.shape[1], layer_width=layer_width, output_width=y.shape[1], random_seed=random_seed)
-    nn = _train(y=y, X=X, nn=nn, learn_r=learn_r, batch_frac=batch_frac, max_epoch=max_epoch)
-    return check_nn(nn=nn)
+    return _train(y=y, X=X, nn=nn, learn_r=learn_r, batch_frac=batch_frac, max_epoch=max_epoch)
