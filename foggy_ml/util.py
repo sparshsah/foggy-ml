@@ -338,6 +338,7 @@ def d(x: Floatvec, fn: Callable[[Floatvec], Floatvec]) -> Floatvec:
                      = exp(x) / sum(exp(x)) * (1 - softmax(x))
                      = softmax(x) * (1 - softmax(x)).
     """
-    if fn not in (expit, softmax):
+    if fn in (expit, softmax):
+        return fn(x) * (1 - fn(x))
+    else:
         raise NotImplementedError(fn)
-    return fn(x) * (1 - fn(x))
