@@ -181,9 +181,9 @@ def split_shuffle(*arrays, n: int, random_seed: int=1337) -> List:
     Shuffle then split each array, consistently with the others.
 
     E.g.
-    >>> y, X = shuffle_split(y, X, n=3)
-    >>> y_first_split, X_first_split = y[0], X[0]
-    >>> y_last_split, X_last_split = y[2], X[2]
+    >>> y, X = split_shuffle(y, X, n=3)
+    >>> y_batch_0, X_batch_0 = y[0], X[0]
+    >>> y_batch_2, X_batch_2 = y[-1], X[-1]
     """
     arrays = shuffle(*arrays, random_state=random_seed)
     arrays = [np.array_split(ary=ary, indices_or_sections=n) for ary in arrays]
