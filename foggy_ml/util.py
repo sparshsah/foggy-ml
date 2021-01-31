@@ -225,7 +225,7 @@ overfitting is to also "regularize" weights by penalizing deviations from zero.
 This is like LASSO or Ridge or ElasticNet OLS regression.
 """
 
-def _get_neg_llh(p_y: Iterable[float], normalize: bool=True) -> float:
+def _get_neg_llh(p_y: Floatlike, normalize: bool=True) -> float:
     """
     Negative log likelihood.
 
@@ -248,7 +248,7 @@ def _get_neg_llh(p_y: Iterable[float], normalize: bool=True) -> float:
     ------
     float, the negative (joint or mean) log-likelihood.
     """
-    p_y = check_type(p_y, type_={tuple, list, pd.Series})
+    p_y = check_type(p_y, type_={int, float, tuple, list, pd.Series})
 
     # convert to negative joint log-likelihood
     neg_llh = -np.sum(np.log(p_y))
