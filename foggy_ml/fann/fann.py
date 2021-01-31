@@ -9,9 +9,10 @@ from .. import util
 # calculations and algorithms
 import numpy as np
 
+# TODO(sparshsah): not all (no pun intended!) of this stuff is strictly useful as a public API..
 __all__ = [
     # data structures
-    "Neuron", "Layer", "NN",  # don't include "RNG"
+    "Neuron", "Layer", "NN",
     # magic numbers
     "NN_INDEX_NLEVELS", "BIAS_INDEX", "LEARN_R_DEFAULT", "BATCH_FRAC_DEFAULT", "MAX_EPOCH_DEFAULT",
     # initialization
