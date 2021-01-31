@@ -172,7 +172,7 @@ def one_hotify(y: pd.Series, _y_options: Optional[list]=None) -> pd.DataFrame:
 ########################################################################################################################
 
 """
-Two common loss functions are MSE and cross-entropy AKA "negative log likelihood".
+Two common loss functions are MSE and cross-entropy AKA "negative log likelihood"[1].
 
 One reason I find the MSE intuitively appealing is that
 it more severely penalizes "confident" wrong answers.
@@ -192,6 +192,10 @@ classification setting minimizing cross-entropy yields an MLE.
 One legitimate additional option (not implemented) that can help combat
 overfitting is to also "regularize" weights by penalizing deviations from zero.
 This is like LASSO or Ridge or ElasticNet OLS regression.
+
+Footnote
+--------
+[1]
 """
 
 def _get_neg_llh(p_y: Floatvec, normalize: bool=True) -> float:

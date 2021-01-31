@@ -544,6 +544,8 @@ Point is, some models just aren't amenable to fitting in closed form.
 With that in mind, backpropagation is just a fast way to compute the gradient we want to descend,
 using dynamic programming to implement the Chain Rule from calculus.
 
+Footnote
+--------
 [1] Possibly-wrong Math Lesson: More precisely, ordinary logistic regression uses the Newton-Raphson method,
 which is like gradient descent in spirit but finds roots by constructing a first-order Taylor approximation of
 a function in the neighborhood of a suspected root. Incidentally, the "finds roots"
