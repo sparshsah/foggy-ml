@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 from scipy.special import expit, softmax  # linter can't see C funcs, so pylint: disable=no-name-in-module
 
-Floatlike = Union[float, Iterable[float]]
+Floatvec = Union[float, Iterable[float]]
 
 EPSILON: float = 1e-6
 
@@ -168,64 +168,33 @@ def one_hotify(y: pd.Series, _y_options: Optional[list]=None) -> pd.DataFrame:
 
 
 ########################################################################################################################
-# GRADIENT #############################################################################################################
-########################################################################################################################
-
-
-def d(x: Floatlike, fn: Callable[[Floatlike], Floatlike]) -> Floatlike:
-    """
-    Vectorized (partial) derivative, i.e. d(x, fn) = [d/dx_i fn(x)_i for i in range(len(x))].
-
-    Proof:
-
-    expit(x)        := (1 + exp(-x))^{-1}
-    d/dx expit(x)    = -1 (1 + exp(-x))^{-2} * exp(-x) * -1  # chain rule
-                     = (1 + exp(-x))^{-2} * exp(-x)
-                     = (1 + exp(-x))^{-1} * exp(-x) / (1 + exp(-x))
-                     = expit(x) * (exp(-x) + 1 - 1) / (1 + exp(-x))
-                     = expit(x) * [ (exp(-x) + 1) / (1 + exp(-x)) - 1 / (1 + exp(-x)) ]
-                     = expit(x) * [ (1 + exp(-x)) / (1 + exp(-x)) - (1 + exp(-x))^{-1} ]
-                     = expit(x) * (1 - expit(x)).
-
-    softmax(x)      := exp(x) / sum(exp(x))
-    d/dx softmax(x)  = [sum(exp(x)) d/dx exp(x) - exp(x) d/dx sum(exp(x))] / sum(exp(x))^2  # quotient rule
-                     = [sum(exp(x)) * exp(x) - exp(x) * exp(x)] / sum(exp(x))^2
-                     = exp(x) * [sum(exp(x)) - exp(x)] / sum(exp(x))^2
-                     = exp(x) * [sum(exp(x)) / sum(exp(x))^2 - exp(x) / sum(exp(x))^2]
-                     = exp(x) * [1 / sum(exp(x)) - softmax(x) / sum(exp(x))]
-                     = exp(x) / sum(exp(x)) * (1 - softmax(x))
-                     = softmax(x) * (1 - softmax(x)).
-    """
-    if fn not in (expit, softmax):
-        raise NotImplementedError(fn)
-    return fn(x) * (1 - fn(x))
-
-
-########################################################################################################################
-# LOSS | |- || |_ ######################################################################################################
+# | |- || |_ ###########################################################################################################
 ########################################################################################################################
 
 """
-We implement the cross-entropy loss AKA "log loss" rather than e.g. MSE loss.
+Two common loss functions are MSE and cross-entropy AKA "negative log likelihood".
+
 One reason I find the MSE intuitively appealing is that
-it more severely penalizes more "confident" wrong answers.
-For example, if the possible category labels are A, B, C, with the correct
-label being A, and we assign Pr[A] = 0.50, the log loss will be the same
-regardless of whether we assign Pr[B] = 0.25 and Pr[C] = 0.25, or
-Pr[B] = 0.49 and Pr[C] = 0.01. On the other hand, the MSE loss will
-be worse in the latter case.
+it more severely penalizes "confident" wrong answers.
+E.g. suppose the correct category label is A, the possible labels are [A, B, C],
+and we assign Pr[A] := 50% and Pr[B] := 25% =: Pr[C].
+The MSE will get worse if we instead assign Pr[B] := 49% and Pr[C] := 1%.
+On the other hand the cross-entropy would stay the same.
+I'd argue that the second assignment is truly "worse", in that
+although we'd still pick the correct label (A) if forced to choose,
+we're now willing to wager almost as much on an incorrect label (B)
+as we are on the correct label.
 
-With that said, in general maximum-likelihood estimators have nice properties
-and whereas in the OLS setting minimizing MSE yields an MLE, in the
-Binomial (or Multinomial) classification setting minimizing log loss
-yields an MLE.
+With that said, in general maximum-likelihood estimators have nice properties and whereas
+in the linear regression setting minimizing MSE (the basis of OLS) yields an MLE, in the
+classification setting minimizing cross-entropy yields an MLE.
 
-One legitimate additional choice (not implemented) that can help combat
+One legitimate additional option (not implemented) that can help combat
 overfitting is to also "regularize" weights by penalizing deviations from zero.
 This is like LASSO or Ridge or ElasticNet OLS regression.
 """
 
-def _get_neg_llh(p_y: Floatlike, normalize: bool=True) -> float:
+def _get_neg_llh(p_y: Floatvec, normalize: bool=True) -> float:
     """
     Negative log likelihood.
 
@@ -296,3 +265,36 @@ def get_neg_llh(y: pd.DataFrame, p: pd.DataFrame, normalize: bool=True) -> float
     """
     p_y = (y * p).sum(axis="columns")
     return _get_neg_llh(p_y=p_y, normalize=normalize)
+
+
+########################################################################################################################
+# GRADIENT #############################################################################################################
+########################################################################################################################
+
+def d(x: Floatvec, fn: Callable[[Floatvec], Floatvec]) -> Floatvec:
+    """
+    Vectorized (partial) derivative, i.e. d(x, fn) = [d/dx_i fn(x)_i for i in range(len(x))].
+
+    Proof:
+
+    expit(x)        := (1 + exp(-x))^{-1}
+    d/dx expit(x)    = -1 (1 + exp(-x))^{-2} * exp(-x) * -1  # chain rule
+                     = (1 + exp(-x))^{-2} * exp(-x)
+                     = (1 + exp(-x))^{-1} * exp(-x) / (1 + exp(-x))
+                     = expit(x) * (exp(-x) + 1 - 1) / (1 + exp(-x))
+                     = expit(x) * [ (exp(-x) + 1) / (1 + exp(-x)) - 1 / (1 + exp(-x)) ]
+                     = expit(x) * [ (1 + exp(-x)) / (1 + exp(-x)) - (1 + exp(-x))^{-1} ]
+                     = expit(x) * (1 - expit(x)).
+
+    softmax(x)      := exp(x) / sum(exp(x))
+    d/dx softmax(x)  = [sum(exp(x)) d/dx exp(x) - exp(x) d/dx sum(exp(x))] / sum(exp(x))^2  # quotient rule
+                     = [sum(exp(x)) * exp(x) - exp(x) * exp(x)] / sum(exp(x))^2
+                     = exp(x) * [sum(exp(x)) - exp(x)] / sum(exp(x))^2
+                     = exp(x) * [sum(exp(x)) / sum(exp(x))^2 - exp(x) / sum(exp(x))^2]
+                     = exp(x) * [1 / sum(exp(x)) - softmax(x) / sum(exp(x))]
+                     = exp(x) / sum(exp(x)) * (1 - softmax(x))
+                     = softmax(x) * (1 - softmax(x)).
+    """
+    if fn not in (expit, softmax):
+        raise NotImplementedError(fn)
+    return fn(x) * (1 - fn(x))
