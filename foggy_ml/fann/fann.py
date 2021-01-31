@@ -599,7 +599,7 @@ def _train(y: pd.Series, X: pd.DataFrame, nn: NN, num_batches: int,
            learn_r: float=LEARN_R_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT,
            random_seed: int=1337)-> NN:
     for _ in range(max_epoch):
-        y_batches, X_batches = util.shuffle_split(y, X, n=num_batches,
+        y_batches, X_batches = util.split_shuffle(y, X, n=num_batches,
                                                   # same as ++random_seed, courtesy of PEP 572 :)
                                                   random_seed=random_seed := random_seed + 1)
         for batch in num_batches:

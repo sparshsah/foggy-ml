@@ -176,7 +176,7 @@ def one_hotify(y: pd.Series, _y_options: Optional[list]=None) -> pd.DataFrame:
     return check_one_hot(y)
 
 
-def shuffle_split(*arrays, n: int, random_seed: int=1337):
+def split_shuffle(*arrays, n: int, random_seed: int=1337):
     """
     Shuffle then split each array, consistently with the others.
 
