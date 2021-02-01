@@ -367,6 +367,21 @@ class TestCheckOneHot(unittest.TestCase):
             util.check_one_hot(df)
 
 
+class TestCheckShapeMatch(unittest.TestCase):
+
+    def test_series(self):
+        raise NotImplementedError
+
+    def test_df(self):
+        raise NotImplementedError
+
+    def test_series_df(self):
+        raise NotImplementedError
+
+    def test_df_series(self):
+        raise NotImplementedError
+
+
 class TestOneHotify(unittest.TestCase):
 
     def test_point(self):
@@ -393,7 +408,24 @@ class TestOneHotify(unittest.TestCase):
         self.assertTrue(test.all().all())
 
 
-class TestGetNegLLH(unittest.TestCase):
+class TestSplitShuffle(unittest.TestCase):
+
+    def test_series(self):
+        raise NotImplementedError
+
+    def test_df(self):
+        raise NotImplementedError
+
+    def test_series_df(self):
+        raise NotImplementedError
+
+    def test_df_series(self):
+        raise NotImplementedError
+
+
+class TestGetCrossEntropy(unittest.TestCase):
+
+    raise NotImplementedError
 
     def test_reduced(self):
         import numpy as np
@@ -435,5 +467,3 @@ class TestGetNegLLH(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-# todo: cehck shape match, split shuffle, xentryp
