@@ -606,7 +606,7 @@ def _train(y: pd.Series, X: pd.DataFrame, nn: NN, num_batches: int,
         """
         random_seed += 1
         y_batches, X_batches = util.split_shuffle(y, X, n=num_batches, random_seed=random_seed)
-        for batch in num_batches:
+        for batch in range(num_batches):
             nn = __train(y=y_batches[batch], X=X_batches[batch], nn=nn, learn_r=learn_r)
     return check_nn(nn=nn)
 
