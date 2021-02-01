@@ -213,6 +213,10 @@ as we are on the correct label.
 With that said, in general maximum-likelihood estimators have nice properties and whereas
 in the linear regression setting minimizing MSE (the basis of OLS) yields an MLE, in the
 classification setting minimizing cross-entropy[2, 3] yields an MLE.
+And, by using a final softmax layer to squash the output, we make the cross-entropy loss
+depend even on "incorrect" output neurons: Large pre-squash activation in an incorrect
+output neuron will drive up the denominator of the softmax, driving down the post-squash
+activation from the correct output neuron, driving up the loss.
 
 One legitimate additional option (not implemented) that can help combat
 overfitting is to also "regularize" weights by penalizing deviations from zero.
@@ -340,6 +344,7 @@ def d_dx(x: Floatvec, fn: Callable, _y: Optional=None) -> Floatvec:
 
     proof
     -----
+
     expit(x)                 := (1 + exp(-x))^{-1}
     d/dx expit(x)             = -1 (1 + exp(-x))^{-2} * exp(-x) * -1  # chain rule
                               = (1 + exp(-x))^{-2} * exp(-x)
@@ -348,6 +353,7 @@ def d_dx(x: Floatvec, fn: Callable, _y: Optional=None) -> Floatvec:
                               = expit(x) * [ (exp(-x) + 1) / (1 + exp(-x)) - 1 / (1 + exp(-x)) ]
                               = expit(x) * [ (1 + exp(-x)) / (1 + exp(-x)) - (1 + exp(-x))^{-1} ]
                               = expit(x) * (1 - expit(x)).
+
 
     softmax(x)               := exp(x) / sum(exp(x))
     d/dx softmax(x)           = [sum(exp(x)) d/dx exp(x) - exp(x) d/dx sum(exp(x))] / sum(exp(x))^2  # quotient rule
@@ -358,8 +364,10 @@ def d_dx(x: Floatvec, fn: Callable, _y: Optional=None) -> Floatvec:
                               = exp(x) / sum(exp(x)) * (1 - softmax(x))
                               = softmax(x) * (1 - softmax(x)).
 
+
     cross_entropy(_y, a)     := -sum(_y * log(a))
     d/da cross_entropy(_y, a) = -_y/a.
+
 
     crossmax(_y, x)          := cross_entropy(_y, a)  # letting a:= softmax(x)
     d/dx crossmax(_y, x)      = d/da cross_entropy(_y, a) * d/dx a  # chain rule
@@ -368,11 +376,18 @@ def d_dx(x: Floatvec, fn: Callable, _y: Optional=None) -> Floatvec:
                               = _y * (a - 1)
                               = _ya - _y
                               = [a_i - _y_i if i == true_label else 0 for i in range(len(x))].
+
     This last one is *almost* right.. we're just failing to account for the cross-derivative:
     This is a vector-valued function with vector-valued inputs.
     Above, when we calculated d/dx softmax(x), we calculated only [d/dx_i softmax(x)_i for i in range(len(x))], but
     in reality we of course have a Jacobian [[d/dx_i softmax(x)_j for i in range(len(x))] for j in range(len(x))].
     If you do out that calculation, you arrive at a - _y, which is simply [a_i - _y_i for i in range(len(x))].
+
+    This makes sense: Keeping in mind that `0 <= a_i <= 1`, if `i` is the correct label (_y_i == 1),
+    then `a_i - _y_i == a_i - 1 <= 0`, so the partial derivative is negative, which tells us that making `a_i`
+    bigger will make the loss smaller, as desired. Otherwise, _y_i == 0, hence `a_i - _y_i = a_i >= 0`,
+    which tells us that making `a_i` bigger will also make the loss bigger, letting us know that we should
+    instead make `a_i` smaller.
     """
     if fn in (expit, softmax):
         return fn(x) * (1 - fn(x))
