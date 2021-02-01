@@ -372,19 +372,35 @@ class TestCheckShapeMatch(unittest.TestCase):
     def test_series(self):
         import pandas as pd
         foo = pd.Series([0, 1, 2])
-        bar = pd.Series([0, -1, -1])
+        bar = pd.Series([0, -1, -2])
         foo_, bar_ = util.check_shape_match(foo, bar)
         self.assertIs(foo_, foo)
         self.assertIs(bar_, bar)
 
     def test_df(self):
-        pass
+        import pandas as pd
+        foo = pd.DataFrame({"a": [0, 1, 2], "b": [0, 2, 4]})
+        bar = pd.DataFrame({"a": [0, -1, -2], "b": [0, -2, -4]})
+        foo_, bar_ = util.check_shape_match(foo, bar)
+        self.assertIs(foo_, foo)
+        self.assertIs(bar_, bar)
+
 
     def test_series_df(self):
-        pass
+        import pandas as pd
+        foo = pd.Series([0, 1, 2])
+        bar = pd.DataFrame({"a": [0, -1, -2], "b": [0, -2, -4]})
+        foo_, bar_ = util.check_shape_match(foo, bar)
+        self.assertIs(foo_, foo)
+        self.assertIs(bar_, bar)
 
     def test_df_series(self):
-        pass
+        import pandas as pd
+        foo = pd.DataFrame({"a": [0, 1, 2], "b": [0, 2, 4]})
+        bar = pd.Series([0, -1, -2])
+        foo_, bar_ = util.check_shape_match(foo, bar)
+        self.assertIs(foo_, foo)
+        self.assertIs(bar_, bar)
 
 
 class TestOneHotify(unittest.TestCase):
