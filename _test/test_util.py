@@ -367,21 +367,24 @@ class TestCheckOneHot(unittest.TestCase):
             util.check_one_hot(df)
 
 
-"""
 class TestCheckShapeMatch(unittest.TestCase):
 
     def test_series(self):
-        raise NotImplementedError
+        import pandas as pd
+        foo = pd.Series([0, 1, 2])
+        bar = pd.Series([0, -1, -1])
+        foo_, bar_ = util.check_shape_match(foo, bar)
+        self.assertIs(foo_, foo)
+        self.assertIs(bar_, bar)
 
     def test_df(self):
-        raise NotImplementedError
+        pass
 
     def test_series_df(self):
-        raise NotImplementedError
+        pass
 
     def test_df_series(self):
-        raise NotImplementedError
-"""
+        pass
 
 
 class TestOneHotify(unittest.TestCase):
