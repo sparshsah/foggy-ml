@@ -490,33 +490,76 @@ class TestSplitShuffle(unittest.TestCase):
         import pandas as pd
         foo = pd.Series([0, 1, 2])
         bar = pd.Series([0, -1, -2])
-        foo_, bar_ = util.check_shape_match(foo, bar)
-        self.assertIs(foo_, foo)
-        self.assertIs(bar_, bar)
+
+        num_batches = 3
+        foo_, bar_ = util.split_shuffle(foo, bar, n=num_batches)
+        for x_ in foo_, bar_:
+            self.assertEqual(len(x_), num_batches)
+        foo_, bar_ = [pd.concat(x_) for x_ in (foo_, bar_)]
+
+        _ = util.check_shape_match(foo_, foo, axis=0)
+        _ = util.check_shape_match(bar_, bar, axis=0)
+
+        # checksum to verify that they contain the same data
+        self.assertEqual(foo_.sum(), foo.sum())
+        self.assertEqual(bar_.sum(), bar.sum())
 
     def test_df(self):
         import pandas as pd
         foo = pd.DataFrame({"a": [0, 1, 2], "b": [0, 2, 4]})
         bar = pd.DataFrame({"a": [0, -1, -2], "b": [0, -2, -4]})
-        foo_, bar_ = util.check_shape_match(foo, bar)
-        self.assertIs(foo_, foo)
-        self.assertIs(bar_, bar)
+
+        num_batches = 3
+        foo_, bar_ = util.split_shuffle(foo, bar, n=num_batches)
+        for x_ in foo_, bar_:
+            self.assertEqual(len(x_), num_batches)
+        foo_, bar_ = [pd.concat(x_) for x_ in (foo_, bar_)]
+
+        for axis in 0, 1:
+            _ = util.check_shape_match(foo_, foo, axis=axis)
+            _ = util.check_shape_match(bar_, bar, axis=axis)
+
+        # checksum to verify that they contain the same data
+        self.assertEqual(foo_.sum().sum(), foo.sum().sum())
+        self.assertEqual(bar_.sum().sum(), bar.sum().sum())
 
     def test_series_df(self):
         import pandas as pd
         foo = pd.Series([0, 1, 2])
         bar = pd.DataFrame({"a": [0, -1, -2], "b": [0, -2, -4]})
-        foo_, bar_ = util.check_shape_match(foo, bar)
-        self.assertIs(foo_, foo)
-        self.assertIs(bar_, bar)
+
+        num_batches = 3
+        foo_, bar_ = util.split_shuffle(foo, bar, n=num_batches)
+        for x_ in foo_, bar_:
+            self.assertEqual(len(x_), num_batches)
+        foo_, bar_ = [pd.concat(x_) for x_ in (foo_, bar_)]
+
+        _ = util.check_shape_match(foo_, foo, axis=0)
+        for axis in 0, 1:
+            _ = util.check_shape_match(bar_, bar, axis=axis)
+
+        # checksum to verify that they contain the same data
+        self.assertEqual(foo_.sum(), foo.sum())
+        self.assertEqual(bar_.sum().sum(), bar.sum().sum())
 
     def test_df_series(self):
         import pandas as pd
         foo = pd.DataFrame({"a": [0, 1, 2], "b": [0, 2, 4]})
         bar = pd.Series([0, -1, -2])
-        foo_, bar_ = util.check_shape_match(foo, bar)
-        self.assertIs(foo_, foo)
-        self.assertIs(bar_, bar)
+
+        num_batches = 3
+        foo_, bar_ = util.split_shuffle(foo, bar, n=num_batches)
+        for x_ in foo_, bar_:
+            self.assertEqual(len(x_), num_batches)
+        foo_, bar_ = [pd.concat(x_) for x_ in (foo_, bar_)]
+
+        for axis in 0, 1:
+            _ = util.check_shape_match(foo_, foo, axis=axis)
+        _ = util.check_shape_match(bar_, bar, axis=0)
+
+        # checksum to verify that they contain the same data
+        self.assertEqual(foo_.sum().sum(), foo.sum().sum())
+        self.assertEqual(bar_.sum(), bar.sum())
 
 
 class TestGetCrossEntropy(unittest.TestCase):
