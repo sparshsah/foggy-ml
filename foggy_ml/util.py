@@ -391,7 +391,7 @@ def d_dx(x: Floatvec, fn: Callable, _y: Optional=None) -> Floatvec:
     This is a vector-valued function with vector-valued inputs.
     Above, when we calculated d/dx softmax(x), we calculated only [d/dx_i softmax(x)_i for i in range(len(x))], but
     in reality we of course have a Jacobian [[d/dx_i softmax(x)_j for i in range(len(x))] for j in range(len(x))].
-    If you do out that calculation, you arrive at a - _y, which is simply [a_i - _y_i for i in range(len(x))].
+    If you do out the fuller calculation, you arrive at a - _y, which is simply [a_i - _y_i for i in range(len(x))].
 
     This makes sense: Keeping in mind that `0 <= a_i <= 1`, if `i` is the correct label (_y_i == 1),
     then `a_i - _y_i == a_i - 1 <= 0`, so the partial derivative is negative, which tells us that making `a_i`

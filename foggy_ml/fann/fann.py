@@ -521,7 +521,10 @@ def predict(X: pd.DataFrame, nn: NN) -> pd.Series:
 # | |- || |_ ###########################################################################################################
 ########################################################################################################################
 
-# for now, we don't directly use loss function
+"""
+TODO(sparshsah): logic for "early termination" of training if loss "doesn't change", i.e.
+if np.isclose(curr_epoch_loss, prev_epoch_loss, atol=tol), then we're done training
+"""
 
 
 ########################################################################################################################
