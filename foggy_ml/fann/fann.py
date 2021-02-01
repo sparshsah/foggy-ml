@@ -600,7 +600,7 @@ def _train(y: pd.Series, X: pd.DataFrame, nn: NN, num_batches: int,
            random_seed: int=1337)-> NN:
     for _ in range(max_epoch):
         """
-        TODO(sparshsah): PEP 572 -- Assignment Expressions (Python 3.8) will support e.g.
+        TODO(sparshsah): PEP 572 -- Assignment Expressions (Python 3.8) supports e.g.
         `split_shuffle(.., random_seed=random_seed := random_seed + 1)`, to mean
         `split_shuffle(.., random_seed = ++random_seed)`.
         """
