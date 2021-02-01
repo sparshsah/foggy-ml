@@ -9,6 +9,7 @@ import numpy as np
 from scipy.special import expit, softmax  # linter can't see C funcs, so pylint: disable=no-name-in-module
 
 Floatvec = Union[float, Iterable[float]]
+Arraylike = Union[np.ndarray, pd.Series, pd.DataFrame]
 
 EPSILON: float = 1e-6
 
@@ -176,7 +177,7 @@ def one_hotify(y: pd.Series, _y_options: Optional[list]=None) -> pd.DataFrame:
     return check_one_hot(y)
 
 
-def split_shuffle(*arrays, n: int, random_seed: int=1337) -> List:
+def split_shuffle(*arrays: Tuple[Arraylike], n: int, random_seed: int=1337) -> Tuple[List[Arraylike]]:
     """
     Shuffle then split each array, consistently with the others.
 
@@ -186,7 +187,8 @@ def split_shuffle(*arrays, n: int, random_seed: int=1337) -> List:
     >>> y_batch_2, X_batch_2 = y[-1], X[-1]
     """
     arrays = shuffle(*arrays, random_state=random_seed)
-    arrays = [np.array_split(ary=ary, indices_or_sections=n) for ary in arrays]
+    # tuple more space-efficient
+    arrays = tuple([np.array_split(ary=ary, indices_or_sections=n) for ary in arrays])
     return arrays
 
 
