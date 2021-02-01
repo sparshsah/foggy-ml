@@ -369,7 +369,7 @@ class TestCheckOneHot(unittest.TestCase):
 
 class TestCheckShapeMatch(unittest.TestCase):
 
-    def test_series(self):
+    def test_series_succ(self):
         import pandas as pd
         foo = pd.Series([0, 1, 2])
         bar = pd.Series([0, -1, -2])
@@ -377,7 +377,21 @@ class TestCheckShapeMatch(unittest.TestCase):
         self.assertIs(foo_, foo)
         self.assertIs(bar_, bar)
 
-    def test_df(self):
+    def test_series_fail_long_short(self):
+        import pandas as pd
+        foo = pd.Series([0, 1, 2])
+        bar = pd.Series([0, -1])
+        with self.assertRaises(ValueError):
+            util.check_shape_match(foo, bar)
+
+    def test_series_fail_short_long(self):
+        import pandas as pd
+        foo = pd.Series([0, 1])
+        bar = pd.Series([0, -1, -2])
+        with self.assertRaises(ValueError):
+            util.check_shape_match(foo, bar)
+
+    def test_df_succ(self):
         import pandas as pd
         foo = pd.DataFrame({"a": [0, 1, 2], "b": [0, 2, 4]})
         bar = pd.DataFrame({"a": [0, -1, -2], "b": [0, -2, -4]})
@@ -385,8 +399,21 @@ class TestCheckShapeMatch(unittest.TestCase):
         self.assertIs(foo_, foo)
         self.assertIs(bar_, bar)
 
+    def test_df_fail_long_short(self):
+        import pandas as pd
+        foo = pd.DataFrame({"a": [0, 1, 2], "b": [0, 2, 4]})
+        bar = pd.DataFrame({"a": [0, -1], "b": [0, -2]})
+        with self.assertRaises(ValueError):
+            util.check_shape_match(foo, bar)
 
-    def test_series_df(self):
+    def test_df_short_long(self):
+        import pandas as pd
+        foo = pd.DataFrame({"a": [0, 1], "b": [0, 2]})
+        bar = pd.DataFrame({"a": [0, -1, -2], "b": [0, -2, -4]})
+        with self.assertRaises(ValueError):
+            util.check_shape_match(foo, bar)
+
+    def test_series_df_succ(self):
         import pandas as pd
         foo = pd.Series([0, 1, 2])
         bar = pd.DataFrame({"a": [0, -1, -2], "b": [0, -2, -4]})
@@ -394,13 +421,41 @@ class TestCheckShapeMatch(unittest.TestCase):
         self.assertIs(foo_, foo)
         self.assertIs(bar_, bar)
 
-    def test_df_series(self):
+    def test_series_df_fail_long_short(self):
+        import pandas as pd
+        foo = pd.Series([0, 1, 2])
+        bar = pd.DataFrame({"a": [0, -1], "b": [0, -2]})
+        with self.assertRaises(ValueError):
+            util.check_shape_match(foo, bar)
+
+    def test_series_df_fail_short_long(self):
+        import pandas as pd
+        foo = pd.Series([0, 1])
+        bar = pd.DataFrame({"a": [0, -1, -2], "b": [0, -2, -4]})
+        with self.assertRaises(ValueError):
+            util.check_shape_match(foo, bar)
+
+    def test_df_series_succ(self):
         import pandas as pd
         foo = pd.DataFrame({"a": [0, 1, 2], "b": [0, 2, 4]})
         bar = pd.Series([0, -1, -2])
         foo_, bar_ = util.check_shape_match(foo, bar)
         self.assertIs(foo_, foo)
         self.assertIs(bar_, bar)
+
+    def test_df_series_fail_long_short(self):
+        import pandas as pd
+        foo = pd.DataFrame({"a": [0, 1, 2], "b": [0, 2, 4]})
+        bar = pd.Series([0, -1])
+        with self.assertRaises(ValueError):
+            util.check_shape_match(foo, bar)
+
+    def test_df_series_fail_short_long(self):
+        import pandas as pd
+        foo = pd.DataFrame({"a": [0, 1], "b": [0, 2]})
+        bar = pd.Series([0, -1, -2])
+        with self.assertRaises(ValueError):
+            util.check_shape_match(foo, bar)
 
 
 class TestOneHotify(unittest.TestCase):
@@ -432,16 +487,36 @@ class TestOneHotify(unittest.TestCase):
 class TestSplitShuffle(unittest.TestCase):
 
     def test_series(self):
-        pass
+        import pandas as pd
+        foo = pd.Series([0, 1, 2])
+        bar = pd.Series([0, -1, -2])
+        foo_, bar_ = util.check_shape_match(foo, bar)
+        self.assertIs(foo_, foo)
+        self.assertIs(bar_, bar)
 
     def test_df(self):
-        pass
+        import pandas as pd
+        foo = pd.DataFrame({"a": [0, 1, 2], "b": [0, 2, 4]})
+        bar = pd.DataFrame({"a": [0, -1, -2], "b": [0, -2, -4]})
+        foo_, bar_ = util.check_shape_match(foo, bar)
+        self.assertIs(foo_, foo)
+        self.assertIs(bar_, bar)
 
     def test_series_df(self):
-        pass
+        import pandas as pd
+        foo = pd.Series([0, 1, 2])
+        bar = pd.DataFrame({"a": [0, -1, -2], "b": [0, -2, -4]})
+        foo_, bar_ = util.check_shape_match(foo, bar)
+        self.assertIs(foo_, foo)
+        self.assertIs(bar_, bar)
 
     def test_df_series(self):
-        pass
+        import pandas as pd
+        foo = pd.DataFrame({"a": [0, 1, 2], "b": [0, 2, 4]})
+        bar = pd.Series([0, -1, -2])
+        foo_, bar_ = util.check_shape_match(foo, bar)
+        self.assertIs(foo_, foo)
+        self.assertIs(bar_, bar)
 
 
 class TestGetCrossEntropy(unittest.TestCase):
