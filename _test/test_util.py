@@ -367,6 +367,7 @@ class TestCheckOneHot(unittest.TestCase):
             util.check_one_hot(df)
 
 
+"""
 class TestCheckShapeMatch(unittest.TestCase):
 
     def test_series(self):
@@ -380,6 +381,7 @@ class TestCheckShapeMatch(unittest.TestCase):
 
     def test_df_series(self):
         raise NotImplementedError
+"""
 
 
 class TestOneHotify(unittest.TestCase):
@@ -408,6 +410,7 @@ class TestOneHotify(unittest.TestCase):
         self.assertTrue(test.all().all())
 
 
+"""
 class TestSplitShuffle(unittest.TestCase):
 
     def test_series(self):
@@ -421,35 +424,39 @@ class TestSplitShuffle(unittest.TestCase):
 
     def test_df_series(self):
         raise NotImplementedError
+"""
 
 
 class TestGetCrossEntropy(unittest.TestCase):
 
-    raise NotImplementedError
-
-    def test_reduced(self):
+    def test_series(self):
+        import pandas as pd
         import numpy as np
-        p_y = [0.50, 0.20, 0.80]
-        expected = np.log(np.prod(p_y) ** (-1. / len(p_y)))
-        test = np.isclose(util._get_neg_llh(p_y=p_y), expected)
+        _y = pd.Series([0, 0, 1, 0])
+        p_y = pd.Series([0.10, 0.30, 0.40, 0.20])
+        expected = -np.log(0.40)
+        test = np.isclose(util._get_cross_entropy(_y=_y, p_y=p_y), expected)
         self.assertTrue(test)
 
-    def test_reduced_dup(self):
+    def test_series_perfectly_right(self):
+        import pandas as pd
         import numpy as np
-        p_y = [0.50, 0.20, 0.80]
-        expected = np.log(np.prod(p_y) ** (-1. / len(p_y)))
-        # default is to norm, so duplicating shouldn't matter!
-        test = np.isclose(util._get_neg_llh(p_y=p_y + p_y), expected)
+        _y = pd.Series([0, 0, 1, 0])
+        p_y = _y
+        res = util._get_cross_entropy(_y=_y, p_y=p_y)
+        expected = 0
+        test = np.isclose(res, expected)
         self.assertTrue(test)
 
-    def test_reduced_zero(self):
-        self.assertEqual(util._get_neg_llh(p_y=[0.50, 0, 0.80]), float("inf"))
-
-    def test_reduced_one(self):
-        self.assertEqual(util._get_neg_llh(p_y=[1]), 0)
-
-    def test_reduced_zero_one(self):
-        self.assertEqual(util._get_neg_llh(p_y=[0, 1]), float("inf"))
+    def test_series_perfectly_wrong(self):
+        import pandas as pd
+        import numpy as np
+        _y = pd.Series([0, 0, 1, 0])
+        p_y = pd.Series([0.10, 0.70, 0, 0.20])
+        res = util._get_cross_entropy(_y=_y, p_y=p_y)
+        expected = float("inf")
+        test = np.isclose(res, expected)
+        self.assertTrue(test)
 
     def test_df(self):
         import pandas as pd
@@ -459,8 +466,51 @@ class TestGetCrossEntropy(unittest.TestCase):
             "a": [0.50, 0.20, 0.70],
             "b": [0.50, 0.80, 0.30]
         })
-        res = util.get_neg_llh(y=y, p=p)
+        res = util.get_cross_entropy(y=y, p=p)
         expected = np.log((0.50 * 0.80 * 0.70) ** (-1. / 3))
+        test = np.isclose(res, expected)
+        self.assertTrue(test)
+
+    def test_df_dup(self):
+        """Test that 'duplicating' input doesn't change normalized output (default setting)."""
+        import pandas as pd
+        import numpy as np
+        y = util.one_hotify(pd.Series(["a", "b", "a"]))
+        p = pd.DataFrame({
+            "a": [0.50, 0.20, 0.70],
+            "b": [0.50, 0.80, 0.30]
+        })
+        res = util.get_cross_entropy(y=pd.concat([y, y]), p=pd.concat([p, p]))
+        res_undup = util.get_cross_entropy(y=y, p=p)
+        expected = res_undup
+        test = np.isclose(res, expected)
+        self.assertTrue(test)
+
+    def test_df_dup_unnormed(self):
+        """Test that 'duplicating' input doubles un-normalized output."""
+        import pandas as pd
+        import numpy as np
+        y = util.one_hotify(pd.Series(["a", "b", "a"]))
+        p = pd.DataFrame({
+            "a": [0.50, 0.20, 0.70],
+            "b": [0.50, 0.80, 0.30]
+        })
+        res = util.get_cross_entropy(y=pd.concat([y, y]), p=pd.concat([p, p]), normalize=False)
+        res_undup = util.get_cross_entropy(y=y, p=p, normalize=False)
+        expected = res_undup * 2
+        test = np.isclose(res, expected)
+        self.assertTrue(test)
+
+    def test_df_perfectly_right_and_wrong(self):
+        import pandas as pd
+        import numpy as np
+        y = util.one_hotify(pd.Series(["a", "b", "a"]))
+        p = pd.DataFrame({
+            "a": [1, 1, 0.70],
+            "b": [0, 0, 0.30]
+        })
+        res = util.get_cross_entropy(y=pd.concat([y, y]), p=pd.concat([p, p]))
+        expected = float("inf")
         test = np.isclose(res, expected)
         self.assertTrue(test)
 

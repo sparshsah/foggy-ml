@@ -284,7 +284,17 @@ def _get_cross_entropy(_y: Union[pd.Series, pd.DataFrame], p_y: Union[pd.Series,
     ------
     float, the cross-entropy.
     """
-    ce = -sum(_y * np.log(p_y))  # for single data point, same as -_y.dot(np.log(p_y))
+    ce = _y * np.log(p_y)  # for single data point, same as _y.dot(np.log(p_y))
+
+    if len(ce.shape) == 1:
+        ce = ce.sum()
+    elif len(ce.shape) == 2:
+        ce = ce.sum().sum()  # ce is DataFrame, sum over index then again to get total sum as scalar
+    else:
+        raise NotImplementedError(ce.shape)
+
+    ce *= -1
+
     return check_type(ce, type_=float)
 
 
