@@ -429,21 +429,19 @@ class TestOneHotify(unittest.TestCase):
         self.assertTrue(test.all().all())
 
 
-"""
 class TestSplitShuffle(unittest.TestCase):
 
     def test_series(self):
-        raise NotImplementedError
+        pass
 
     def test_df(self):
-        raise NotImplementedError
+        pass
 
     def test_series_df(self):
-        raise NotImplementedError
+        pass
 
     def test_df_series(self):
-        raise NotImplementedError
-"""
+        pass
 
 
 class TestGetCrossEntropy(unittest.TestCase):
