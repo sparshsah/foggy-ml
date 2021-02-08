@@ -34,7 +34,7 @@ building a nested series of one-liner helpers becomes second nature,
 so that each individual function is easy to digest
 and its position in the hierarchy is immediately obvious.
     In fact, if you think of a row within an array (or a helper to a function)
-as a "private" or "nested" property, you might even call this
+as a "private" property, you might even call this
 at-first-glance unidiomatic nomenclature truly Pythonic!
 
 - We often pass up opportunities to take advantage of small
