@@ -13,6 +13,7 @@ interactive demo in `_demo/fann/demo_fann.ipynb`.
 
 - Our guiding objective has been to write code that is, in order of priority:
 (a) fun, (b) easy to read, (c) elegant, and (d) efficient.
+Efficiency comes pointedly last in the hierarchy.
 
 - In the interest of making this package feature-complete yet self-contained,
 we include a catch-all `util` module that in a formal organization would be
