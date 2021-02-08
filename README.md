@@ -21,6 +21,21 @@ better as one or more separate standalone packages.
 - Many readers will see this code and instinctively want to
 refactor from functional to OOP. Resist this urge.
 
+- We permit ourselves our personal predilection for underscores,
+to the point of controversy and perhaps even overuse.
+    For example, if we have a 2D array `arr`,
+we will iterate over each row within that array as `_arr`.
+Similarly, if we have a function `foo`,
+we will call its helper `_foo`, and in turn its helper `__foo`.
+    This nomenclature takes a little getting-used-to,
+but we vigorously defend the modularity and clarity it promotes. For example,
+building a nested series of one-liner helpers becomes second nature,
+so that each individual function is easy to digest
+and its position in the hierarchy is immediately obvious.
+    In fact, if you think of a row within an array (or a helper to a function)
+as a "private attribute" or "subcomponent", you might even call this
+at-first-glance unidiomatic nomenclature truly Pythonic!
+
 - We often pass up opportunities to take advantage of small
 data structures and fast numerical linear algebra operations. For example,
 we "flatten" our FANN into a pandas DataFrame with MultiIndex,
@@ -38,21 +53,6 @@ we're C programmers who never learned how to use `free()` calls properly,
 or because we don't trust Python's garbage collector,
 but rather to enforce scope for certain variables,
 decluttering the namespace and preventing accidental misuse.
-
-- We permit ourselves our personal predilection for underscores,
-to the point of controversy and perhaps even overuse.
-    For example, if we have a 2D array `arr`,
-we will iterate over each row within that array as `_arr`.
-Similarly, if we have a function `foo`,
-we will call its helper `_foo`, and in turn its helper `__foo`.
-    This nomenclature takes a little getting-used-to,
-but we vigorously defend the modularity and clarity it promotes. For example,
-building a nested series of one-liner helpers becomes second nature,
-so that each individual function is easy to digest
-and its position in the hierarchy is immediately obvious.
-    In fact, if you think of a row within an array (or a helper to a function)
-as a "private attribute" or "subcomponent", you might even call this
-at-first-glance unidiomatic nomenclature truly Pythonic!
 
 - We stick to the first-person plural in comments ("we", "us", "our").
 This isn't the "Royal We", it just helps
