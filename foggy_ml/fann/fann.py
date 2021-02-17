@@ -554,6 +554,7 @@ The speed/stability of convergence doesn't change just because you add more data
 With that in mind, backpropagation is just a fast way to compute the gradient we want to descend,
 using dynamic programming to implement the Chain Rule from calculus.
 
+
 Footnote
 --------
 
@@ -565,7 +566,6 @@ first derivative of the loss function, finding its root(s), and therefore must k
 the first derivative i.e. the second-partial and cross-derivatives of the loss function. Assuming a slow-enough
 learning rate (or fine-enough step size, if that's how you want to specify the update rule), gradient descent
 can find local minima using the first derivative alone. The tradeoff is that Newton-Raphson can be faster.
-
 
 [2] Most authors call batch_sz=1 as "online" learning (which is a bit of a misnomer
 unless you also set max_epoch=1), batch_sz=|dataset| as "batch" learning, and anything in between as

@@ -222,6 +222,7 @@ One legitimate additional option (not implemented) that can help combat
 overfitting is to also "regularize" weights by penalizing deviations from zero.
 This is like LASSO or Ridge or ElasticNet OLS regression.
 
+
 Footnote
 --------
 
