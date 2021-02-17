@@ -36,8 +36,8 @@ def lrange(*args) -> list:
 
 
 def titlefy(d: str) -> str:
-    # e.g. "train" -> "TRAINING DATA"
-    return "{d}ing Data".format(d=d).upper()
+    """E.g. 'train' -> 'TRAINING DATA'."""
+    return f"{d}ing Data".upper()
 
 
 def gen_data(n: int=256, noise: float=0.32, random_seed: int=1337, x_scaler: Optional[FeatureScaler]=None) ->\
@@ -133,9 +133,7 @@ def homebrewify(ref_nn: RefNN, layer_width: Tuple[float]=LAYER_WIDTH) -> fann.NN
     since it assumes there are only 2 categories in the output layer.
     """
     if NUM_CATEGORIES != 2:
-        msg = "Got K={num_categories} categories, but assume binary i.e. K=2 classification!".format(
-            num_categories=NUM_CATEGORIES)
-        raise ValueError(msg)
+        raise ValueError(f"Got K={NUM_CATEGORIES} categories, but assume binary i.e. K=2 classification!")
     output_layer = fann.Layer(index=range(NUM_CATEGORIES), columns=[fann.BIAS_INDEX] + prev_neuron_indices)
     # populate bias weights
     output_layer.loc[0, fann.BIAS_INDEX] = -ref_nn.intercepts_[-1][0]
@@ -175,7 +173,7 @@ def plot_datas(X0: pd.DataFrame, y0: pd.Series, X1: pd.DataFrame, y1: pd.Series,
 def plot_perf(X: pd.DataFrame, y: pd.Series, y_hat: pd.Series, suptitle: Optional[str]=None):
     score = np.mean(y_hat == y)
     plot_datas(X0=X, y0=y, title0="Ground Truth",
-               X1=X, y1=y_hat, title1="Model (score = {score:.2f}%)".format(score=score * 100),
+               X1=X, y1=y_hat, title1=f"Model (score = {score * 100: .2f}%)",
                suptitle=suptitle)
 
 

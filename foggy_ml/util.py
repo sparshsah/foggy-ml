@@ -40,8 +40,7 @@ def _check_type(obj: object, type_: type, check_dtype: bool=False, check_not: bo
     if check_not:
         check = not check
     if not check:
-        raise TypeError("{obj} is (dtype={check_dtype}) {type_obj}, failing against (not={check_not}) {type_}!".format(
-            obj=obj, check_dtype=check_dtype, type_obj=type_obj, check_not=check_not, type_=type_))
+        raise TypeError(f"{obj} is (dtype={check_dtype}) {type_obj}, failing against (not={check_not}) {type_}!")
     return obj
 
 
@@ -80,8 +79,7 @@ def check_type(obj: object, type_: type, check_dtype: bool=False, check_not: boo
                     return _check_type(obj=obj, type_=type_, check_dtype=check_dtype, check_not=check_not)
                 except TypeError:
                     continue
-            raise TypeError("{obj} (dtype={check_dtype}) failing against every (not={check_not}) {type_}!".format(
-                obj=obj, check_dtype=check_dtype, check_not=check_not, type_=type_))
+            raise TypeError(f"{obj} (dtype={check_dtype}) failing against every (not={check_not}) {type_}!")
 
 
 def check_dtype(obj: object, type_: type, check_not: bool=False) -> object:
@@ -103,11 +101,11 @@ def check_pmf(pmf: object, permit_nan=False) -> object:
     pmf_ = pd.Series(pmf)
     pmf_ = check_dtype(pmf_, {int, float})
     if not permit_nan and pmf_.isnull().any():
-        raise ValueError("{pmf_} not non-null!".format(pmf_=pmf_))
+        raise ValueError(f"{pmf_} not non-null!")
     if (pmf_ < -EPSILON).any():
-        raise ValueError("{pmf_} not non-negative!".format(pmf_=pmf_))
+        raise ValueError(f"{pmf_} not non-negative!")
     if not np.isclose(pmf_.sum(), 1.00):
-        raise ValueError("{pmf_} sums to {sum_} not 1.00!".format(pmf_=pmf_, sum_=sum(pmf_)))
+        raise ValueError(f"{pmf_} sums to {sum(pmf_)} not 1.00!")
     return pmf
 
 
@@ -124,8 +122,7 @@ def check_one_hot(y: pd.DataFrame) -> pd.DataFrame:
 
 def check_shape_match(x0: object, x1: object, axis=0) -> Tuple[object, object]:
     if x1.shape[axis] != x0.shape[axis]:
-        msg = "{n0} != {n1}!".format(n0=x0.shape[axis], n1=x1.shape[axis])
-        raise ValueError(msg)
+        raise ValueError(f"{x0.shape[axis]} != {x1.shape[axis]}!")
     return x0, x1
 
 

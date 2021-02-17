@@ -122,7 +122,7 @@ def check_data_point(x: object) -> pd.Series:
     util.check_type(x, pd.Series)
     util.check_not_type(x.index, pd.MultiIndex)
     if BIAS_INDEX in x.index:
-        raise ValueError("Data point \n{x}\n contains reserved index `{i}`!".format(x=x, i=BIAS_INDEX))
+        raise ValueError(f"Data point \n{x}\n contains reserved index `{BIAS_INDEX}`!")
     util.check_dtype(x, type_={int, float})
     return x
 
@@ -131,7 +131,7 @@ def check_neuron(neuron: object) -> Neuron:
     util.check_type(neuron, Neuron)
     util.check_not_type(neuron.index, pd.MultiIndex)
     if BIAS_INDEX not in neuron.index:
-        raise ValueError("Neuron \n{neuron}\n missing bias index `{i}`!".format(neuron=neuron, i=BIAS_INDEX))
+        raise ValueError(f"Neuron \n{neuron}\n missing bias index `{BIAS_INDEX}`!")
     util.check_dtype(neuron, float)
     return neuron
 
@@ -151,9 +151,7 @@ def check_layer(layer: object) -> Layer:
         neuron = check_neuron(neuron=neuron)
         neuron_cols = neuron.dropna().index
         if not neuron_cols.equals(layer_cols):
-            raise ValueError(
-                "Neuron's weights not filled across its full Layer.. {neuron_cols} != {layer_cols}!".format(
-                    neuron_cols=neuron_cols, layer_cols=layer_cols))
+            raise ValueError(f"Neuron's weights not filled across its full Layer.. {neuron_cols} != {layer_cols}!")
         del neuron_cols
     del layer_cols
     return layer
@@ -164,8 +162,7 @@ def check_nn(nn: object) -> NN:
     util.check_type(nn.index, pd.MultiIndex)
     # levels[0] indexes the layers, levels[1] indexes the neurons on each layer
     if nn.index.nlevels != NN_INDEX_NLEVELS:
-        raise ValueError("NN \n{nn}\n index nlevels = {nlevels} not {nlevels_}!".format(
-            nn=nn, nlevels=nn.index.nlevels, nlevels_=NN_INDEX_NLEVELS))
+        raise ValueError(f"NN \n{nn}\n index nlevels = {nn.index.nlevels} not {NN_INDEX_NLEVELS}!")
     util.check_not_type(nn.columns, pd.MultiIndex)
     for layer in nn.index.remove_unused_levels().levels[0]:
         check_layer(layer=nn.loc[layer])
@@ -192,7 +189,7 @@ def get_bias(neuron: Neuron) -> float:
     bias = neuron[BIAS_INDEX]
     bias = util.check_type(bias, float)
     if pd.isnull(bias):
-        raise ValueError("Neuron \n{neuron}\n missing bias!".format(neuron=neuron))
+        raise ValueError(f"Neuron \n{neuron}\n missing bias!")
     return bias
 
 
@@ -203,11 +200,11 @@ def get_w_in(x: pd.Series, neuron: Neuron) -> pd.Series:
 
     w_in = neuron.reindex(index=x.index)
     if w_in.isnull().any():
-        raise ValueError("Feed-in weights \n{w_in}\n not completely filled!".format(w_in=w_in))
+        raise ValueError(f"Feed-in weights \n{w_in}\n not completely filled!")
 
     w_pad = neuron.drop(labels=BIAS_INDEX).drop(labels=x.index)
     if w_pad.notnull().any():
-        raise ValueError("\n{w_pad}\n contains value(s), but should be just padding!".format(w_pad=w_pad))
+        raise ValueError(f"\n{w_pad}\n contains value(s), but should be just padding!")
 
     return w_in
 
