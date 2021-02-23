@@ -575,6 +575,7 @@ def __bprop(_y: object, x: pd.Series, nn: NN) -> pd.DataFrame:
     # get loss
 
     # get gradient
+    # e.g. output layer's gradient could be based on the "crossmax" activation
     raise NotImplementedError
 
 
