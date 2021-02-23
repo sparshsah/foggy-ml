@@ -196,16 +196,19 @@ def split_shuffle(*arrays: Tuple[Arraylike], n: int, random_seed: int=1337) -> T
 r"""
 Two common loss functions are MSE and cross-entropy AKA "log loss"[1].
 
+
 One reason we find the MSE intuitively appealing is that
 it more severely penalizes "confident" wrong answers.
 E.g. suppose the correct category label is A, the possible labels are [A, B, C],
 and we assign Pr[A] := 50% and Pr[B] := 25% =: Pr[C].
 The MSE will get worse if we instead assign Pr[B] := 49% and Pr[C] := 1%.
 On the other hand the cross-entropy would stay the same.
-I'd argue that the second assignment is truly "worse", in that
+
+    I'd argue that the second assignment is truly "worse", in that
 although we'd still pick the correct label (A) if forced to choose,
 we're now willing to wager almost as much on an incorrect label (B)
 as we are on the correct label.
+
 
 With that said, in general maximum-likelihood estimators have nice properties and whereas
 in the linear regression setting minimizing MSE (the basis of OLS) yields an MLE, in the
@@ -215,9 +218,25 @@ depend even on "incorrect" output neurons: Large pre-squash activation in an inc
 output neuron will drive up the denominator of the softmax, driving down the post-squash
 activation from the correct output neuron, driving up the loss.
 
+
 One legitimate additional option (not implemented) that can help combat
 overfitting is to also "regularize" weights by penalizing deviations from zero.
-This is like LASSO or Ridge or ElasticNet OLS regression.
+Depending on the regularization penalty function you choose,
+this can be like e.g. LASSO or Ridge or ElasticNet OLS regression.
+Indeed, regularizing weights like this (rather than constraining the depth/width
+of your network) is the industry-standard way to combat overfitting.
+
+    Said another way, if you imagine every NN as having potentially unbounded width,
+constraining the width of your network is like arbitrarily choosing how many
+weights get set to zero (effectively nulling out their associated neurons).
+The industry guidance is to instead widen your network then add a regularization penalty,
+letting the data inform which weights should be set to (or at least shrunk toward) zero.
+
+    (Imagining every NN as having potentially unbounded width, constraining the depth of
+your network is like arbitrarily choosing how many neurons' activation functions should
+be the identity. This is a much less compelling analogy, and anyway a bit less relevant
+since in many applications, the marginal benefit of additional depth---as opposed to
+additional width---pretty quickly vanishes.)
 
 
 Footnote
