@@ -585,7 +585,6 @@ def _bprop(y: pd.Series, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
 
 def bprop(y: pd.Series, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     """Get the gradient, shaped like the NN."""
-    # https://www.youtube.com/watch?v=i94OvYb6noo
     raise NotImplementedError
 
 
