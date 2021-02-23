@@ -3,11 +3,20 @@ homebrew machine learning
 (inspired by my college courses, plus a
 heaping spoonful of lessons, blog posts, and StackOverflow answers on the Web)
 
+
 ## fann: Feedforward Artificial Neural Network
 Step-by-step Python implementation of deep learning for multinomial classification.
+
 Source code in `foggy_ml/fann/fann.py`,
 unit tests in `_test/fann/test_fann.py`,
 interactive demo in `_demo/fann/demo_fann.ipynb`.
+
+Two especially great resources:
+- Michael Nielsen's "Neural Networks and Deep Learning" (textbook)[http://neuralnetworksanddeeplearning.com/]
+- Andrej Karpathy's Stanford CS231n course
+    (website)[http://cs231n.stanford.edu/] and
+    (2016 Winter video lectures)[https://www.youtube.com/watch?v=NfnWJUyUJYU&list=PLkt2uSq6rBVctENoVBg1TpCC7OQi31AlC]
+
 
 # Style notes
 
