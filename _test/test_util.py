@@ -17,7 +17,7 @@ class TestCheckType(unittest.TestCase):
 
     def test_complex_series_succ(self):
         import pandas as pd
-        for x in pd.Series(), pd.Series([0, 1]):
+        for x in pd.Series(dtype=object), pd.Series([0, 1]):
             # pd.Series.__equals__() tests elementwise equality, we want to test identity
             self.assertIs(util.check_type(x, type_=pd.Series), x)
 
@@ -62,13 +62,13 @@ class TestCheckNotType(unittest.TestCase):
 
     def test_complex_series_fail_direct(self):
         import pandas as pd
-        for x in pd.Series(), pd.Series([0, 1]):
+        for x in pd.Series(dtype=object), pd.Series([0, 1]):
             with self.assertRaises(TypeError):
                 util.check_type(x, type_=pd.Series, check_not=True)
 
     def test_complex_series_fail_wrapped(self):
         import pandas as pd
-        for x in pd.Series(), pd.Series([0, 1]):
+        for x in pd.Series(dtype=object), pd.Series([0, 1]):
             with self.assertRaises(TypeError):
                 util.check_not_type(x, type_=pd.Series)
 
