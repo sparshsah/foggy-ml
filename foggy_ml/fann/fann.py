@@ -571,7 +571,12 @@ unless you also set max_epoch=1), batch_sz=|dataset| as "batch" learning, and an
 """
 
 def __bprop(_y: object, x: pd.Series, nn: NN) -> pd.DataFrame:
-    A = _fprop(x=x, nn=nn, expand=True)  # pylint: disable=unused-variable
+    """
+
+    """
+    """
+    """
+    A = _fprop(x=x, nn=nn, expand=True)
     # get loss
 
     # get gradient
@@ -600,7 +605,8 @@ def _train(y: pd.Series, X: pd.DataFrame, nn: NN, num_batches: int,
            random_seed: int=1337)-> NN:
     for _ in range(max_epoch):
         """
-        TODO(sparshsah): PEP 572 -- Assignment Expressions (Python 3.8) supports e.g.
+        TODO(sparshsah): [PEP 572](https://www.python.org/dev/peps/pep-0572/) --
+        Assignment Expressions (Python 3.8) supports e.g.
         `split_shuffle(.., random_seed=random_seed := random_seed + 1)`, to mean
         `split_shuffle(.., random_seed = ++random_seed)`.
         """
