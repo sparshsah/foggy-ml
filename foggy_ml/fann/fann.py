@@ -571,11 +571,7 @@ unless you also set max_epoch=1), batch_sz=|dataset| as "batch" learning, and an
 """
 
 def __bprop(_y: object, x: pd.Series, nn: NN) -> pd.DataFrame:
-    """
-
-    """
-    """
-    """
+    """Get the gradient."""
     A = _fprop(x=x, nn=nn, expand=True)
     # get loss
 
