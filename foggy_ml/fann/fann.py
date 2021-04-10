@@ -460,6 +460,7 @@ def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.Data
     if expand:  # isinstance(a, pd.DataFrame)
         # squash only the output layer's outgoing activations into a probability mass function
         # along a's MultiIndex's first level, get the last label
+        # https://stackoverflow.com/questions/45967702/loc-and-iloc-with-multiindexd-dataframe
         output_layer = a.index.remove_unused_levels().levels[0][-1]
         a.loc[pd.IndexSlice[output_layer, :], "a_out"] = squash(a.loc[pd.IndexSlice[output_layer, :], "a_out"])
     else:  # isinstance(a, pd.Series)
@@ -570,35 +571,41 @@ unless you also set max_epoch=1), batch_sz=|dataset| as "batch" learning, and an
 "mini-batch" vs "batch" terminology distinction persists.
 """
 
-def __bprop(_y: object, x: pd.Series, nn: NN) -> pd.DataFrame:
-    """Get the gradient."""
-    A = _fprop(x=x, nn=nn, expand=True)
-    # get loss
+def __bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
+    """Get the gradient. `y` is one-hot."""
+    # fprop, then fill in gradient by working backward
+    a = _fprop(x=x, nn=nn, expand=True)
+    grad = pd.DataFrame(index=nn.index, columns=nn.columns)
+    # output layer: gradient of loss w.r.t. incoming activations
+    # get (index of) output layer (on axis="index", level=0)
+    # https://stackoverflow.com/questions/45967702/loc-and-iloc-with-multiindexd-dataframe
+    output_layer = a.index.remove_unused_levels().levels[0][-1]
+    util.d_dx(_y=_y, fn=util.crossmax, x=a.loc[pd.IndexSlice[output_layer, :], "a_in"])
+    del output_layer
+    raise NotImplementedError
+    return grad
 
-    # get gradient
-    # e.g. output layer's gradient could be based on the "crossmax" activation
+
+def _bprop(y: pd.DataFrame, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
+    """Get the gradient, averaged over the batch. `y` is one-hot."""
     raise NotImplementedError
 
 
-def _bprop(y: pd.Series, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
-    """Get the gradient, averaged over the batch."""
+def bprop(y: pd.DataFrame, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
+    """Get the gradient, shaped like the NN. `y` is one-hot."""
     raise NotImplementedError
 
 
-def bprop(y: pd.Series, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
-    """Get the gradient, shaped like the NN."""
-    raise NotImplementedError
-
-
-def __train(y: pd.Series, X: pd.DataFrame, nn: NN, learn_r: float) -> NN:
-    """Descend a step along the gradient."""
+def __train(y: pd.DataFrame, X: pd.DataFrame, nn: NN, learn_r: float) -> NN:
+    """Descend a step along the gradient. `y` is one-hot."""
     grad = bprop(y=y, X=X, nn=nn)
     return nn - learn_r * grad
 
 
-def _train(y: pd.Series, X: pd.DataFrame, nn: NN, num_batches: int,
+def _train(y: pd.DataFrame, X: pd.DataFrame, nn: NN, num_batches: int,
            learn_r: float=LEARN_R_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT,
            random_seed: int=1337)-> NN:
+    """`y` is one-hot."""
     for _ in range(max_epoch):
         """
         TODO(sparshsah): [PEP 572](https://www.python.org/dev/peps/pep-0572/) --
