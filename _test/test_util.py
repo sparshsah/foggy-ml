@@ -588,7 +588,8 @@ class TestGetCrossEntropy(unittest.TestCase):
         import numpy as np
         _y = pd.Series([0, 0, 1, 0])
         p_y = pd.Series([0.10, 0.70, 0, 0.20])
-        res = util._get_cross_entropy(_y=_y, p_y=p_y)
+        with np.errstate(divide="ignore"):  # otherwise, get "RuntimeWarning: divide by zero encountered in log"
+            res = util._get_cross_entropy(_y=_y, p_y=p_y)
         expected = float("inf")
         test = np.isclose(res, expected)
         self.assertTrue(test)
@@ -644,7 +645,8 @@ class TestGetCrossEntropy(unittest.TestCase):
             "a": [1, 1, 0.70],
             "b": [0, 0, 0.30]
         })
-        res = util.get_cross_entropy(y=pd.concat([y, y]), p=pd.concat([p, p]))
+        with np.errstate(divide="ignore"):  # otherwise, get "RuntimeWarning: divide by zero encountered in log"
+            res = util.get_cross_entropy(y=pd.concat([y, y]), p=pd.concat([p, p]))
         expected = float("inf")
         test = np.isclose(res, expected)
         self.assertTrue(test)
