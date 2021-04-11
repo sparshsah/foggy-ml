@@ -24,7 +24,7 @@ __all__ = [
     # calculations and algorithms
     "activate", "squash",
     "_____fprop", "____fprop", "___fprop", "__fprop", "_fprop", "fprop", "predict",
-    "__bprop", "_bprop", "bprop", "__train", "_train", "train",
+    "_bprop", "bprop", "__train", "_train", "train",
 ]
 
 ########################################################################################################################
@@ -571,28 +571,24 @@ unless you also set max_epoch=1), batch_sz=|dataset| as "batch" learning, and an
 "mini-batch" vs "batch" terminology distinction persists.
 """
 
-def __bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
+def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     """Get the gradient. `y` is one-hot."""
     # fprop, then fill in gradient by working backward
     a = _fprop(x=x, nn=nn, expand=True)
-    grad = pd.DataFrame(index=nn.index, columns=nn.columns)
+    grad = pd.DataFrame(index=nn.index, columns=nn.columns)  # gradient w.r.t NN i.e. weights
     # output layer: gradient of loss w.r.t. incoming activations
     # get (index of) output layer (on axis="index", level=0)
     # https://stackoverflow.com/questions/45967702/loc-and-iloc-with-multiindexd-dataframe
     output_layer = a.index.remove_unused_levels().levels[0][-1]
     util.d_dx(_y=_y, fn=util.crossmax, x=a.loc[pd.IndexSlice[output_layer, :], "a_in"])
     del output_layer
+    # shape it like the NN (so it's truly a gradient w.r.t weights)
     raise NotImplementedError
     return grad
 
 
-def _bprop(y: pd.DataFrame, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
-    """Get the gradient, averaged over the batch. `y` is one-hot."""
-    raise NotImplementedError
-
-
 def bprop(y: pd.DataFrame, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
-    """Get the gradient, shaped like the NN. `y` is one-hot."""
+    """Get the gradient, averaged over the batch. `y` is one-hot."""
     raise NotImplementedError
 
 
