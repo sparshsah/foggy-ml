@@ -580,6 +580,7 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     # get (index of) output layer (on axis="index", level=0)
     # https://stackoverflow.com/questions/45967702/loc-and-iloc-with-multiindexd-dataframe
     output_layer = a.index.remove_unused_levels().levels[0][-1]
+    # dim(d_dx) = dim(y_one_hot) = dim(x)
     util.d_dx(_y=_y, fn=util.crossmax, x=a.loc[pd.IndexSlice[output_layer, :], "a_in"])
     del output_layer
     # shape it like the NN (so it's truly a gradient w.r.t weights)
