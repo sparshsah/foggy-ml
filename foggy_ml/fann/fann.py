@@ -589,7 +589,12 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
 
 def bprop(y: pd.DataFrame, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     """Get the gradient, averaged over the batch. `y` is one-hot."""
-    raise NotImplementedError
+    # clever use of list comprehension to sum DataFrames.. hehe..
+    grad = sum([
+        _bprop(_y=util.check_type(_y, pd.Series), x=util.check_type(X.loc[i], pd.Series), nn=nn)
+        for i, _y in y.iterrows()
+    ])
+    return grad / y.shape[0]
 
 
 def __train(y: pd.DataFrame, X: pd.DataFrame, nn: NN, learn_r: float) -> NN:
