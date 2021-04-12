@@ -183,7 +183,7 @@ def check_nn(nn: object) -> NN:
     if nn.index.nlevels != NN_INDEX_NLEVELS:
         raise ValueError(f"NN \n{nn}\n index nlevels = {nn.index.nlevels} not {NN_INDEX_NLEVELS}!")
     util.check_not_type(nn.columns, pd.MultiIndex)
-    for layer in nn.index.remove_unused_levels().levels[0]:
+    for layer in nn.layer_labels():
         check_layer(layer=nn.loc[layer])
     return nn
 
@@ -389,7 +389,7 @@ def ___fprop(x: pd.Series, nn: NN, fn: Callable[[float], float]=activate,
     levels[0] indexes the layers, levels[1] indexes the neurons on each layer, so
     this is basically a list of (names of) layers in this NN e.g. [0, 1, 2, ..]
     """
-    layers = nn.index.remove_unused_levels().levels[0]
+    layers = nn.layer_labels()
     curr_layer = layers[0]
     """
     we want to "squeeze" the MultiIndex i.e. we want indices to be
@@ -443,7 +443,7 @@ def __fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.Dat
         Output layer outgoing activations not yet squashed!
     """
     a = ___fprop(x=x, nn=nn, expand=expand)
-    return pd.concat(a, keys=nn.index.remove_unused_levels().levels[0]) if expand else a
+    return pd.concat(a, keys=nn.layer_labels()) if expand else a
 
 
 def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.DataFrame]:
@@ -595,19 +595,20 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     `y` is one-hot.
     """
     d_loss_d_nn = nn * 0  # grad of LOSS w.r.t. NN weights/biases.. same shape as NN, incl NaN's in all same places
+
     # fprop, then fill in gradient by working backward
     a = _fprop(x=x, nn=nn, expand=True)
     d_loss_d_a = a * 0  # grad of LOSS w.r.t. NN incoming/outgoing activations (based on this data point's fwd pass)
 
     # first, need to get output (i.e. last) layer's outgoing activations
-    layer = a.loc_last_layer()
+    layer = a.layer_labels()[-1]
     # `a[out][out]` means `activations[output layer][outgoing (as opposed to incoming) activations]`
-    a_out_out = a.loc[pd.IndexSlice[a.loc_last_layer(), :], "a_out"]
+    a_out_out = a.loc[pd.IndexSlice[layer, :], "a_out"]
     # now we can calc (vector of) derivatives of loss w.r.t. output layer's outgoing activations
-    # note: dim(d loss / d a[out][out]) = dim(_y) [since `_y` is one-hot] = dim(a[out][out])
+    # note: dim(d loss / d a[out][out]) = dim(_y) /* since `_y` is one-hot */ = dim(a[out][out])
     d_loss_d_a_out_out = util.d_dx(_y=_y, fn=util.crossmax, x=a_out_out)
     del a_out_out
-    d_loss_d_a.loc[pd.IndexSlice[a.loc_last_layer(), :], "a_out"] = d_loss_d_a_out_out
+    d_loss_d_a.loc[pd.IndexSlice[layer, :], "a_out"] = d_loss_d_a_out_out
     del d_loss_d_a_out_out
     """
     now we know how strongly/which direction we will nudge the loss by
@@ -622,11 +623,11 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     `a[out][in]` means `activations[output layer][incoming]`, we'll use chain rule:
     d loss / d a[in][out] = d loss / d a[out][out] * d a[out][out] / d a[in][out].
     """
-    a_out_in = a.loc[pd.IndexSlice[a.loc_last_layer(), :], "a_in"]
+    a_out_in = a.loc[pd.IndexSlice[layer, :], "a_in"]
     d_a_out_out_d_a_out_in = util.d_dx(fn=activate, x=a_out_in)
     del a_out_in
     d_loss_d_a_out_in = d_loss_d_a.loc[pd.IndexSlice] / d_a_out_out_d_a_out_in
-    d_loss_d_a.loc[pd.IndexSlice[a.loc_last_layer(), :], "a_in"] = d_loss_d_a_out_in
+    d_loss_d_a.loc[pd.IndexSlice[layer, :], "a_in"] = d_loss_d_a_out_in
     del d_a_out_out_d_a_out_in, d_loss_d_a_out_in
     """
     okay, now we know how strongly/which direction we need to nudge the output layer's INCOMING activations. huzzah!
