@@ -593,10 +593,10 @@ unless you also set max_epoch=1), batch_sz=|dataset| as "batch" learning, and an
 
 def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     """Get the gradient. `y` is one-hot."""
-    raise NotImplementedError
+    grad_nn = nn * 0  # gradient w.r.t. NN weights/biases.. same shape as NN, incl NaN's in all same places
     # fprop, then fill in gradient by working backward
     a = _fprop(x=x, nn=nn, expand=True)
-    grad = pd.DataFrame(index=nn.index, columns=nn.columns)  # gradient w.r.t NN i.e. weights
+    grad_a = a * 0  # gradient w.r.t. NN incoming/outgoing activations (based on this data point's fwd pass)
 
     # first, need to get output (i.e. last) layer's outgoing activations
     # `a[out][out]` means `activations[output layer][outgoing (as opposed to incoming) activations]`
@@ -606,15 +606,16 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     d_loss_d_a_out_out = util.d_dx(_y=_y, fn=util.crossmax, x=a_out_out)
     del a_out_out
     """
-    now we know how strongly/which direction we need to nudge the output layer's outgoing activations,
-    in order to get a better fit on this data point. that is, we must "walk" along the negative of the gradient.
+    now we know how strongly/which direction we will nudge the loss by
+    tweaking the output layer's outgoing activations i.e. by
+    tweaking each output neuron's individual outgoing activation.
 
-    but how do we do that? well, we can't reach in and arbitrarily tweak the output layer's outgoing activation.
-    so let's propagate the derivative just one more step backward, and figure out the derivative of the loss
+    however, we CAN'T just reach in and arbitrarily tweak an output neuron's outgoing activation.
+    so let's propagate derivative just one more step backward, and calc derivative of loss
     w.r.t. the output layer's INCOMING activations.
 
     keeping in mind that e.g. `a[out][out]` means `activations[output layer][outgoing]`, whereas
-    `a[out][in]` means `activations[output layer][incoming]`, we'll use the chain rule:
+    `a[out][in]` means `activations[output layer][incoming]`, we'll use chain rule:
     d loss / d a[in][out] = d loss / d a[out][out] * d a[out][out] / d a[in][out].
     """
     a_out_in = a.loc[pd.IndexSlice[a.loc_last_layer(), :], "a_in"]
@@ -622,9 +623,23 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     del a_out_in
     d_loss_d_a_out_in = d_loss_d_a_out_out / d_a_out_out_d_a_out_in
     del d_a_out_out_d_a_out_in, d_loss_d_a_out_out
+    """
+    okay, now we know how strongly/which direction we need to nudge the output layer's INCOMING activations. huzzah!
+    .. wait hold up.. we STILL can't reach in and arbitrarily tweak an output neuron's INCOMING activation..
+
+    but aha! an output neuron's incoming activation is influenced by its feed-in weights, i.e. the strength of
+    its own activation based on the outgoing activations from each of the neurons on the penultimate layer.
+    and we CAN reach in and arbitrarily tweak those!
+
+    how much do we have to tweak each one by? well, the incoming activation is just a linear combination e.g.
+    a_in = bias + ... _ * weight ..., where the `_` is exactly the outgoing activation of some neuron
+    on the penultimate layer! so let's use the chain rule again:
+    a_in needs to change by `something`, so we can simply
+    """
     del d_loss_d_a_out_in
 
-    return grad
+    del grad_a
+    return grad_nn
 
 
 def bprop(y: pd.DataFrame, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
