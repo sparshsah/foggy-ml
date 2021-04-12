@@ -593,10 +593,10 @@ unless you also set max_epoch=1), batch_sz=|dataset| as "batch" learning, and an
 
 def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     """Get the gradient. `y` is one-hot."""
-    grad_nn = nn * 0  # gradient w.r.t. NN weights/biases.. same shape as NN, incl NaN's in all same places
+    grad_nn = nn * 0  # grad of LOSS w.r.t. NN weights/biases.. same shape as NN, incl NaN's in all same places
     # fprop, then fill in gradient by working backward
     a = _fprop(x=x, nn=nn, expand=True)
-    grad_a = a * 0  # gradient w.r.t. NN incoming/outgoing activations (based on this data point's fwd pass)
+    grad_a = a * 0  # grad of LOSS w.r.t. NN incoming/outgoing activations (based on this data point's fwd pass)
 
     # first, need to get output (i.e. last) layer's outgoing activations
     # `a[out][out]` means `activations[output layer][outgoing (as opposed to incoming) activations]`
