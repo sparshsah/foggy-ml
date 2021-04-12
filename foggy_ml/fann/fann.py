@@ -600,6 +600,82 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     a = _fprop(x=x, nn=nn, expand=True)
     d_loss_d_a = a * 0  # grad of LOSS w.r.t. NN incoming/outgoing activations (based on this data point's fwd pass)
 
+    """
+    We're going to accomplish this in a do-while loop, so it's gonna look ugly,
+    especially because Pandas provides excellent functionality with MultiIndex'ing,
+    without providing a correspondingly excellent API for invoking that functionality.
+
+
+    HOWEVER, all we're doing here is Chain Rule!
+
+
+    To wit (being a bit hand-wavey, so we don't get mired in notation):
+
+    The LOSS is the "crossmax" of the output layer's outgoing activations i.e.
+    <0> LOSS = crossmax(_y=_y, x=A[output][outgoing]) = cross_entropy(_y=_y, p_y=softmax(x=A[output][outgoing])).
+
+    What's the derivative of the LOSS w.r.t. the output layer's outgoing activations i.e.
+    <1> d LOSS / d A[output][outgoing]?
+    Well, we just have to calculate that.
+
+
+    But, once we have that, what's derivative of LOSS w.r.t. output layer's incoming activations, i.e.
+    <2> d LOSS / d A[output][incoming]?
+    Well, we can use the Chain Rule! We know that
+    <3> A[output][outgoing] = activate(A[output][incoming]),
+    whence
+    <4> d A[output][outgoing] / d A[output][incoming]
+    can be calculated, whence we can (finally!) invoke Chain Rule to rewrite
+    <2> d LOSS / d A[output][incoming] = <1> * <4>.
+
+    Thence, for
+    <5> d LOSS / d bias[output]
+    and
+    <6> d LOSS / d feedin_weights[output],
+    we can write that the output layer's incoming activations depends on its own bias,
+    the penultimate layer's outgoing activations, and its own feed-in weights i.e.
+    <7> A[output][incoming] = bias[output] + A[penultimate][outgoing] @ feedin_weights[output]
+    whence we see
+    <8> d A[output][incoming] / d bias[output] = 1
+    and
+    <9> d A[output][incoming] / d feedin_weights[output] = A[penultimate][outgoing],
+    and also (we'll use this later)
+    <10> d A[output][incoming] / d A[penultimate][outgoing] = feedin_weights[output].
+    Now invoke the Chain Rule again:
+    <5> d LOSS / d bias[output] = <2> * <8>
+    and
+    <6> d LOSS / d feedin_weights[output] = <2> * <9>.
+    Together, <5> and <6> tell us exactly how much/which direction to tweak the output layer's
+    bias and feed-in weights!
+
+    And now we can also fill in the derivative of LOSS w.r.t. penultimate layer's
+    outgoing activations i.e.
+    <11> d LOSS / d A[penultimate][outgoing] = <2> * <10>.
+
+
+    That immediately sets us up for the next round, because now we're in exactly
+    the same position as we were in after <1>. That is: What is
+    <12> d LOSS / d A[penultimate][incoming]?
+    Just like in <3>, we know
+    <13> A[penultimate][outgoing] = activate(A[penultimate][incoming]),
+    whence just like in <4>,
+    <14> d A[penultimate][outgoing] / d A[penultimate][incoming]
+    can be calculated, whence just like before we can invoke Chain Rule to rewrite
+    <12> d LOSS / d A[penultimate][incoming] = <11> * <14>.
+
+    Now just rinse and repeat.. <15>-<21> will be same as <5>-<11>, except
+    replace "penultimate" with "antepenultimate" layer everywhere, then
+    replace "output" with "penultimate" layer everywhere.
+
+
+    Assuming you have more layers, <22-31> would then just be same as <15>-<21>, except
+    replace "antepenultimate" with "preantepenultimate" layer everywhere, then
+    replace "penultimate" with "antepenultimate" layer everywhere.
+
+
+    And so on. Beautiful!
+    """
+
     # let's start with the output layer
     layer = a.layer_labels()[-1]
     # `a[out][out]` means `activations[output layer][outgoing (as opposed to incoming) activations]`
@@ -650,6 +726,11 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     we'll use the chain rule again.
     """
     del d_loss_d_a_out_in
+    """
+    after this, we know how much penult's a_out needs to change (grad * output's feed-in).
+    can't change it, also can't change penult's a_in. BUT can chg penult's feed-in w/bias.
+    and so on, as long as d loss / d a[currlayer][outgoing] has been filled in.
+    """
 
     del d_loss_d_a
     return d_loss_d_nn
