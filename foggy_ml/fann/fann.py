@@ -580,8 +580,14 @@ using dynamic programming to implement the Chain Rule from calculus.
 In order to descend the gradient, we need to actually know what it is.
 That is, we need to know the derivative of the final LOSS w.r.t.
 each of the biases/weights in our current network.
+This will tell us how strongly/which direction we will nudge the final loss,
+if we tweak any given bias/weight. (Once we know that, the natural next step is
+to scan for which tweaks will decrease the loss the most, and do them!
+This is the "descent" step.)
 
-We're going to accomplish this in a do-while loop, so it's gonna look intimidating,
+
+We're going to accomplish the gradient computation in a do-while loop,
+so it's gonna look intimidating,
 especially because Pandas provides excellent functionality with MultiIndex'ing,
 without providing a correspondingly excellent API for invoking that functionality.
 
