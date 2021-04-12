@@ -577,7 +577,11 @@ using dynamic programming to implement the Chain Rule from calculus.
 
 # The Backpropagation Algorithm: Dynamic Programming For Computing the Gradient
 
-We're going to accomplish this in a do-while loop, so it's gonna look ugly,
+In order to descend the gradient, we need to actually know what it is.
+That is, we need to know the derivative of the final LOSS w.r.t.
+each of the biases/weights in our current network.
+
+We're going to accomplish this in a do-while loop, so it's gonna look intimidating,
 especially because Pandas provides excellent functionality with MultiIndex'ing,
 without providing a correspondingly excellent API for invoking that functionality.
 
