@@ -592,7 +592,10 @@ unless you also set max_epoch=1), batch_sz=|dataset| as "batch" learning, and an
 """
 
 def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
-    """Get the gradient. `y` is one-hot."""
+    """
+    Get the gradient (AKA derivative).
+    `y` is one-hot.
+    """
     grad_nn = nn * 0  # grad of LOSS w.r.t. NN weights/biases.. same shape as NN, incl NaN's in all same places
     # fprop, then fill in gradient by working backward
     a = _fprop(x=x, nn=nn, expand=True)
@@ -643,7 +646,10 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
 
 
 def bprop(y: pd.DataFrame, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
-    """Get the gradient, averaged over the batch. `y` is one-hot."""
+    """
+    Get the gradient, averaged over the batch.
+    `y` is one-hot.
+    """
     # clever use of list comprehension to sum DataFrames.. hehe..
     grad = sum([
         _bprop(_y=util.check_type(_y, pd.Series), x=util.check_type(X.loc[i], pd.Series), nn=nn)
@@ -653,7 +659,10 @@ def bprop(y: pd.DataFrame, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
 
 
 def __train(y: pd.DataFrame, X: pd.DataFrame, nn: NN, learn_r: float) -> NN:
-    """Descend a step along the gradient. `y` is one-hot."""
+    """
+    Descend a step along the gradient.
+    `y` is one-hot.
+    """
     grad = bprop(y=y, X=X, nn=nn)
     return nn - learn_r * grad
 
@@ -661,7 +670,10 @@ def __train(y: pd.DataFrame, X: pd.DataFrame, nn: NN, learn_r: float) -> NN:
 def _train(y: pd.DataFrame, X: pd.DataFrame, nn: NN, num_batches: int,
            learn_r: float=LEARN_R_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT,
            random_seed: int=1337)-> NN:
-    """`y` is one-hot."""
+    """
+    Get a trained NN. Helper.
+    `y` is one-hot.
+    """
     for _ in range(max_epoch):
         """
         TODO(sparshsah): [PEP 572](https://www.python.org/dev/peps/pep-0572/) --
@@ -680,6 +692,7 @@ def train(y: pd.Series, X: pd.DataFrame,
           layer_width: Union[int, Iterable[int]],
           learn_r: float=LEARN_R_DEFAULT, batch_sz: float=BATCH_SZ_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT,
           random_seed: int=1337)-> NN:
+    """Get a trained NN."""
     _ = util.check_shape_match(y, X)
     y = util.one_hotify(y=y)
 
