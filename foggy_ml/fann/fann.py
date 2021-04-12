@@ -63,9 +63,9 @@ MAX_EPOCH_DEFAULT: int = 2048
 
 
 # hackily add just a bit of syntactic sugar / convenience functionality
-def loc_last_layer(self: pd.DataFrame) -> object:
+def layer_labels(self: pd.DataFrame) -> pd.Index:
     """
-    Get index of last layer (i.e. last label on level=0, axis="index").
+    Get indices of layers (i.e. labels on level=0, axis="index").
     [Cf: https://stackoverflow.com/questions/45967702/loc-and-iloc-with-multiindexd-dataframe]
 
     input
@@ -74,13 +74,11 @@ def loc_last_layer(self: pd.DataFrame) -> object:
 
     output
     ------
-    object, the label/name of the last layer.
+    pd.Index, indices of layers.
     """
-    if not isinstance(self.index, pd.MultiIndex):
-        raise ValueError(type(self.index))
-    return self.index.remove_unused_levels().levels[0][-1]
-pd.DataFrame.loc_last_layer = loc_last_layer
-del loc_last_layer
+    return self.index.remove_unused_levels().levels[0]
+pd.DataFrame.layer_labels = layer_labels
+del layer_labels
 
 
 # initialize
@@ -480,8 +478,8 @@ def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.Data
     del x
     if expand:  # isinstance(a, pd.DataFrame)
         # squash only the output layer's outgoing activations into a probability mass function
-        a.loc[pd.IndexSlice[a.loc_last_layer(), :], "a_out"] = squash(
-            a.loc[pd.IndexSlice[a.loc_last_layer(), :], "a_out"]
+        a.loc[pd.IndexSlice[a.layer_labels()[-1], :], "a_out"] = squash(
+            a.loc[pd.IndexSlice[a.layer_labels()[-1], :], "a_out"]
         )
     else:  # isinstance(a, pd.Series)
         a = squash(a)
