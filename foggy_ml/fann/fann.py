@@ -593,6 +593,7 @@ unless you also set max_epoch=1), batch_sz=|dataset| as "batch" learning, and an
 
 def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     """Get the gradient. `y` is one-hot."""
+    raise NotImplementedError
     # fprop, then fill in gradient by working backward
     a = _fprop(x=x, nn=nn, expand=True)
     grad = pd.DataFrame(index=nn.index, columns=nn.columns)  # gradient w.r.t NN i.e. weights
@@ -620,12 +621,9 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     d_a_out_out_d_a_out_in = util.d_dx(fn=activate, x=a_out_in)
     del a_out_in
     d_loss_d_a_out_in = d_loss_d_a_out_out / d_a_out_out_d_a_out_in
-    del d_loss_d_a_out_out
-    del d_a_out_out_d_a_out_in
+    del d_a_out_out_d_a_out_in, d_loss_d_a_out_out
     del d_loss_d_a_out_in
 
-    # shape it like the NN (so it's truly a gradient w.r.t weights)
-    raise NotImplementedError
     return grad
 
 
