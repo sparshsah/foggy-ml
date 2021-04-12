@@ -607,15 +607,22 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     """
     now we know how strongly/which direction we need to nudge the output layer's outgoing activations,
     in order to get a better fit on this data point. that is, we must "walk" along the negative of the gradient.
+
     but how do we do that? well, we can't reach in and arbitrarily tweak the output layer's outgoing activation.
     so let's propagate the derivative just one more step backward, and figure out the derivative of the loss
-    w.r.t. the output layer's INCOMING activations. we'll use the chain rule:
+    w.r.t. the output layer's INCOMING activations.
+
+    keeping in mind that e.g. `a[out][out]` means `activations[output layer][outgoing]`, whereas
+    `a[out][in]` means `activations[output layer][incoming]`, we'll use the chain rule:
     d loss / d a[in][out] = d loss / d a[out][out] * d a[out][out] / d a[in][out].
-    Remember that e.g. `a[out][out]` means `activations[output layer][outgoing]`, whereas
-    `a[out][in]` means `activations[output layer][incoming]`.
     """
-    a_out_in = a.loc[pd.IndexSlice[a.index.remove_unused_levels().levels[0][-1], :], "a_in"]
+    a_out_in = a.loc[pd.IndexSlice[a.loc_last_layer(), :], "a_in"]
+    d_a_out_out_d_a_out_in = util.d_dx(fn=activate, x=a_out_in)
+    del a_out_in
+    d_loss_d_a_out_in = d_loss_d_a_out_out / d_a_out_out_d_a_out_in
     del d_loss_d_a_out_out
+    del d_a_out_out_d_a_out_in
+    del d_loss_d_a_out_in
 
     # shape it like the NN (so it's truly a gradient w.r.t weights)
     raise NotImplementedError
