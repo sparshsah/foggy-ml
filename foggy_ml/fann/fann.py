@@ -596,18 +596,21 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     Get the gradient (AKA derivative).
     `y` is one-hot.
     """
-    grad_nn = nn * 0  # grad of LOSS w.r.t. NN weights/biases.. same shape as NN, incl NaN's in all same places
+    d_loss_d_nn = nn * 0  # grad of LOSS w.r.t. NN weights/biases.. same shape as NN, incl NaN's in all same places
     # fprop, then fill in gradient by working backward
     a = _fprop(x=x, nn=nn, expand=True)
-    grad_a = a * 0  # grad of LOSS w.r.t. NN incoming/outgoing activations (based on this data point's fwd pass)
+    d_loss_d_a = a * 0  # grad of LOSS w.r.t. NN incoming/outgoing activations (based on this data point's fwd pass)
 
     # first, need to get output (i.e. last) layer's outgoing activations
+    layer = a.loc_last_layer()
     # `a[out][out]` means `activations[output layer][outgoing (as opposed to incoming) activations]`
     a_out_out = a.loc[pd.IndexSlice[a.loc_last_layer(), :], "a_out"]
     # now we can calc (vector of) derivatives of loss w.r.t. output layer's outgoing activations
     # note: dim(d loss / d a[out][out]) = dim(_y) [since `_y` is one-hot] = dim(a[out][out])
     d_loss_d_a_out_out = util.d_dx(_y=_y, fn=util.crossmax, x=a_out_out)
     del a_out_out
+    d_loss_d_a.loc[pd.IndexSlice[a.loc_last_layer(), :], "a_out"] = d_loss_d_a_out_out
+    del d_loss_d_a_out_out
     """
     now we know how strongly/which direction we will nudge the loss by
     tweaking the output layer's outgoing activations i.e. by
@@ -624,8 +627,9 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     a_out_in = a.loc[pd.IndexSlice[a.loc_last_layer(), :], "a_in"]
     d_a_out_out_d_a_out_in = util.d_dx(fn=activate, x=a_out_in)
     del a_out_in
-    d_loss_d_a_out_in = d_loss_d_a_out_out / d_a_out_out_d_a_out_in
-    del d_a_out_out_d_a_out_in, d_loss_d_a_out_out
+    d_loss_d_a_out_in = d_loss_d_a.loc[pd.IndexSlice] / d_a_out_out_d_a_out_in
+    d_loss_d_a.loc[pd.IndexSlice[a.loc_last_layer(), :], "a_in"] = d_loss_d_a_out_in
+    del d_a_out_out_d_a_out_in, d_loss_d_a_out_in
     """
     okay, now we know how strongly/which direction we need to nudge the output layer's INCOMING activations. huzzah!
     .. wait hold up.. we STILL can't reach in and arbitrarily tweak an output neuron's INCOMING activation..
@@ -641,8 +645,8 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     """
     del d_loss_d_a_out_in
 
-    del grad_a
-    return grad_nn
+    del d_loss_d_a
+    return d_loss_d_nn
 
 
 def bprop(y: pd.DataFrame, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
