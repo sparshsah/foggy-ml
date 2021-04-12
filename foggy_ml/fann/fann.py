@@ -600,7 +600,7 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     a = _fprop(x=x, nn=nn, expand=True)
     d_loss_d_a = a * 0  # grad of LOSS w.r.t. NN incoming/outgoing activations (based on this data point's fwd pass)
 
-    # first, need to get output (i.e. last) layer's outgoing activations
+    # let's start with the output layer
     layer = a.layer_labels()[-1]
     # `a[out][out]` means `activations[output layer][outgoing (as opposed to incoming) activations]`
     a_out_out = a.loc[pd.IndexSlice[layer, :], "a_out"]
@@ -621,26 +621,33 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
 
     keeping in mind that e.g. `a[out][out]` means `activations[output layer][outgoing]`, whereas
     `a[out][in]` means `activations[output layer][incoming]`, we'll use chain rule:
-    d loss / d a[in][out] = d loss / d a[out][out] * d a[out][out] / d a[in][out].
+    d loss / d a[out][in] = d loss / d a[out][out] * d a[out][out] / d a[out][in].
     """
-    a_out_in = a.loc[pd.IndexSlice[layer, :], "a_in"]
+    a_out_in = a.loc[layer, "a_in"]
     d_a_out_out_d_a_out_in = util.d_dx(fn=activate, x=a_out_in)
     del a_out_in
-    d_loss_d_a_out_in = d_loss_d_a.loc[pd.IndexSlice] / d_a_out_out_d_a_out_in
+    d_loss_d_a_out_in = d_loss_d_a.loc[layer, "a_out"] / d_a_out_out_d_a_out_in
     d_loss_d_a.loc[pd.IndexSlice[layer, :], "a_in"] = d_loss_d_a_out_in
     del d_a_out_out_d_a_out_in, d_loss_d_a_out_in
     """
-    okay, now we know how strongly/which direction we need to nudge the output layer's INCOMING activations. huzzah!
-    .. wait hold up.. we STILL can't reach in and arbitrarily tweak an output neuron's INCOMING activation..
+    okay, now we know how strongly/which direction we will nudge the loss by
+    tweaking the output layer's INCOMING activations i.e. by
+    tweaking each output neuron's individual INCOMING activation. huzzah!
 
-    but aha! an output neuron's incoming activation is influenced by its feed-in weights, i.e. the strength of
+    .. but wait. we can't just reach in and arbitrarily tweak an output neuron's INCOMING activation, either.
+
+    but wait! an output neuron's incoming activation is influenced by its feed-in weights, i.e. the strength of
     its own activation based on the outgoing activations from each of the neurons on the penultimate layer.
-    and we CAN reach in and arbitrarily tweak those!
+    and we CAN reach in and arbitrarily tweak those feed-in weights!
 
-    how much do we have to tweak each one by? well, the incoming activation is just a linear combination e.g.
-    a_in = bias + ... _ * weight ..., where the `_` is exactly the outgoing activation of some neuron
-    on the penultimate layer! so let's use the chain rule again:
-    a_in needs to change by `something`, so we can simply
+    how strongly/which direction will we nudge the loss by tweaking each of those feed-in weights?
+    well, keeping in mind that the incoming activation is just a linear combination of the form
+    a[curr][in] := a_currentlayer_incoming = bias + ... a_previouslayer_outgoing * weight ...,
+    so that
+    d a[curr][in] / d bias = 1
+    and
+    d a[curr][in] / d weight = a_previouslayer_outgoing,
+    we'll use the chain rule again.
     """
     del d_loss_d_a_out_in
 
