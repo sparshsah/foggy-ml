@@ -458,11 +458,14 @@ def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.Data
     a = __fprop(x=x, nn=nn, expand=expand)  # activations
     del x
     if expand:  # isinstance(a, pd.DataFrame)
-        # squash only the output layer's outgoing activations into a probability mass function
-        # along a's MultiIndex's first level, get the last label
-        # https://stackoverflow.com/questions/45967702/loc-and-iloc-with-multiindexd-dataframe
-        output_layer = a.index.remove_unused_levels().levels[0][-1]
-        a.loc[pd.IndexSlice[output_layer, :], "a_out"] = squash(a.loc[pd.IndexSlice[output_layer, :], "a_out"])
+        # squash only the output layer's outgoing activations into a probability mass function.
+        """
+        get index of output layer (on axis="index", level=0), which is the same as:
+        along a's MultiIndex's first valid level, get the last label
+        [cf: https://stackoverflow.com/questions/45967702/loc-and-iloc-with-multiindexd-dataframe].
+        """
+        i_output_layer = a.index.remove_unused_levels().levels[0][-1]
+        a.loc[pd.IndexSlice[i_output_layer, :], "a_out"] = squash(a.loc[pd.IndexSlice[i_output_layer, :], "a_out"])
     else:  # isinstance(a, pd.Series)
         a = squash(a)
     return a
@@ -576,13 +579,14 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     # fprop, then fill in gradient by working backward
     a = _fprop(x=x, nn=nn, expand=True)
     grad = pd.DataFrame(index=nn.index, columns=nn.columns)  # gradient w.r.t NN i.e. weights
-    # output layer: gradient of loss w.r.t. incoming activations
-    # get (index of) output layer (on axis="index", level=0)
-    # https://stackoverflow.com/questions/45967702/loc-and-iloc-with-multiindexd-dataframe
-    output_layer = a.index.remove_unused_levels().levels[0][-1]
-    # dim(d_dx) = dim(y_one_hot) = dim(x)
-    util.d_dx(_y=_y, fn=util.crossmax, x=a.loc[pd.IndexSlice[output_layer, :], "a_in"])
-    del output_layer
+
+    # calc (vector of) derivatives of loss w.r.t. output layer's outgoing activations
+    # first, need to get output (i.e. last) layer's outgoing activations
+    a_out_out = a.loc[pd.IndexSlice[a.index.remove_unused_levels().levels[0][-1], :], "a_out"]
+    # note: dim(d_loss_d_a_out_out) = dim(_y) [since `_y` is one-hot] = dim(a_out_out)
+    d_loss_d_a_out_out = util.d_dx(_y=_y, fn=util.crossmax, x=a_out_out)
+    del d_loss_d_a_out_out, a_out_out
+
     # shape it like the NN (so it's truly a gradient w.r.t weights)
     raise NotImplementedError
     return grad
