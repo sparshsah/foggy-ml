@@ -548,6 +548,8 @@ if np.isclose(curr_epoch_loss, prev_epoch_loss, atol=tol), then we're done train
 ########################################################################################################################
 
 """
+# Why Do We Need Gradient Descent At All?
+
 When I was first studying machine learning algorithms in college, the whole concept of gradient descent
 (which is the basis of NN training) seemed unnecessary to me. I was accustomed to the OLS method
 from high-school statistics classes, where too we have a prediction problem and a loss function
@@ -556,13 +558,13 @@ Why not do the same here, use calculus (first- and second-order conditions) plus
 to solve for the neural network's optimal weights in closed form?
 
 Then my professor reminded me that even in high-school statistics, logistic regression requires
-iterative "gradient descent"[1]. This reminds me,
+iterative "gradient descent"[^1]. This reminds me,
 TODO(sparshsah): why can't a logistic regression model be fitted in closed form?
 Point is, take as given that some models just aren't amenable to fitting in closed form.
 
 So, we use (stochastic) gradient descent, stepping a bit in the most efficient direction each time.
 
-Batch size[2] here is a tradeoff between (A) faster learning from small batches, and
+Batch size[^2] here is a tradeoff between (A) faster learning from small batches, and
 (B) more stable learning from large batches. A conventional choice is 32 training points per batch.
 Notice that the "optimal" batch size doesn't necessarily scale with |training data|:
 The speed/stability of convergence doesn't change just because you add more data to the training sample.
@@ -571,10 +573,91 @@ With that in mind, backpropagation is just a fast way to compute the gradient we
 using dynamic programming to implement the Chain Rule from calculus.
 
 
+
+
+# The Backpropagation Algorithm: Dynamic Programming For Computing the Gradient
+
+We're going to accomplish this in a do-while loop, so it's gonna look ugly,
+especially because Pandas provides excellent functionality with MultiIndex'ing,
+without providing a correspondingly excellent API for invoking that functionality.
+
+
+HOWEVER, all we're doing here is Chain Rule!
+
+
+To wit (being a bit hand-wavey, so we don't get mired in notation):
+
+The LOSS is the "crossmax" of the output layer's outgoing activations i.e.
+<0> LOSS = crossmax(_y=_y, x=A[output][outgoing]) = cross_entropy(_y=_y, p_y=softmax(x=A[output][outgoing])).
+
+What's the derivative of the LOSS w.r.t. the output layer's outgoing activations i.e.
+<1> d LOSS / d A[output][outgoing]?
+Well, we just have to calculate that.
+
+
+But, once we have that, what's derivative of LOSS w.r.t. output layer's incoming activations, i.e.
+<2> d LOSS / d A[output][incoming]?
+Well, we can use the Chain Rule! We know that
+<3> A[output][outgoing] = activate(A[output][incoming]),
+whence
+<4> d A[output][outgoing] / d A[output][incoming]
+can be calculated, whence we can (finally!) invoke Chain Rule to rewrite
+<2> d LOSS / d A[output][incoming] = <1> * <4>.
+
+Thence, for
+<5> d LOSS / d bias[output]
+and
+<6> d LOSS / d feedin_weights[output],
+we can write that the output layer's incoming activations depends on its own bias,
+the penultimate layer's outgoing activations, and its own feed-in weights i.e.
+<7> A[output][incoming] = bias[output] + A[penultimate][outgoing] @ feedin_weights[output]
+whence we see
+<8> d A[output][incoming] / d bias[output] = 1
+and
+<9> d A[output][incoming] / d feedin_weights[output] = A[penultimate][outgoing],
+and also (we'll use this later)
+<10> d A[output][incoming] / d A[penultimate][outgoing] = feedin_weights[output].
+Now invoke the Chain Rule again:
+<5> d LOSS / d bias[output] = <2> * <8>
+and
+<6> d LOSS / d feedin_weights[output] = <2> * <9>.
+Together, <5> and <6> tell us exactly how much/which direction to tweak the output layer's
+bias and feed-in weights!
+
+And now we can also fill in the derivative of LOSS w.r.t. penultimate layer's
+outgoing activations i.e.
+<11> d LOSS / d A[penultimate][outgoing] = <2> * <10>.
+
+
+That immediately sets us up for the next round, because now we're in exactly
+the same position as we were in after <1>. That is: What is
+<12> d LOSS / d A[penultimate][incoming]?
+Just like in <3>, we know
+<13> A[penultimate][outgoing] = activate(A[penultimate][incoming]),
+whence just like in <4>,
+<14> d A[penultimate][outgoing] / d A[penultimate][incoming]
+can be calculated, whence just like before we can invoke Chain Rule to rewrite
+<12> d LOSS / d A[penultimate][incoming] = <11> * <14>.
+
+Now just rinse and repeat.. <15>-<21> will be same as <5>-<11>, except
+replace "penultimate" with "antepenultimate" layer everywhere, then
+replace "output" with "penultimate" layer everywhere.
+
+
+Assuming you have more layers, <22-31> would then just be same as <15>-<21>, except
+replace "antepenultimate" with "preantepenultimate" layer everywhere, then
+replace "penultimate" with "antepenultimate" layer everywhere.
+
+
+And so on. Beautiful!
+
+
+
+
 Footnote
 --------
 
-[1] Possibly-wrong Math Lesson: More precisely, ordinary logistic regression uses the Newton-Raphson method,
+[^1] Possibly-wrong Math Lesson: More precisely, ordinary logistic regression uses the Newton-Raphson method,
 which is like gradient descent in spirit but finds roots by constructing a first-order Taylor approximation of
 a function in the neighborhood of a suspected root. Incidentally, the "finds roots"
 (instead of "finds local minima") part means that for the Newton-Raphson method we must operate on the
@@ -583,7 +666,7 @@ the first derivative i.e. the second-partial and cross-derivatives of the loss f
 learning rate (or fine-enough step size, if that's how you want to specify the update rule), gradient descent
 can find local minima using the first derivative alone. The tradeoff is that Newton-Raphson can be faster.
 
-[2] Most authors call batch_sz=1 as "online" learning (which is a bit of a misnomer
+[^2] Most authors call batch_sz=1 as "online" learning (which is a bit of a misnomer
 unless you also set max_epoch=1), batch_sz=|dataset| as "batch" learning, and anything in between as
 "mini-batch" or "stochastic" learning. We don't understand why this annoying and confusing
 "mini-batch" vs "batch" terminology distinction persists.
@@ -599,82 +682,6 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     # fprop, then fill in gradient by working backward
     a = _fprop(x=x, nn=nn, expand=True)
     d_loss_d_a = a * 0  # grad of LOSS w.r.t. NN incoming/outgoing activations (based on this data point's fwd pass)
-
-    """
-    We're going to accomplish this in a do-while loop, so it's gonna look ugly,
-    especially because Pandas provides excellent functionality with MultiIndex'ing,
-    without providing a correspondingly excellent API for invoking that functionality.
-
-
-    HOWEVER, all we're doing here is Chain Rule!
-
-
-    To wit (being a bit hand-wavey, so we don't get mired in notation):
-
-    The LOSS is the "crossmax" of the output layer's outgoing activations i.e.
-    <0> LOSS = crossmax(_y=_y, x=A[output][outgoing]) = cross_entropy(_y=_y, p_y=softmax(x=A[output][outgoing])).
-
-    What's the derivative of the LOSS w.r.t. the output layer's outgoing activations i.e.
-    <1> d LOSS / d A[output][outgoing]?
-    Well, we just have to calculate that.
-
-
-    But, once we have that, what's derivative of LOSS w.r.t. output layer's incoming activations, i.e.
-    <2> d LOSS / d A[output][incoming]?
-    Well, we can use the Chain Rule! We know that
-    <3> A[output][outgoing] = activate(A[output][incoming]),
-    whence
-    <4> d A[output][outgoing] / d A[output][incoming]
-    can be calculated, whence we can (finally!) invoke Chain Rule to rewrite
-    <2> d LOSS / d A[output][incoming] = <1> * <4>.
-
-    Thence, for
-    <5> d LOSS / d bias[output]
-    and
-    <6> d LOSS / d feedin_weights[output],
-    we can write that the output layer's incoming activations depends on its own bias,
-    the penultimate layer's outgoing activations, and its own feed-in weights i.e.
-    <7> A[output][incoming] = bias[output] + A[penultimate][outgoing] @ feedin_weights[output]
-    whence we see
-    <8> d A[output][incoming] / d bias[output] = 1
-    and
-    <9> d A[output][incoming] / d feedin_weights[output] = A[penultimate][outgoing],
-    and also (we'll use this later)
-    <10> d A[output][incoming] / d A[penultimate][outgoing] = feedin_weights[output].
-    Now invoke the Chain Rule again:
-    <5> d LOSS / d bias[output] = <2> * <8>
-    and
-    <6> d LOSS / d feedin_weights[output] = <2> * <9>.
-    Together, <5> and <6> tell us exactly how much/which direction to tweak the output layer's
-    bias and feed-in weights!
-
-    And now we can also fill in the derivative of LOSS w.r.t. penultimate layer's
-    outgoing activations i.e.
-    <11> d LOSS / d A[penultimate][outgoing] = <2> * <10>.
-
-
-    That immediately sets us up for the next round, because now we're in exactly
-    the same position as we were in after <1>. That is: What is
-    <12> d LOSS / d A[penultimate][incoming]?
-    Just like in <3>, we know
-    <13> A[penultimate][outgoing] = activate(A[penultimate][incoming]),
-    whence just like in <4>,
-    <14> d A[penultimate][outgoing] / d A[penultimate][incoming]
-    can be calculated, whence just like before we can invoke Chain Rule to rewrite
-    <12> d LOSS / d A[penultimate][incoming] = <11> * <14>.
-
-    Now just rinse and repeat.. <15>-<21> will be same as <5>-<11>, except
-    replace "penultimate" with "antepenultimate" layer everywhere, then
-    replace "output" with "penultimate" layer everywhere.
-
-
-    Assuming you have more layers, <22-31> would then just be same as <15>-<21>, except
-    replace "antepenultimate" with "preantepenultimate" layer everywhere, then
-    replace "penultimate" with "antepenultimate" layer everywhere.
-
-
-    And so on. Beautiful!
-    """
 
     # let's start with the output layer
     layer = a.layer_labels()[-1]
