@@ -62,6 +62,27 @@ BATCH_SZ_DEFAULT: float = 32  # unrelated but inspired by the size of "infinity"
 MAX_EPOCH_DEFAULT: int = 2048
 
 
+# hackily add just a bit of syntactic sugar / convenience functionality
+def loc_last_layer(self: pd.DataFrame) -> object:
+    """
+    Get index of last layer (i.e. last label on level=0, axis="index").
+    [Cf: https://stackoverflow.com/questions/45967702/loc-and-iloc-with-multiindexd-dataframe]
+
+    input
+    -----
+    self: pd.DataFrame w/ MultiIndex.
+
+    output
+    ------
+    object, the label/name of the last layer.
+    """
+    if not isinstance(self.index, pd.MultiIndex):
+        raise ValueError(type(self.index))
+    return self.index.remove_unused_levels().levels[0][-1]
+pd.DataFrame.loc_last_layer = loc_last_layer
+del loc_last_layer
+
+
 # initialize
 
 def init_neuron(prev_layer_width: int, rng: RNG) -> Neuron:
@@ -458,14 +479,10 @@ def _fprop(x: pd.Series, nn: NN, expand: bool=False) -> Union[pd.Series, pd.Data
     a = __fprop(x=x, nn=nn, expand=expand)  # activations
     del x
     if expand:  # isinstance(a, pd.DataFrame)
-        # squash only the output layer's outgoing activations into a probability mass function.
-        """
-        get index of output layer (on axis="index", level=0), which is the same as:
-        along a's MultiIndex's first valid level, get the last label
-        [cf: https://stackoverflow.com/questions/45967702/loc-and-iloc-with-multiindexd-dataframe].
-        """
-        i_output_layer = a.index.remove_unused_levels().levels[0][-1]
-        a.loc[pd.IndexSlice[i_output_layer, :], "a_out"] = squash(a.loc[pd.IndexSlice[i_output_layer, :], "a_out"])
+        # squash only the output layer's outgoing activations into a probability mass function
+        a.loc[pd.IndexSlice[a.loc_last_layer(), :], "a_out"] = squash(
+            a.loc[pd.IndexSlice[a.loc_last_layer(), :], "a_out"]
+        )
     else:  # isinstance(a, pd.Series)
         a = squash(a)
     return a
@@ -582,7 +599,7 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
 
     # first, need to get output (i.e. last) layer's outgoing activations
     # `a[out][out]` means `activations[output layer][outgoing (as opposed to incoming) activations]`
-    a_out_out = a.loc[pd.IndexSlice[a.index.remove_unused_levels().levels[0][-1], :], "a_out"]
+    a_out_out = a.loc[pd.IndexSlice[a.loc_last_layer(), :], "a_out"]
     # now we can calc (vector of) derivatives of loss w.r.t. output layer's outgoing activations
     # note: dim(d loss / d a[out][out]) = dim(_y) [since `_y` is one-hot] = dim(a[out][out])
     d_loss_d_a_out_out = util.d_dx(_y=_y, fn=util.crossmax, x=a_out_out)
