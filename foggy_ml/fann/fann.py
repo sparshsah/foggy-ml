@@ -670,7 +670,7 @@ And so on. Beautiful!
 Footnote
 --------
 
-[^1] Possibly-wrong Math Lesson: More precisely, ordinary logistic regression uses the Newton-Raphson method,
+[^1]: Possibly-wrong Math Lesson: More precisely, ordinary logistic regression uses the Newton-Raphson method,
 which is like gradient descent in spirit but finds roots by constructing a first-order Taylor approximation of
 a function in the neighborhood of a suspected root. Incidentally, the "finds roots"
 (instead of "finds local minima") part means that for the Newton-Raphson method we must operate on the
@@ -679,7 +679,7 @@ the first derivative i.e. the second-partial and cross-derivatives of the loss f
 learning rate (or fine-enough step size, if that's how you want to specify the update rule), gradient descent
 can find local minima using the first derivative alone. The tradeoff is that Newton-Raphson can be faster.
 
-[^2] Most authors call batch_sz=1 as "online" learning (which is a bit of a misnomer
+[^2]: Most authors call batch_sz=1 as "online" learning (which is a bit of a misnomer
 unless you also set max_epoch=1), batch_sz=|dataset| as "batch" learning, and anything in between as
 "mini-batch" or "stochastic" learning. We don't understand why this annoying and confusing
 "mini-batch" vs "batch" terminology distinction persists.
