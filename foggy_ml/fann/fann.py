@@ -99,7 +99,9 @@ def init_layer(prev_layer_width: int, layer_width: int, rng: RNG) -> Layer:
     return layerify(layer=layer)
 
 
-def init_nn(input_width: int, layer_width: Union[int, Iterable[int]], output_width=int, random_seed=1337) -> NN:
+def init_nn(input_width: int, output_width=int,
+            layer_width: Optional[Union[int, Iterable[int]]]=None,
+            random_seed=1337) -> NN:
     """
     Initialize an NN with random weights.
 
@@ -107,11 +109,11 @@ def init_nn(input_width: int, layer_width: Union[int, Iterable[int]], output_wid
     -----
     intput_width: int, how many features. E.g. `3` for points in three-dimensional space.
 
-    layer_width: Union[int, Iterable[int]], the width(s) of the hidden layer(s).
-        E.g. `4` for a single hidden layer with 4 neurons,
-        or `(4, 5)` for a hidden layer of 4 neurons followed by a hidden layer of 5 neurons.
-
     output_width: int, how many categories. E.g. `2` for binomial classification.
+
+    layer_width: Optional[Union[int, Iterable[int]]], the width(s) of the hidden layer(s).
+        E.g. `None` for no hidden layers, `4` for a single hidden layer with 4 neurons,
+        or `(4, 5)` for a hidden layer of 4 neurons followed by a hidden layer of 5 neurons.
 
     random_seed: int, the random seed.
 
@@ -822,7 +824,7 @@ def _train(y: pd.DataFrame, X: pd.DataFrame, nn: NN, num_batches: int,
 
 
 def train(y: pd.Series, X: pd.DataFrame,
-          layer_width: Union[int, Iterable[int]],
+          layer_width: Optional[Union[int, Iterable[int]]]=None,
           learn_r: float=LEARN_R_DEFAULT, batch_sz: int=BATCH_SZ_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT,
           random_seed: int=1337)-> NN:
     """
@@ -834,7 +836,7 @@ def train(y: pd.Series, X: pd.DataFrame,
     -----
     y: pd.Series, ground-truth data labels.
     X: pd.DataFrame, the given data points.
-    layer_width: int or iterable[int], the desired width(s) of each NN layer.
+    layer_width: None or int or iterable[int], the desired width(s) of each NN layer.
         The depth of the overall NN will be 1 if layer_width is None,
         2 if isinstance(layer_width, int),
         else len(layer_width) + 1.
