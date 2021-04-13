@@ -58,7 +58,7 @@ RNG: type = np.random.Generator
 NN_INDEX_NLEVELS: int = 2  # MultiIndex[layers, neurons]
 BIAS_INDEX: Union[int, str] = "_bias_"
 LEARN_R_DEFAULT: float = 0.20
-BATCH_SZ_DEFAULT: float = 32  # unrelated but inspired by the size of "infinity" for Central Limit Thm
+BATCH_SZ_DEFAULT: int = 32  # unrelated but inspired by the size of "infinity" for Central Limit Thm
 MAX_EPOCH_DEFAULT: int = 2048
 
 
@@ -779,8 +779,33 @@ def _train(y: pd.DataFrame, X: pd.DataFrame, nn: NN, num_batches: int,
            learn_r: float=LEARN_R_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT,
            random_seed: int=1337)-> NN:
     """
-    Get a trained NN. Helper.
-    `y` is one-hot.
+    Get a trained NN.
+
+    Helper function with similar signature but more convenient input types
+    than main function.
+
+    input
+    -----
+    y: pd.DataFrame, one-hot encoding of ground-truth labels for given data points.
+    X: pd.DataFrame, the given data points.
+    nn: NN, the FANN of interest.
+    num_batches: int, number of (equal-sized) training batches per epoch.
+        Has to be ordered before the corresponding input `batch_sz` in the main function's signature,
+        because we have no default value here.
+    learn_r: float, the "learning rate", controls how far along the gradient to step.
+        Sophisticated learning algorithms like "annealing" can dampen the learning rate
+        as training proceeds, the logic being that successive epochs drive the NN
+        closer and closer to a loss-minimizing NN and therefore you can afford to
+        make finer and finer tweaks to the weights. Moreoever, keeping a high learning rate
+        during early epochs can help "launch" the NN out of local minima of the loss function
+        that are far away from a global minimum.
+    max_epoch: int, maximum number of training epochs. In future, we plan to automatically
+        detect when the loss has converged -> terminate training early.
+    random_seed: int, for the RNG that batches the data.
+
+    output
+    ------
+    NN, the trained neural network.
     """
     for _ in range(max_epoch):
         """
@@ -798,9 +823,38 @@ def _train(y: pd.DataFrame, X: pd.DataFrame, nn: NN, num_batches: int,
 
 def train(y: pd.Series, X: pd.DataFrame,
           layer_width: Union[int, Iterable[int]],
-          learn_r: float=LEARN_R_DEFAULT, batch_sz: float=BATCH_SZ_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT,
+          learn_r: float=LEARN_R_DEFAULT, batch_sz: int=BATCH_SZ_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT,
           random_seed: int=1337)-> NN:
-    """Get a trained NN."""
+    """
+    Get a trained NN.
+
+    Preprocesses inputs then passes down to helper.
+
+    input
+    -----
+    y: pd.Series, ground-truth data labels.
+    X: pd.DataFrame, the given data points.
+    layer_width: int or iterable[int], the desired width(s) of each NN layer.
+        The depth of the overall NN will be 1 if layer_width is None,
+        2 if isinstance(layer_width, int),
+        else len(layer_width) + 1.
+    learn_r: float, the "learning rate", controls how far along the gradient to step.
+        Sophisticated learning algorithms like "annealing" can dampen the learning rate
+        as training proceeds, the logic being that successive epochs drive the NN
+        closer and closer to a loss-minimizing NN and therefore you can afford to
+        make finer and finer tweaks to the weights. Moreoever, keeping a high learning rate
+        during early epochs can help "launch" the NN out of local minima of the loss function
+        that are far away from a global minimum.
+    batch_sz: int, number of data points per training batch.
+    max_epoch: int, maximum number of training epochs. In future, we plan to automatically
+        detect when the loss has converged -> terminate training early.
+    random_seed: int, for the RNG that initializes NN biases/weights, and also batches the data.
+
+    output
+    ------
+    NN, the trained neural network.
+    """
+
     _ = util.check_shape_match(y, X)
     y = util.one_hotify(y=y)
 
