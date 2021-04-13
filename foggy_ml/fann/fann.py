@@ -122,7 +122,8 @@ def init_nn(input_width: int, output_width=int,
     NN, a new Neural Network object.
     """
     # setup loop control
-    layer_width = (layer_width,) if isinstance(layer_width, int) else tuple(layer_width)
+    layer_width = tuple() if layer_width is None else \
+        (layer_width,) if isinstance(layer_width, int) else tuple(layer_width)
     layer_width = (input_width,) + layer_width + (output_width,)
     del output_width, input_width
     layer_width = pd.Series(layer_width)
@@ -865,6 +866,3 @@ def train(y: pd.Series, X: pd.DataFrame,
     return _train(y=y, X=X,
                   nn=nn, learn_r=learn_r, num_batches=y.shape[0]//batch_sz, max_epoch=max_epoch,
                   random_seed=random_seed)
-
-
-# TODO(sparshsah): support 0 hidden layers lol seems natural base case
