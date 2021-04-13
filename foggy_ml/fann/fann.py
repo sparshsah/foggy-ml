@@ -854,7 +854,6 @@ def train(y: pd.Series, X: pd.DataFrame,
     ------
     NN, the trained neural network.
     """
-
     _ = util.check_shape_match(y, X)
     y = util.one_hotify(y=y)
 
@@ -864,3 +863,5 @@ def train(y: pd.Series, X: pd.DataFrame,
     return _train(y=y, X=X,
                   nn=nn, learn_r=learn_r, num_batches=y.shape[0]//batch_sz, max_epoch=max_epoch,
                   random_seed=random_seed)
+
+# todo(sparshsah): support 0 hidden layers lol seems natural base case
