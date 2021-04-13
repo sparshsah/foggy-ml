@@ -684,8 +684,17 @@ unless you also set max_epoch=1), batch_sz=|dataset| as "batch" learning, and an
 
 def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     """
-    Get the gradient (AKA derivative).
-    `y` is one-hot.
+    Get the gradient (AKA derivative) of LOSS (on the given data point) w.r.t. input NN's biases/weights.
+
+    input
+    -----
+    _y: pd.Series, one-hot encoding of ground-truth label for given data point.
+    x: pd.Series, the given data point.
+    nn: NN, the FANN of interest.
+
+    output
+    ------
+    pd.DataFrame (same shape as `nn`), the gradient.
     """
     # fprop, then fill in gradient by working backward
     a = _fprop(x=x, nn=nn, expand=True)
@@ -720,10 +729,19 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
 
 def bprop(y: pd.DataFrame, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     """
-    Get the gradient, averaged over the batch.
-    `y` is one-hot.
+    Get the gradient (AKA derivative) of LOSS (on given data points) w.r.t. input NN's biases/weights.
+
+    input
+    -----
+    y: pd.DataFrame, one-hot encoding of ground-truth labels for given data points.
+    X: pd.DataFrame, the given data points.
+    nn: NN, the FANN of interest.
+
+    output
+    ------
+    pd.DataFrame (same shape as `nn`), the gradient.
     """
-    # clever use of list comprehension to sum DataFrames.. hehe..
+    # clever use of list comprehension to average over DataFrames.. hehe..
     grad = sum([
         _bprop(_y=util.check_type(_y, pd.Series), x=util.check_type(X.loc[i], pd.Series), nn=nn)
         for i, _y in y.iterrows()
@@ -733,8 +751,25 @@ def bprop(y: pd.DataFrame, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
 
 def __train(y: pd.DataFrame, X: pd.DataFrame, nn: NN, learn_r: float) -> NN:
     """
-    Descend a step along the gradient.
-    `y` is one-hot.
+    Descend a step along the gradient (AKA derivative)
+    of LOSS (on given data points) w.r.t. input NN's biases/weights.
+
+    input
+    -----
+    y: pd.DataFrame, one-hot encoding of ground-truth labels for given data points.
+    X: pd.DataFrame, the given data points.
+    nn: NN, the FANN of interest.
+    learn_r: float, the "learning rate", controls how far along the gradient to step.
+        Sophisticated learning algorithms like "annealing" can dampen the learning rate
+        as training proceeds, the logic being that successive epochs drive the NN
+        closer and closer to a loss-minimizing NN and therefore you can afford to
+        make finer and finer tweaks to the weights. Moreoever, keeping a high learning rate
+        during early epochs can help "launch" the NN out of local minima of the loss function
+        that are far away from a global minimum.
+
+    output
+    ------
+    pd.DataFrame (same shape as `nn`), the gradient.
     """
     grad = bprop(y=y, X=X, nn=nn)
     return nn - learn_r * grad
