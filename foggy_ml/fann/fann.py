@@ -746,9 +746,10 @@ def bprop(y: pd.DataFrame, X: pd.DataFrame, nn: NN) -> pd.DataFrame:
     """
     # clever use of list comprehension to average over DataFrames.. hehe..
     grad = sum([
-        _bprop(_y=util.check_type(_y, pd.Series), x=util.check_type(X.loc[i], pd.Series), nn=nn)
-        for i, _y in y.iterrows()
-    ])
+        _bprop(_y=util.check_type(_y, pd.Series),
+               x=util.check_type(X.loc[i], pd.Series),
+               nn=nn)
+    for i, _y in y.iterrows()])
     return grad / y.shape[0]
 
 
