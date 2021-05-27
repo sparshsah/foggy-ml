@@ -606,6 +606,8 @@ The LOSS is the "crossmax" of the output layer's outgoing activations i.e.
 What's the derivative of the LOSS w.r.t. the output layer's outgoing activations i.e.
 <1> d LOSS / d A[output][outgoing]?
 Well, we just have to calculate that.
+Note that <1> is a vector whose length is the number of neurons in the output layer i.e.
+the number of categories in the classification task.
 
 
 But, once we have that, what's derivative of LOSS w.r.t. output layer's incoming activations, i.e.
@@ -700,10 +702,11 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     pd.DataFrame (same shape as `nn`), the gradient.
     """
     # fprop, then fill in gradient by working backward
+    # we want this one, not `__fprop`, because we have d_crossmax available to easily calc derivative
     a = _fprop(x=x, nn=nn, expand=True)
 
     # gradient (i.e. derivative) of LOSS w.r.t. NN biases/weights
-    # same shape as NN, incl NaN's in all same places
+    # hackily initialize something that has the same shape as NN, incl NaN's in all same places
     grad_nn = nn * 0
     # gradient of LOSS w.r.t. NN incoming/outgoing activations (based on x's fwd pass)
     grad_a = a * 0
