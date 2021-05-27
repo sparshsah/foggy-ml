@@ -701,7 +701,6 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     ------
     pd.DataFrame (same shape as `nn`), the gradient.
     """
-    # fprop, then fill in gradient by working backward
     # we want this one, not `__fprop`, because we have d_crossmax available to easily calc derivative
     a = _fprop(x=x, nn=nn, expand=True)
 
@@ -711,24 +710,27 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     # gradient of LOSS w.r.t. NN incoming/outgoing activations (based on x's fwd pass)
     grad_a = a * 0
 
-    # let's start with the output layer
+    # fill in gradient by working backward, starting from output layer
     layer = a.layer_labels()[-1]
+    layer = pd.IndexSlice[layer, :]  # index for setting values, works to get as well
     # `a[out][out]` means `activations[output layer][outgoing (as opposed to incoming) activations]`
-    a_out_out = a.loc[pd.IndexSlice[layer, :], "a_out"]
+    a_layer_out = a.loc[layer, "a_out"]
     # now we can calc (vector of) derivatives of loss w.r.t. output layer's outgoing activations
     # note: dim(d loss / d a[out][out]) = dim(_y) /* since `_y` is one-hot */ = dim(a[out][out])
-    d_loss_d_a_out_out = util.d_dx(_y=_y, fn=util.crossmax, x=a_out_out)
-    del a_out_out
-    grad_a.loc[pd.IndexSlice[layer, :], "a_out"] = d_loss_d_a_out_out
-    del d_loss_d_a_out_out
+    d_loss_d_a_layer_out = util.d_dx(_y=_y, fn=util.crossmax, x=a_layer_out)
+    del a_layer_out
+    grad_a.loc[layer, "a_out"] = d_loss_d_a_layer_out
+    del d_loss_d_a_layer_out
+    # activations[output layer][incoming activations]
+    a_layer_in = a.loc[layer, "a_in"]
+    # derivative of output layer's outgoing activations w.r.t. output layer's incoming activations
+    d_a_layer_out_d_a_layer_in = util.d_dx(fn=activate, x=a_layer_in)
+    del a_layer_in
+    d_loss_d_a_layer_in = grad_a.loc[layer, "a_out"] * d_a_layer_out_d_a_layer_in
+    grad_a.loc[layer, "a_in"] = d_loss_d_a_layer_in
+    del d_a_layer_out_d_a_layer_in, d_loss_d_a_layer_in
+    del d_loss_d_a_layer_in
 
-    a_out_in = a.loc[layer, "a_in"]
-    d_a_out_out_d_a_out_in = util.d_dx(fn=activate, x=a_out_in)
-    del a_out_in
-    d_loss_d_a_out_in = grad_a.loc[layer, "a_out"] / d_a_out_out_d_a_out_in
-    grad_a.loc[pd.IndexSlice[layer, :], "a_in"] = d_loss_d_a_out_in
-    del d_a_out_out_d_a_out_in, d_loss_d_a_out_in
-    del d_loss_d_a_out_in
     del grad_a
     return grad_nn
 
