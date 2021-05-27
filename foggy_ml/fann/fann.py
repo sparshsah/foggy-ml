@@ -710,26 +710,53 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     # gradient of LOSS w.r.t. NN incoming/outgoing activations (based on x's fwd pass)
     grad_a = a * 0
 
-    # fill in gradient by working backward, starting from output layer
-    layer = a.layer_labels()[-1]
-    layer = pd.IndexSlice[layer, :]  # index for setting values, works to get as well
-    # `a[out][out]` means `activations[output layer][outgoing (as opposed to incoming) activations]`
-    a_layer_out = a.loc[layer, "a_out"]
-    # now we can calc (vector of) derivatives of loss w.r.t. output layer's outgoing activations
-    # note: dim(d loss / d a[out][out]) = dim(_y) /* since `_y` is one-hot */ = dim(a[out][out])
-    d_loss_d_a_layer_out = util.d_dx(_y=_y, fn=util.crossmax, x=a_layer_out)
-    del a_layer_out
-    grad_a.loc[layer, "a_out"] = d_loss_d_a_layer_out
-    del d_loss_d_a_layer_out
-    # activations[output layer][incoming activations]
-    a_layer_in = a.loc[layer, "a_in"]
-    # derivative of output layer's outgoing activations w.r.t. output layer's incoming activations
-    d_a_layer_out_d_a_layer_in = util.d_dx(fn=activate, x=a_layer_in)
-    del a_layer_in
-    d_loss_d_a_layer_in = grad_a.loc[layer, "a_out"] * d_a_layer_out_d_a_layer_in
-    grad_a.loc[layer, "a_in"] = d_loss_d_a_layer_in
-    del d_a_layer_out_d_a_layer_in, d_loss_d_a_layer_in
-    del d_loss_d_a_layer_in
+    # fill in gradient by working backward one layer at a time, starting from output layer
+    for layer in reversed(a.layer_labels()):  # iterator is more efficient than slicing w/ [::-1]
+        layer_ = pd.IndexSlice[layer, :]  # index for setting values
+
+        # `a[layer][out]` means `activations[curr layer][outgoing (as opposed to incoming) activations]`
+        a_layer_out = a.loc[layer, "a_out"]
+        # now we can calc (vector of) derivatives of loss w.r.t. curr layer's outgoing activations
+        if layer == a.layer_labels()[-1]:  # curr layer == output layer
+            d_loss_d_a_layer_out = util.d_dx(_y=_y, fn=util.crossmax, x=a_layer_out)
+            # dim(d loss / d a[out][out]) == dim(a[out][out]) == dim(_y)  # since `_y` is one-hot
+            assert d_loss_d_a_layer_out.shape == a_layer_out.shape == _y.shape, \
+                (d_loss_d_a_layer_out, a_layer_out, _y)
+        else:
+            # d_loss_d_a_layer_out = grad_nn_at_latest_layer * nn_weights_at_curr_layer
+            raise NotImplementedError
+        del a_layer_out
+        grad_a.loc[layer_, "a_out"] = d_loss_d_a_layer_out
+        del d_loss_d_a_layer_out
+
+        # activations[curr layer][incoming activations]
+        a_layer_in = a.loc[layer, "a_in"]
+        # derivative of curr layer's outgoing activations w.r.t. curr layer's incoming activations
+        d_a_layer_out_d_a_layer_in = util.d_dx(fn=activate, x=a_layer_in)
+        d_loss_d_a_layer_in = grad_a.loc[layer, "a_out"] * d_a_layer_out_d_a_layer_in
+        grad_a.loc[layer_, "a_in"] = d_loss_d_a_layer_in
+        del d_loss_d_a_layer_in, d_a_layer_out_d_a_layer_in
+
+        # curr layer's bias(es)
+        bias_layer = nn.loc[layer, BIAS_INDEX]
+        assert bias_layer.shape == a_layer_in.shape, (bias_layer, a_layer_in)
+        del a_layer_in
+        # derivative of curr layer's incoming activations w.r.t. curr layer's biases
+        d_a_layer_in_d_bias_layer = pd.Series(1, index=bias_layer.index)
+        del bias_layer
+        # derivative of LOSS w.r.t. curr layer's bias
+        d_loss_d_bias_layer = grad_a.loc[layer, "a_in"] * d_a_layer_in_d_bias_layer
+        del d_a_layer_in_d_bias_layer
+        grad_nn.loc[layer_, BIAS_INDEX] = d_loss_d_bias_layer
+        del d_loss_d_bias_layer
+
+        # curr layer's feed-in weights
+        # go one neuron at a time
+        w_in_layer = get_w_in(x=something, neuron=nn.loc[layer, neuron])
+        # derivative of LOSS w.r.t. curr layer's feed-in weights
+        d_loss_d_w_in_layer = None
+
+    # handle the input layer's incoming activations w.r.t x
 
     del grad_a
     return grad_nn
