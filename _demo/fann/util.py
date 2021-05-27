@@ -41,7 +41,7 @@ def titlefy(d: str) -> str:
 
 
 def gen_data(n: int=256, noise: float=0.32, random_seed: int=1337, x_scaler: Optional[FeatureScaler]=None) ->\
-    (Dict[str, Union[pd.DataFrame, pd.Series]], FeatureScaler):
+        Tuple[Dict[str, Union[pd.DataFrame, pd.Series]], FeatureScaler]:
     X, y = datasets.make_moons(n_samples=n, noise=noise, random_state=random_seed)
     assert X.shape[1] == NUM_FEATURES, (len(X), NUM_FEATURES)
     assert len(set(y)) == NUM_CATEGORIES, (len(set(y)), NUM_CATEGORIES)
