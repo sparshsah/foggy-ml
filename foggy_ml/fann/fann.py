@@ -701,6 +701,14 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
     ------
     pd.DataFrame (same shape as `nn`), the gradient.
     """
+    """
+    TODO(sparshsah): I've tried to be as abstract as possible with my FANN implementation,
+    so that e.g. you can name your NN layers and neurons whatever you want.
+    However, in this function, it's much easier to assume that the layers/neurons
+    are simply numbered (i.e. zero-indexed). Eventually I'd like to support the ability
+    to give the layers different labels than just 0,1,2,etc, e.g. maybe you really
+    want to call the input layer "input" and the output layer "categories" or something.
+    """
     # we want this one, not `__fprop`, because we have d_crossmax available to easily calc derivative
     a = _fprop(x=x, nn=nn, expand=True)
 
