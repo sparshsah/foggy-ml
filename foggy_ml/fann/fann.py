@@ -770,35 +770,34 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
             # inner layer's outgoing activations
             a_inner_out = a.loc[inner, "a_out"]
             del inner
-            for n in nn.loc[curr, :].index:  # neuron label
-                # current (layer, neuron)'s feed-in weights
-                w_in_curr = get_w_in(
-                    x=a_inner_out,
-                    neuron=check_neuron(
-                        neuron=nn.loc[ (curr,n) , : ]
-                    )
-                )
-                # <9> d A[output][incoming] / d feedin_weights[output] = A[penultimate][outgoing]
-                d_a_curr_in_d_w_in_curr = a_inner_out
-                # <6> d LOSS / d feedin_weights[output] = <2> * <9>
-                # TODO: is this dimensions consistent?
-                d_loss_d_w_in_curr = grad_a.loc[curr, "a_in"] * d_a_curr_in_d_w_in_curr
-                del d_a_curr_in_d_w_in_curr
-                grad_nn.loc[ (curr,n), w_in_curr.index ] = d_loss_d_w_in_curr
-                del d_loss_d_w_in_curr, n
-                # <10> d A[output][incoming] / d A[penultimate][outgoing] = feedin_weights[output]
-                # TODO: this can't be right can it? we only use the last neuron's w_in?
-                d_a_curr_in_d_a_inner_out = w_in_curr
-                del w_in_curr
-            del a_inner_out
-
-            # set up the next iteration (wherein `curr` will have been decremented to `inner`)
-            # <11> d LOSS / d A[penultimate][outgoing] = <2> * <10>
-            d_loss_d_a_curr_out = grad_a.loc[curr, "a_in"] * d_a_curr_in_d_a_inner_out
-
         else:  # we're at the input layer
-            pass  # do nothing, we'll now exit the loop and tie up the loose end below
-    # TODO: handle the input layer's incoming activations w.r.t x
+            a_inner_out = x
+
+        for n in nn.loc[curr, :].index:  # neuron label
+            # current (layer, neuron)'s feed-in weights
+            w_in_curr = get_w_in(
+                x=a_inner_out,
+                neuron=check_neuron(
+                    neuron=nn.loc[ (curr,n) , : ]
+                )
+            )
+            # <9> d A[output][incoming] / d feedin_weights[output] = A[penultimate][outgoing]
+            d_a_curr_in_d_w_in_curr = a_inner_out
+            # <6> d LOSS / d feedin_weights[output] = <2> * <9>
+            # TODO: is this dimensions consistent?
+            d_loss_d_w_in_curr = grad_a.loc[curr, "a_in"] * d_a_curr_in_d_w_in_curr
+            del d_a_curr_in_d_w_in_curr
+            grad_nn.loc[ (curr,n), w_in_curr.index ] = d_loss_d_w_in_curr
+            del d_loss_d_w_in_curr, n
+            # <10> d A[output][incoming] / d A[penultimate][outgoing] = feedin_weights[output]
+            # TODO: this can't be right can it? we only use the last neuron's w_in?
+            d_a_curr_in_d_a_inner_out = w_in_curr
+            del w_in_curr
+        del a_inner_out
+
+        # set up the next iteration (wherein `curr` will have been decremented to `inner`)
+        # <11> d LOSS / d A[penultimate][outgoing] = <2> * <10>
+        d_loss_d_a_curr_out = grad_a.loc[curr, "a_in"] * d_a_curr_in_d_a_inner_out
 
     del grad_a
     return grad_nn
