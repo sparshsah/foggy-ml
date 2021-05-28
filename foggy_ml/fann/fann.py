@@ -784,7 +784,8 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
             # <9> d A[output][incoming] / d feedin_weights[output] = A[penultimate][outgoing]
             d_a_curr_in_d_w_in_curr = a_inner_out
             # <6> d LOSS / d feedin_weights[output] = <2> * <9>
-            # TODO: is this dimensions consistent?
+            assert grad_a.loc[curr, "a_in"].shape == d_a_curr_in_d_w_in_curr.shape, \
+                (grad_a.loc[curr, "a_in"].shape, d_a_curr_in_d_w_in_curr.shape)
             d_loss_d_w_in_curr = grad_a.loc[curr, "a_in"] * d_a_curr_in_d_w_in_curr
             del d_a_curr_in_d_w_in_curr
             grad_nn.loc[ (curr,n), w_in_curr.index ] = d_loss_d_w_in_curr
