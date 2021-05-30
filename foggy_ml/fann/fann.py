@@ -791,7 +791,8 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
             grad_nn.loc[ (curr,n), w_in_curr.index ] = d_loss_d_w_in_curr
             del d_loss_d_w_in_curr, n
             # <10> d A[output][incoming] / d A[penultimate][outgoing] = feedin_weights[output]
-            # TODO: this can't be right can it? we only use the last neuron's w_in?
+            assert False, \
+                "this can't be right can it?? we only use the last neuron's w_in??"
             d_a_curr_in_d_a_inner_out = w_in_curr
             del w_in_curr
         del a_inner_out
