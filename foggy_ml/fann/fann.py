@@ -800,10 +800,11 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
             del w_in_curr, n
         del a_inner_out
 
-        assert False
         # set up the next iteration (wherein `curr` will have been decremented to `inner`)
         # <11> d LOSS / d A[penultimate][outgoing] = <2> * <10>
-        d_loss_d_a_curr_out = grad_a.loc[curr, "a_in"] * d_a_curr_in_d_a_inner_out
+        # in practice we must do <10> * <2> so pandas will align the matrix mult correctly
+        d_loss_d_a_curr_out = d_a_curr_in_d_a_inner_out.mul(grad_a.loc[curr, "a_in"], axis="index")
+        assert False
 
     del grad_a
     return grad_nn
