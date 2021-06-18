@@ -909,7 +909,7 @@ def _train(y: pd.DataFrame, X: pd.DataFrame, nn: NN, num_batches: int,
 
 
 def train(y: pd.Series, X: pd.DataFrame,
-          layer_width: Optional[Union[int, Iterable[int]]]=None,
+          nn: Optional[NN]=None, layer_width: Optional[Union[int, Iterable[int]]]=None,
           learn_r: float=LEARN_R_DEFAULT, batch_sz: int=BATCH_SZ_DEFAULT, max_epoch: int=MAX_EPOCH_DEFAULT,
           random_seed: int=1337)-> NN:
     """
@@ -921,6 +921,7 @@ def train(y: pd.Series, X: pd.DataFrame,
     -----
     y: pd.Series, ground-truth data labels.
     X: pd.DataFrame, the given data points.
+    nn: if not None then train this model (ignoring `layer_width`), else initialize a brand-new one.
     layer_width: None or int or iterable[int], the desired width(s) of each NN layer.
         The depth of the overall NN will be 1 if layer_width is None,
         2 if isinstance(layer_width, int),
@@ -944,9 +945,10 @@ def train(y: pd.Series, X: pd.DataFrame,
     _ = util.check_shape_match(y, X)
     y = util.one_hotify(y=y)
 
-    nn = init_nn(output_width=y.shape[1], input_width=X.shape[1],
-                 layer_width=layer_width,
-                 random_seed=random_seed)
+    if nn is None:
+        nn = init_nn(output_width=y.shape[1], input_width=X.shape[1],
+                     layer_width=layer_width,
+                     random_seed=random_seed)
     return _train(y=y, X=X,
                   nn=nn, learn_r=learn_r, num_batches=y.shape[0]//batch_sz, max_epoch=max_epoch,
                   random_seed=random_seed)
