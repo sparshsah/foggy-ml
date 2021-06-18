@@ -63,7 +63,9 @@ we're C programmers who never learned how to use `free()` calls properly,
 or because we don't trust Python's
 [garbage collector](https://github.com/sparshsah/foggy-demo/blob/main/demo/cs/gc-cycles.ipynb.pdf),
 but rather to enforce scope for certain variables,
-decluttering the namespace and preventing accidental misuse.
+thereby making it immediately obvious when we're done with them,
+preventing accidental misuse after that point,
+and decluttering the namespace.
 
 - We stick to the first-person plural in comments ("we", "us", "our").
 This isn't the "Royal We", it just helps
