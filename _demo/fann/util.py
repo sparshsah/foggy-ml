@@ -11,9 +11,11 @@ It's not important to read every single line of every single one.
 # target source code
 import foggy_ml.util as util  # assumes `/path/to/foggy-ml` in `PYTHONPATH`, so pylint: disable=import-error
 import foggy_ml.fann as fann  # again, pylint: disable=import-error
+import foggy_ml.fann.fann as _fann  # pylint: disable=import-error
 
 # syntax utils
 from typing import Tuple, Dict, Callable, Union, Optional
+from importlib import reload
 # data loading
 import sklearn.datasets as datasets
 # data structures
