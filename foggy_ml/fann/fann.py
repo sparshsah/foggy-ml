@@ -737,7 +737,7 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
             del a_curr_out
         else:  # we're in the middle, at some inner layer
             pass  # do nothing, we already set up what we need in the outer iteration
-        grad_a.loc[curr_, "a_out"] = d_loss_d_a_curr_out
+        grad_a.loc[curr_, "a_out"] = d_loss_d_a_curr_out.values
         del d_loss_d_a_curr_out
 
         # current layer's incoming activations
@@ -747,7 +747,7 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
         # <2> d LOSS / d A[output][incoming] = <1> * <4>
         d_loss_d_a_curr_in = grad_a.loc[curr, "a_out"] * d_a_curr_out_d_a_curr_in
         del d_a_curr_out_d_a_curr_in
-        grad_a.loc[curr_, "a_in"] = d_loss_d_a_curr_in
+        grad_a.loc[curr_, "a_in"] = d_loss_d_a_curr_in.values
         del d_loss_d_a_curr_in
 
         # current layer's biases
@@ -761,7 +761,7 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
         # <5> d LOSS / d bias[output] = <2> * <8>
         d_loss_d_bias_curr = grad_a.loc[curr, "a_in"] * d_a_curr_in_d_bias_curr
         del d_a_curr_in_d_bias_curr
-        grad_nn.loc[curr_, BIAS_INDEX] = d_loss_d_bias_curr
+        grad_nn.loc[curr_, BIAS_INDEX] = d_loss_d_bias_curr.values
         del d_loss_d_bias_curr
 
         if curr in a.layer_labels()[1:]:  # we're at the output or some hidden layer
@@ -784,11 +784,13 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
             # <9> d A[output][incoming] / d feedin_weights[output] = A[penultimate][outgoing]
             d_a_curr_in_d_w_in_curr = a_inner_out
             # <6> d LOSS / d feedin_weights[output] = <2> * <9>
+            """
             assert grad_a.loc[curr, "a_in"].shape == d_a_curr_in_d_w_in_curr.shape, \
                 (grad_a.loc[curr, "a_in"].shape, d_a_curr_in_d_w_in_curr.shape)
-            d_loss_d_w_in_curr = grad_a.loc[curr, "a_in"] * d_a_curr_in_d_w_in_curr
+            """
+            d_loss_d_w_in_curr = grad_a.loc[ (curr,n) , "a_in" ] * d_a_curr_in_d_w_in_curr
             del d_a_curr_in_d_w_in_curr
-            grad_nn.loc[ (curr,n), w_in_curr.index ] = d_loss_d_w_in_curr
+            grad_nn.loc[ (curr,n) , w_in_curr.index ] = d_loss_d_w_in_curr.values
             del d_loss_d_w_in_curr, n
             # <10> d A[output][incoming] / d A[penultimate][outgoing] = feedin_weights[output]
             assert False, \
