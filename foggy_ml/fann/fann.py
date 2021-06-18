@@ -804,7 +804,10 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
         # <11> d LOSS / d A[penultimate][outgoing] = <2> * <10>
         # in practice we must do <10> * <2> so pandas will align the matrix mult correctly
         d_loss_d_a_curr_out = d_a_curr_in_d_a_inner_out.mul(grad_a.loc[curr, "a_in"], axis="index")
-        assert False
+        # multivariate chain rule w/ partial derivatives:
+        # e.g. d f(x_1, ..., x_n) / dt = (df / d x_1)(d x_1 / dt) + ... + (df / d x_n)(d x_n / dt)
+        # now, substitute f = LOSS, and x_1,...,x_n = <10> for each of n output-layer neurons!
+        d_loss_d_a_curr_out = d_loss_d_a_curr_out.sum()
 
     del grad_a
     return grad_nn
