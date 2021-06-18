@@ -58,14 +58,14 @@ which is the whole point of a project like this.
 It's not like our code would be a viable
 TensorFlow alternative \~if only\~ we removed the type checks.
 
-- We make liberal use of `del` statements. This is not because
-we're C programmers who never learned how to use `free()` calls properly,
-or because we don't trust Python's
-[garbage collector](https://github.com/sparshsah/foggy-demo/blob/main/demo/cs/gc-cycles.ipynb.pdf),
-but rather to enforce scope for certain variables,
-thereby making it immediately obvious when we're done with them,
-preventing accidental misuse after that point,
-and decluttering the namespace.
+- We make liberal use of `del` statements.
+This isn't necessarily because the `del`'d object
+was wasting space, but rather to enforce scope for the
+referring variable name.
+We thereby
+(a) make it immediately obvious that we're done with that variable,
+(b) prevent accidental misuse after that point, and
+(c) declutter the namespace.
 
 - We stick to the first-person plural in comments ("we", "us", "our").
 This isn't the "Royal We", it just helps
