@@ -1,7 +1,9 @@
 # foggyML
-homebrew machine learning
-(inspired by my college courses, plus a
-heaping spoonful of lessons, blog posts, and StackOverflow answers on the Web)
+homebrew machine learning.
+inspired by my college courses, plus a
+heaping spoonful of lessons, blog posts, and StackOverflow answers on the Web --
+but this is totally original, "from scratch" code,
+you won't find a single snippet of this anywhere else!
 
 
 ## fann: Feedforward Artificial Neural Network
