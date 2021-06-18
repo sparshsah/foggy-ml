@@ -52,7 +52,7 @@ we "flatten" our FANN into a pandas DataFrame with MultiIndex,
 and implement a recursive forward propagation.
 In the same spirit, we do a lot of sometimes-redundant
 type checking and assertions, which tend to be slow,
-often 10-100x slower than even our non-vectorized calculations.
+often 10-100x slower than even our own most naive non-vectorized calculations.
 However, they (we hope) make things easier to visualize and reason about,
 which is the whole point of a project like this.
 It's not like our code would be a viable
@@ -60,7 +60,8 @@ TensorFlow alternative \~if only\~ we removed the type checks.
 
 - We make liberal use of `del` statements. This is not because
 we're C programmers who never learned how to use `free()` calls properly,
-or because we don't trust Python's garbage collector,
+or because we don't trust Python's
+[garbage collector](https://github.com/sparshsah/foggy-demo/blob/main/demo/cs/gc-cycles.ipynb.pdf),
 but rather to enforce scope for certain variables,
 decluttering the namespace and preventing accidental misuse.
 
