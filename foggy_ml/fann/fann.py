@@ -773,6 +773,9 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
         else:  # we're at the input layer
             a_inner_out = x
 
+        # hackily initialize something that has the right shape for <10>, i.e. on the first iteration,
+        # nrows = # of output-layer neurons, ncols = # of penult-layer neurons
+        d_a_curr_in_d_a_inner_out = grad_nn.loc[curr].drop(BIAS_INDEX, axis="columns").dropna(how="all", axis="columns") * 0
         for n in nn.loc[curr, :].index:  # neuron label
             # current (layer, neuron)'s feed-in weights
             w_in_curr = get_w_in(
@@ -793,9 +796,7 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
             grad_nn.loc[ (curr,n) , w_in_curr.index ] = d_loss_d_w_in_curr.values
             del d_loss_d_w_in_curr, n
             # <10> d A[output][incoming] / d A[penultimate][outgoing] = feedin_weights[output]
-            assert False, \
-                "this can't be right can it?? we only use the last neuron's w_in??"
-            d_a_curr_in_d_a_inner_out = w_in_curr
+            d_a_curr_in_d_a_inner_out.loc[n, :] = w_in_curr.values
             del w_in_curr
         del a_inner_out
 
