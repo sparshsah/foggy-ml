@@ -11,10 +11,9 @@ It's not important to read every single line of every single one.
 # target source code
 import foggy_ml.util as util  # assumes `/path/to/foggy-ml` in `PYTHONPATH`, so pylint: disable=import-error
 import foggy_ml.fann as fann  # again, pylint: disable=import-error
-import foggy_ml.fann.fann as _fann  # pylint: disable=import-error
 
 # syntax utils
-from typing import Tuple, Dict, Callable, Union, Optional
+from typing import Tuple, List, Dict, Callable, Union, Optional
 from importlib import reload
 # data loading
 import sklearn.datasets as datasets
@@ -28,9 +27,17 @@ from sklearn.neural_network import MLPClassifier as RefNN  # reference implement
 # visualization
 import matplotlib.pyplot as plt
 
+RADIANS_PER_CIRCLE: float = 2 * np.pi
+CIRCLE_SCALE: float = 4
 NUM_FEATURES: int = 2  # aka num of neurons on input layer
 NUM_CATEGORIES: int = 2  # aka num of neurons on output layer
 LAYER_WIDTH: Tuple[int] = (4, 3)  # first hidden layer has 4 neurons, second hidden layer has 3 neurons
+
+
+def get_unit_circle(k: int=NUM_CATEGORIES, scale: float=CIRCLE_SCALE) -> List[Tuple[float, float]]:
+    """Uniformly sample `k` points on the unit circle in the 2D plane."""
+    a = RADIANS_PER_CIRCLE / k
+    return [( np.cos(a*l)*scale , np.sin(a*l)*scale ) for l in range(k)]
 
 
 def lrange(*args) -> list:
@@ -42,17 +49,31 @@ def titlefy(d: str) -> str:
     return f"{d}ing Data".upper()
 
 
-def gen_data(n: int=256, noise: float=0.32, random_seed: int=1337, x_scaler: Optional[FeatureScaler]=None) ->\
+def _gen_data(num_categories: int=NUM_CATEGORIES, n: int=256, noise: float=0.32, random_seed: int=1337,
+              x_scaler: Optional[FeatureScaler]=None) ->\
         Tuple[Dict[str, Union[pd.DataFrame, pd.Series]], FeatureScaler]:
-    X, y = datasets.make_moons(n_samples=n, noise=noise, random_state=random_seed)
+    if num_categories == NUM_CATEGORIES:
+        X, y = datasets.make_moons(n_samples=n, noise=noise, random_state=random_seed)
+    else:
+        X, y = datasets.make_blobs(centers=get_unit_circle(k=num_categories), n_samples=n,
+                                   random_state=random_seed)
     assert X.shape[1] == NUM_FEATURES, (len(X), NUM_FEATURES)
-    assert len(set(y)) == NUM_CATEGORIES, (len(set(y)), NUM_CATEGORIES)
+    assert len(set(y)) == num_categories, (len(set(y)), num_categories)
     x_scaler = FeatureScaler().fit(X) if x_scaler is None else x_scaler
     X = x_scaler.transform(X)
     X = pd.DataFrame(X)
     y = pd.Series(y)
     data = {"X": X, "y": y}
     return data, x_scaler
+
+
+def gen_data(num_categories: int=NUM_CATEGORIES):
+    data = {}
+    data["train"], x_scaler = _gen_data(num_categories=num_categories)
+    # for simplicity, we pretend we know ground-truth optimal hyperparameters -> don't need tuning data
+    # data["Tuning Data"], _ = gen_data(num_categories=num_categories, random_seed=1337+1, x_scaler=x_scaler)
+    data["test"], _ = _gen_data(num_categories=num_categories, random_seed=1337+2, x_scaler=x_scaler)
+    return data
 
 
 def homebrewify(ref_nn: RefNN, layer_width: Tuple[float]=LAYER_WIDTH) -> fann.NN:
@@ -152,7 +173,7 @@ def plot_data(X: pd.DataFrame, y: pd.Series, title: Optional[str]=None,
               ax: Optional[plt.matplotlib.axes._base._AxesBase]=None):
     ax = plt if ax is None else ax
     # caution: in scatterplot, `x` is actually X[0] i.e. the 1st feature, `y` is X[1] i.e. 2nd feature
-    ax.scatter(x=X[0], y=X[1], c=y, cmap=plt.cm.get_cmap("coolwarm"))
+    ax.scatter(x=X[0], y=X[1], c=y/y.max(), cmap=plt.cm.get_cmap("coolwarm"))
     try:
         ax.set_title(title)
     except AttributeError:
@@ -179,13 +200,6 @@ def plot_perf(X: pd.DataFrame, y: pd.Series, y_hat: pd.Series, suptitle: Optiona
                suptitle=suptitle)
 
 
-def plot_perfs(pred_fn: Callable[[pd.DataFrame], pd.Series]):
+def plot_perfs(data: Dict[str, Union[pd.DataFrame, pd.Series]], pred_fn: Callable[[pd.DataFrame], pd.Series]):
     for d in "train", "test":
         plot_perf(X=data[d]["X"], y=data[d]["y"], y_hat=pred_fn(data[d]["X"]), suptitle=titlefy(d=d))
-
-
-data = {}
-data["train"], x_scaler = gen_data()
-# for simplicity, we pretend we know ground-truth optimal hyperparameters -> don't need tuning data
-# data["Tuning Data"], _ = gen_data(random_seed=1337+1, x_scaler=x_scaler)
-data["test"], _ = gen_data(random_seed=1337+2, x_scaler=x_scaler)
