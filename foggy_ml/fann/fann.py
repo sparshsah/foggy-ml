@@ -787,10 +787,6 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
             # <9> d A[output][incoming] / d feedin_weights[output] = A[penultimate][outgoing]
             d_a_curr_in_d_w_in_curr = a_inner_out
             # <6> d LOSS / d feedin_weights[output] = <2> * <9>
-            """
-            assert grad_a.loc[curr, "a_in"].shape == d_a_curr_in_d_w_in_curr.shape, \
-                (grad_a.loc[curr, "a_in"].shape, d_a_curr_in_d_w_in_curr.shape)
-            """
             d_loss_d_w_in_curr = grad_a.loc[ (curr,n) , "a_in" ] * d_a_curr_in_d_w_in_curr
             del d_a_curr_in_d_w_in_curr
             grad_nn.loc[ (curr,n) , w_in_curr.index ] = d_loss_d_w_in_curr.values
@@ -804,13 +800,15 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
         # <11> d LOSS / d A[penultimate][outgoing] = <2> * <10>
         # in practice we must do <10> * <2> so pandas will align the matrix mult correctly
         d_loss_d_a_curr_out = d_a_curr_in_d_a_inner_out.mul(grad_a.loc[curr, "a_in"], axis="index")
-        # multivariate chain rule w/ partial derivatives:
-        # e.g. d f(x_1, ..., x_n) / dt = (df / d x_1)(d x_1 / dt) + ... + (df / d x_n)(d x_n / dt)
-        # now, substitute
-        #     f = LOSS,
-        #     x_1,...,x_n = <10>,
-        #     t = A[penultimate][outgoing]
-        # for each of the n output-layer neurons!
+        """
+        multivariate chain rule w/ partial derivatives:
+        e.g. d f(x_1, ..., x_n) / dt = (df / d x_1)(d x_1 / dt) + ... + (df / d x_n)(d x_n / dt)
+        now, substitute
+            f = LOSS,
+            x_1,...,x_n = <10>,
+            t = A[penultimate][outgoing]
+        for each of the n output-layer neurons!
+        """
         d_loss_d_a_curr_out = d_loss_d_a_curr_out.sum()
 
     del grad_a
