@@ -806,7 +806,11 @@ def _bprop(_y: pd.Series, x: pd.Series, nn: NN) -> pd.DataFrame:
         d_loss_d_a_curr_out = d_a_curr_in_d_a_inner_out.mul(grad_a.loc[curr, "a_in"], axis="index")
         # multivariate chain rule w/ partial derivatives:
         # e.g. d f(x_1, ..., x_n) / dt = (df / d x_1)(d x_1 / dt) + ... + (df / d x_n)(d x_n / dt)
-        # now, substitute f = LOSS, and x_1,...,x_n = <10> for each of n output-layer neurons!
+        # now, substitute
+        #     f = LOSS,
+        #     x_1,...,x_n = <10>,
+        #     t = A[penultimate][outgoing]
+        # for each of the n output-layer neurons!
         d_loss_d_a_curr_out = d_loss_d_a_curr_out.sum()
 
     del grad_a
