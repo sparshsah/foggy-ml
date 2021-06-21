@@ -10,7 +10,7 @@ you won't find a single snippet of this anywhere else!
 Step-by-step Python implementation of deep learning for multinomial classification.
 Unlike most walkthroughs on the Web,
 our implementation supports
-abitrary number of features and categories,
+arbitrary number of features and categories,
 as well as depth and width of network.
 
 Two especially great resources:
