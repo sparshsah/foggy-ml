@@ -1,4 +1,7 @@
 # foggyML
+
+author: [@sparshsah](https://github.com/sparshsah)
+
 homebrew machine learning.
 inspired by my college courses, plus a
 heaping spoonful of lessons, blog posts, and StackOverflow answers on the Web --
