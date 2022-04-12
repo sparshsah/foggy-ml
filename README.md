@@ -73,8 +73,9 @@ was wasting space, but rather to enforce scope for the
 referring variable name.
 We thereby
 (a) make it immediately obvious that we're done with that variable,
-(b) prevent accidental misuse after that point, and
-(c) declutter the namespace.
+(b) prevent accidental misuse after that point,
+(c) declutter the namespace, and, yes,
+(d) let the garbage collector collect it if it wants.
 
 - We stick to the first-person plural in comments ("we", "us", "our").
 This isn't the "Royal We", it just helps
