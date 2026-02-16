@@ -87,7 +87,7 @@ def init_neuron(prev_layer_width: int, rng: RNG) -> Neuron:
     neuron = Neuron(index=(BIAS_INDEX,) + tuple(range(prev_layer_width)))
     # generate bias
     neuron.loc[BIAS_INDEX] = rng.normal()
-    # generate weights
+    # generate weights, Xavier-style
     # normalize so ex-ante stdev of sum is exactly unity -> neuron saturation less likely -> learns faster
     # skip the bias index
     neuron.iloc[1:] = rng.normal(scale=1. / prev_layer_width**0.5, size=prev_layer_width)
@@ -99,9 +99,9 @@ def init_layer(prev_layer_width: int, layer_width: int, rng: RNG) -> Layer:
     return layerify(layer=layer)
 
 
-def init_nn(input_width: int, output_width=int,
+def init_nn(input_width: int, output_width: int,
             layer_width: Optional[Union[int, Iterable[int]]]=None,
-            random_seed=1337) -> NN:
+            random_seed: int=1337) -> NN:
     """
     Initialize an NN with random weights.
 
@@ -952,5 +952,5 @@ def train(y: pd.Series, X: pd.DataFrame,
                      layer_width=layer_width,
                      random_seed=random_seed)
     return _train(y=y, X=X,
-                  nn=nn, learn_r=learn_r, num_batches=y.shape[0]//batch_sz, max_epoch=max_epoch,
+                  nn=nn, learn_r=learn_r, num_batches=max(1, y.shape[0]//batch_sz), max_epoch=max_epoch,
                   random_seed=random_seed)
