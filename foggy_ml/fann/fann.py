@@ -107,7 +107,7 @@ def init_nn(input_width: int, output_width: int,
 
     input
     -----
-    intput_width: int, how many features. E.g. `3` for points in three-dimensional space.
+    input_width: int, how many features. E.g. `3` for points in three-dimensional space.
 
     output_width: int, how many categories. E.g. `2` for binomial classification.
 
